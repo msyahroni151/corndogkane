@@ -21,10 +21,10 @@ function assertDemoTarget(env = process.env) {
     const ref = env.HRIS_DEMO_PROJECT_REF || "";
     const direct =
       target.hostname === `db.${ref}.supabase.co` &&
-      decodeURIComponent(target.username) === "postgres";
+      ["postgres", "corndog_demo_app"].includes(decodeURIComponent(target.username));
     const pooler =
       /^[a-z0-9-]+\.pooler\.supabase\.com$/.test(target.hostname) &&
-      decodeURIComponent(target.username) === `postgres.${ref}`;
+      [`postgres.${ref}`, `corndog_demo_app.${ref}`].includes(decodeURIComponent(target.username));
     if (
       !/^[a-z0-9]{20}$/.test(ref) ||
       (!direct && !pooler) ||

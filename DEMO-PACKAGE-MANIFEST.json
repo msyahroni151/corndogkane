@@ -1,10 +1,18 @@
 {
-  "createdAt": "2026-10-20T04:17:59.528Z",
+  "createdAt": "2026-10-20T05:04:04.165Z",
   "containsRealData": false,
   "files": [
     {
+      "path": ".gitignore",
+      "sha256": "39bfba1cef8b6d552c2151a1b74db37945459e65de624c4ca26bb2cd806aeab3"
+    },
+    {
       "path": "DEMO-DEPLOYMENT.md",
-      "sha256": "25b18150bbfc846788fd82c316e07c06d653edb8bb3d05bb25c518960a7650d2"
+      "sha256": "d770e47a7ecc4ddf0b2288ac9029d5b4d18c4ef613bdc8be38713a2708f34672"
+    },
+    {
+      "path": "README.md",
+      "sha256": "5f97fcd1fb5cc455c7d7b4728b36f3c841257a819d0a9093bd72ff81450defcd"
     },
     {
       "path": "eslint.config.mjs",
@@ -13,6 +21,10 @@
     {
       "path": "integrations/coa/master-coa-v1.json",
       "sha256": "e9a7d8d1ef514db049a3f5d6dde0217925d564d1a7114d992a53bd6bc1de04ca"
+    },
+    {
+      "path": "integrations/supabase/prod-ca-2021.crt",
+      "sha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7"
     },
     {
       "path": "next.config.ts",
@@ -172,15 +184,15 @@
     },
     {
       "path": "render.yaml",
-      "sha256": "29ac6b319a85536ec2d9257d7b72f844aef94ff5378c427db7f486cb98aa80af"
+      "sha256": "81f175c8c7df073f17cd48453cc3cb2defb265aee31a3745639ef1e59d4b7920"
     },
     {
       "path": "scripts/demo-target.cjs",
-      "sha256": "0d763de1759be4edeba5fd8d8b217a6557b0feaabd65436cb80fc2f97a5c79fe"
+      "sha256": "f7424e04d12011640525e551d9ba034cafc2d84b98274d84742680fe445562b6"
     },
     {
       "path": "scripts/package-demo.cjs",
-      "sha256": "9f76220f2246bad77eec52779516c76b46f91f5b89c168a51db9c52baa1d6062"
+      "sha256": "ae7b5c2ae4fbeb903fa725d05f861f40152d0a57cbc4e59102f42b940a57d612"
     },
     {
       "path": "scripts/seed-demo.ts",
@@ -717,126 +729,6 @@
     {
       "path": "src/components/workspace-heading.tsx",
       "sha256": "0177dc93ac0862f3d34bd6e69e3cfe7c8d2c5017abaea1498375708c7dcc3b6d"
-    },
-    {
-      "path": "src/generated/prisma/browser.ts",
-      "sha256": "467cdbbcf8255f26488e05dedd0120d48e96f19832f5684fd7273c53174d8999"
-    },
-    {
-      "path": "src/generated/prisma/client.ts",
-      "sha256": "1bcf69d2fc0db3504111f50894914465c2521fd7bd447fdd7dbd51b6a79040c4"
-    },
-    {
-      "path": "src/generated/prisma/commonInputTypes.ts",
-      "sha256": "fc65f65487f09a4482e47ece653b25405d1f7c930c5d2fcbe899c8802ac0185a"
-    },
-    {
-      "path": "src/generated/prisma/enums.ts",
-      "sha256": "21112b1750c0830ef24445f25d7a7de820101e997130ef51516f77cd640eab8c"
-    },
-    {
-      "path": "src/generated/prisma/internal/class.ts",
-      "sha256": "9a4272859d22c54394bfaf0ee1062204f64140b88c3bfed51e110753e6e7868f"
-    },
-    {
-      "path": "src/generated/prisma/internal/prismaNamespace.ts",
-      "sha256": "44cfc6d15942b684802254915ff7153905677cb3273a8eba04287830e9ac135f"
-    },
-    {
-      "path": "src/generated/prisma/internal/prismaNamespaceBrowser.ts",
-      "sha256": "deb3164347e617389d78f80a001046108142c4ae84e9fae95bb537572355844e"
-    },
-    {
-      "path": "src/generated/prisma/models.ts",
-      "sha256": "5d3fd40bd1bc6ecb3b635c7dfe50dfbf30a511a9e1fd0a49033df4ac6d26912f"
-    },
-    {
-      "path": "src/generated/prisma/models/AccessRole.ts",
-      "sha256": "61dfe79a9947b822999e9f03587cf3a6bdbc182607466c1eee9d5b2404f7dc91"
-    },
-    {
-      "path": "src/generated/prisma/models/Area.ts",
-      "sha256": "ccff8159087bffadd0161bb6650a549fb2a2e28ff4a814be37c0a1a0b2dfedce"
-    },
-    {
-      "path": "src/generated/prisma/models/AssetEvent.ts",
-      "sha256": "6482c716c7052a0e339d3c9ecb9c5e4f8a1ddefd0eb742893137f7386e0f5010"
-    },
-    {
-      "path": "src/generated/prisma/models/Attendance.ts",
-      "sha256": "f9e65ec3ded08317b8676d4d5a94d3e6e6f1713ae21a2c904878769e29cad54f"
-    },
-    {
-      "path": "src/generated/prisma/models/Employee.ts",
-      "sha256": "0fc0f55e0bacb4872b9539363da0e6ddd1a906b24d5b243a58be3a4afed1f781"
-    },
-    {
-      "path": "src/generated/prisma/models/FinancialAccount.ts",
-      "sha256": "fabee585847d6ae4064b8c20e7e9e42da452a70c2b8a1d4dce1c64d55cd7c3e5"
-    },
-    {
-      "path": "src/generated/prisma/models/FixedAsset.ts",
-      "sha256": "6e89db334ebdf3fbbba85aff4e53bec124c9fe3c3360d6d35dea0d80a58d70db"
-    },
-    {
-      "path": "src/generated/prisma/models/JournalTransaction.ts",
-      "sha256": "8b51a9bcaed7cbb825c0bf2a9d7b7430fd154743f0c3b0c259527e4c201e1e8d"
-    },
-    {
-      "path": "src/generated/prisma/models/LoginThrottle.ts",
-      "sha256": "4e8ef9fe54a96c5bdaec15023249904a13591bf3b985c6f1cd8cf1b069195214"
-    },
-    {
-      "path": "src/generated/prisma/models/MoneyEntry.ts",
-      "sha256": "c041a87402332e3829e5adc9ab7c81504edd77fc8e30edf427cf218d68f4b04a"
-    },
-    {
-      "path": "src/generated/prisma/models/OperationalExpense.ts",
-      "sha256": "48e2e61beb962ac693201c4475f7bc3ef570336808e19b032d8e711ea8129b5e"
-    },
-    {
-      "path": "src/generated/prisma/models/Outlet.ts",
-      "sha256": "2439050e6589ddf86ddefcbce8765d01f8c4a1bbc8671e0ed4b8db41489a89a9"
-    },
-    {
-      "path": "src/generated/prisma/models/OutletOperation.ts",
-      "sha256": "f6fe3a64f910044fd89828eace92a5b071d41f0050b17f1a36a8d980d326187f"
-    },
-    {
-      "path": "src/generated/prisma/models/Partner.ts",
-      "sha256": "1dc0cf266acd9a6f06e53376d1602d08ef1c0308c91b7e6fb8f53f1ceba1ba4a"
-    },
-    {
-      "path": "src/generated/prisma/models/Payroll.ts",
-      "sha256": "1b997c2affe55d6c6e172dae8b46cdb31276fcd139ad71e69debf944181d3a05"
-    },
-    {
-      "path": "src/generated/prisma/models/Placement.ts",
-      "sha256": "8d048998e28dfd78bfaa5968d5fd55c0f8e2a5365bcf08c5cbe9ed545f4bd272"
-    },
-    {
-      "path": "src/generated/prisma/models/Schedule.ts",
-      "sha256": "0a048b03ca250a45c0ac84efd3e23bb20c9055f4c25b6983b3eaa2e629dcf935"
-    },
-    {
-      "path": "src/generated/prisma/models/SequenceCounter.ts",
-      "sha256": "059c848def2e5c806b1b57867cfcd80e349349cbd43f9cf9fb023c4401101293"
-    },
-    {
-      "path": "src/generated/prisma/models/Session.ts",
-      "sha256": "6b1ca8a0039828bf8810f303108a4f4373d055614cd5aa96d6efccb685ccee28"
-    },
-    {
-      "path": "src/generated/prisma/models/SettlementDeduction.ts",
-      "sha256": "a0b9761b57f2a028bed1c71bc796cfc605991557229254329231c323568d3ce5"
-    },
-    {
-      "path": "src/generated/prisma/models/SettlementReview.ts",
-      "sha256": "7cb16719d24c1227d89af91e865cdfe43bb0e5fb56ff900ea0856a03c0e7809b"
-    },
-    {
-      "path": "src/generated/prisma/models/User.ts",
-      "sha256": "5017df7d3b66699a91516268a291f077d3f2df24ec1d70f067eda615a28a01a7"
     },
     {
       "path": "src/lib/asset-code.ts",

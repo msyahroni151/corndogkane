@@ -42,6 +42,7 @@ async function packageDemo() {
     "prisma",
     "public",
     "integrations/coa/master-coa-v1.json",
+    "integrations/supabase/prod-ca-2021.crt",
     "package.json",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
@@ -70,7 +71,7 @@ async function packageDemo() {
     .digest("hex");
   await fs.writeFile(
     path.join(destination, "README.md"),
-    "# Corndog Kane\n\nSource aplikasi HRIS, operasional outlet, payroll, dan keuangan. Repository privat.\n\nUntuk menjalankan demo gratis Render + Supabase, baca [DEMO-DEPLOYMENT.md](DEMO-DEPLOYMENT.md). Data contoh terpisah dari database asli.\n\nPengembangan: Node.js 24, pnpm 11.25.0, PostgreSQL. Pasang dependency dengan pnpm install, isi DATABASE_URL di .env.local, lalu jalankan pnpm dev. Build: pnpm build.\n",
+    "# Corndog Kane\n\nSource aplikasi HRIS, operasional outlet, payroll, dan keuangan.\n\nUntuk menjalankan demo gratis Render + Supabase, baca [DEMO-DEPLOYMENT.md](DEMO-DEPLOYMENT.md). Data contoh terpisah dari database asli.\n\nPengembangan: Node.js 24, pnpm 11.25.0, PostgreSQL. Pasang dependency dengan pnpm install, isi DATABASE_URL di .env.local, lalu jalankan pnpm dev. Build: pnpm build.\n",
   );
   await fs.writeFile(
     path.join(destination, "DEMO-PACKAGE-MANIFEST.json"),

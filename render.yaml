@@ -15,6 +15,8 @@ services:
         value: "1"
       - key: CHECKPOINT_DISABLE
         value: "1"
+      - key: NODE_EXTRA_CA_CERTS
+        value: integrations/supabase/prod-ca-2021.crt
       - key: HRIS_DEMO_MODE
         value: "1"
       - key: HRIS_DEMO_PROJECT_REF

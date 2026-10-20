@@ -45,3 +45,11 @@ Sumber:
 ## Status penerbitan
 
 File konfigurasi bukan bukti bahwa website sudah online. Penerbitan baru selesai setelah resource cloud dibuat, akun hosting terhubung, dan URL demo berhasil diuji. Jangan mengunggah data lokal sebagai pengganti data contoh.
+
+## Koneksi server demo
+
+Server demo dapat memakai role PostgreSQL khusus `corndog_demo_app`, dengan akses hanya untuk membuat dan mengelola tabel aplikasi pada database demo. Untuk Session pooler, username-nya `corndog_demo_app.PROJECT_REF`. Password role disimpan dalam environment hosting dan tidak masuk repository.
+
+Gunakan `sslmode=verify-full` dan `NODE_EXTRA_CA_CERTS=integrations/supabase/prod-ca-2021.crt`. Berkas tersebut adalah sertifikat CA publik Supabase, bukan private key. Sumber sertifikat: https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt. Sidik jari SHA-256: `80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA`.
+
+Jika layanan dibuat langsung melalui Dashboard/CLI, konfigurasi aktif berada pada layanan tersebut; `render.yaml` adalah template untuk instalasi baru dan tidak otomatis mengelola layanan yang sudah ada.
