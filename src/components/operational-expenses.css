@@ -1,0 +1,226 @@
+.expense-form {
+  padding: 20px;
+}
+.expense-form .field {
+  font-size: 12px;
+  gap: 7px;
+}
+.expense-form .field :is(input, select, textarea) {
+  font-size: 12px;
+  border-radius: 8px;
+}
+.expense-group {
+  border: 1px solid #bfd2ff;
+  background: #f0f5ff;
+  color: #284eb3;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 11px;
+  line-height: 18px;
+}
+.expense-label {
+  font-size: 12px;
+  color: #3c4a5f;
+  margin-bottom: 8px;
+}
+.expense-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.expense-choice {
+  min-height: 37px;
+  border: 1px solid #e0e5ec;
+  background: white;
+  border-radius: 7px;
+  color: #6b7280;
+  font-size: 12px;
+  padding: 8px;
+}
+.expense-choice[aria-pressed="true"] {
+  background: #172035;
+  color: white;
+  border-color: #172035;
+}
+.expense-payment-status .expense-choice[aria-pressed="true"] {
+  background: #f1fbf1;
+  border-color: #45a651;
+  color: #31863b;
+}
+.expense-hint {
+  font-size: 11px;
+  line-height: 18px;
+  color: #7c8a9a;
+}
+.expense-error {
+  margin-top: 16px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b42323;
+  padding: 12px;
+  font-size: 12px;
+}
+.expense-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 20px;
+  margin-top: 22px;
+  border-top: 1px solid #edf0f4;
+}
+.expense-form-footer > button {
+  font-size: 12px;
+}
+.expense-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.expense-summary > article {
+  background: #fff;
+  border: 1px solid #dfe6e3;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 1px 2px #14372809;
+}
+.expense-summary .expense-summary-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.expense-summary h2 {
+  font-size: 10px;
+  color: #8794a4;
+  letter-spacing: 0.3px;
+}
+.expense-summary strong {
+  display: block;
+  margin-top: 16px;
+  font-size: 17px;
+  color: #de3f3f;
+}
+.expense-summary article:nth-child(2) strong {
+  color: #3f70c3;
+}
+.expense-summary article:nth-child(3) strong {
+  color: #d18a29;
+}
+.expense-summary article:nth-child(4) strong {
+  color: #39a050;
+}
+.expense-summary p {
+  margin-top: 5px;
+  font-size: 10px;
+  color: #94a0af;
+}
+.expense-filter {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+}
+.expense-tabs {
+  display: flex;
+  border-radius: 9px;
+  background: #eaf1fb;
+  padding: 4px;
+  gap: 3px;
+}
+.expense-tabs > a {
+  padding: 10px;
+  font-size: 11px;
+  white-space: nowrap;
+  color: #5e7793;
+  border-radius: 6px;
+}
+.expense-tabs > a[aria-current="page"] {
+  background: white;
+  color: #39a050;
+  box-shadow: 0 1px 3px #29433612;
+}
+.expense-filter .field {
+  font-size: 11px;
+}
+.expense-filter .expense-search {
+  min-width: 200px;
+  flex: 1;
+}
+.expense-filter .field input {
+  font-size: 12px;
+}
+.expense-table {
+  width: 100%;
+  min-width: 900px;
+  text-align: left;
+  font-size: 12px;
+}
+.expense-table th {
+  padding: 18px 16px;
+  background: #f7f9fb;
+  font-size: 10px;
+  color: #7b899b;
+  letter-spacing: 0.4px;
+  border-bottom: 1px solid #e4e9ef;
+}
+.expense-table td {
+  padding: 16px;
+  border-bottom: 1px solid #edf1f4;
+}
+.expense-status {
+  border-radius: 18px;
+  padding: 4px 9px;
+  font-size: 10px;
+  background: #f0faf3;
+  color: #31984c;
+  white-space: nowrap;
+}
+.expense-status[data-status="UNPAID"] {
+  background: #fff8e9;
+  color: #bb8125;
+}
+.expense-category {
+  display: inline-block;
+  max-width: 210px;
+  border-radius: 16px;
+  padding: 4px 9px;
+  background: #eff4ff;
+  color: #5475a7;
+  font-size: 10px;
+}
+.expense-purpose {
+  font-weight: 650;
+  color: #263a32;
+}
+.expense-amount {
+  color: #dc4545;
+  font-weight: 700;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .expense-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 500px) {
+  .expense-summary {
+    gap: 10px;
+  }
+  .expense-summary > article {
+    padding: 14px;
+  }
+  .expense-summary strong {
+    font-size: 15px;
+  }
+  .expense-filter .expense-tabs {
+    width: 100%;
+  }
+  .expense-tabs > a {
+    flex: 1;
+    text-align: center;
+  }
+  .expense-form {
+    padding: 16px;
+  }
+}

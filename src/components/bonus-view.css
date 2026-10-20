@@ -1,0 +1,13 @@
+.button-secondary.bonus-view-toggle {
+  background: #f6d86b;
+  border-color: #f6d86b;
+  color: #55421b;
+  transition: background-color 150ms, border-color 150ms;
+}
+.button-secondary.bonus-view-toggle:hover {
+  background: #efd05c;
+  border-color: #efd05c;
+}
+.button-secondary.bonus-view-toggle:focus-visible {
+  outline-color: #b58b17;
+}

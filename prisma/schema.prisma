@@ -1,0 +1,576 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Fondasi biodata karyawan. ID dari spreadsheet akan dipertahankan saat impor.
+model Employee {
+  settlementReviews SettlementReview[]
+  outletCrewRecords OutletOperation[] @relation("OperationCrew")
+  outletTrainingRecords OutletOperation[] @relation("OperationTraining")
+  loginAccount      User?
+  payrolls          Payroll[]
+  moneyEntries      MoneyEntry[]
+  schedules         Schedule[]
+  placements        Placement[]
+  id                String       @id
+  nik               String?      @unique
+  fullName          String
+  employeeCode      String?      @unique
+  department        String
+  applicationRole   String?
+  employeeType      String?
+  baseSalary        Int?
+  position          String
+  workPattern       String?
+  employmentStatus  String?
+  salaryBasis       String?
+  joinedAt          DateTime?    @db.Date
+  activityStatus    String       @default("AKTIF")
+  active            Boolean      @default(true)
+  leftAt            DateTime?    @db.Date
+  phone             String?
+  bankName          String?
+  bankAccountNumber String?
+  bankAccountName   String?
+  notes             String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([department, active])
+  @@map("employees")
+}
+
+model User {
+  assetsCreated FixedAsset[] @relation("AssetCreator")
+  assetsUpdated FixedAsset[] @relation("AssetUpdater")
+  assetEvents AssetEvent[]
+  createdOperationalExpenses OperationalExpense[] @relation("ExpenseCreator")
+  paidOperationalExpenses OperationalExpense[] @relation("ExpensePayer")
+  createdFinancialAccounts FinancialAccount[]
+  createdJournalTransactions JournalTransaction[]
+  settlementReviews SettlementReview[]
+  createdOutletOperations OutletOperation[] @relation("OperationCreator")
+  updatedOutletOperations OutletOperation[] @relation("OperationUpdater")
+  roleId              String?
+  role                AccessRole?  @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  employeeId          String?      @unique
+  employee            Employee?    @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  updatedAt           DateTime     @default(now()) @updatedAt
+  createdPartners     Partner[]
+  createdMoneyEntries MoneyEntry[] @relation("MoneyCreator")
+  decidedMoneyEntries MoneyEntry[] @relation("MoneyDecider")
+  updatedAttendance   Attendance[]
+  createdSchedules    Schedule[]
+  createdPlacements   Placement[]
+  id                  String       @id @default(cuid())
+  email               String       @unique
+  name                String
+  passwordHash        String
+  active              Boolean      @default(true)
+  createdAt           DateTime     @default(now())
+  sessions            Session[]
+
+  @@map("users")
+}
+
+model Session {
+  tokenHash String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model LoginThrottle {
+  key         String   @id
+  attempts    Int
+  windowStart DateTime
+
+  @@map("login_throttles")
+}
+
+model SequenceCounter {
+  name  String @id
+  value Int
+
+  @@map("sequence_counters")
+}
+
+enum OperationalRole {
+  REGULER
+  BACKUP
+  LEADER_SHIFT
+  CREW_GUDANG
+}
+
+model Area {
+  id         String      @id
+  name       String      @unique
+  color      String      @default("#deeddd")
+  active     Boolean     @default(true)
+  outlets    Outlet[]
+  placements Placement[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@map("areas")
+}
+
+model Outlet {
+  fixedAssets FixedAsset[]
+  operations OutletOperation[]
+  nameCode       String?     @db.VarChar(40)
+  closed         Boolean     @default(false)
+  dailyRate      Int?
+  operatingHours Json?
+  id             String      @id
+  name           String      @unique
+  areaId         String
+  area           Area        @relation(fields: [areaId], references: [id], onDelete: Restrict)
+  active         Boolean     @default(true)
+  placements     Placement[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([areaId, active])
+  @@map("outlets")
+}
+
+model Placement {
+  schedules    Schedule[]
+  id           String          @id @default(cuid())
+  employeeId   String
+  employee     Employee        @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  employeeName String
+  role         OperationalRole
+  startDate    DateTime        @db.Date
+  endDate      DateTime        @db.Date
+  areaId       String?
+  area         Area?           @relation(fields: [areaId], references: [id], onDelete: Restrict)
+  areaName     String?
+  areaColor    String?
+  outletId     String?
+  outlet       Outlet?         @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  outletName   String?
+  location     String?
+  notes        String?
+  createdById  String
+  createdBy    User            @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt    DateTime        @default(now())
+
+  @@index([employeeId, startDate, endDate])
+  @@index([endDate])
+  @@map("placements")
+}
+
+enum ScheduleStatus {
+  KERJA
+  LIBUR
+  STANBY
+}
+
+enum WarehouseShift {
+  S1
+  S2
+  FULL
+}
+
+model Schedule {
+  outletDailyRate Int?
+  attendance      Attendance?
+  id              String          @id @default(cuid())
+  employeeId      String
+  employee        Employee        @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  placementId     String
+  placement       Placement       @relation(fields: [placementId], references: [id], onDelete: Restrict)
+  date            DateTime        @db.Date
+  employeeName    String
+  role            OperationalRole
+  areaName        String?
+  areaColor       String?
+  outletId        String?
+  outletName      String?
+  location        String?
+  status          ScheduleStatus  @default(KERJA)
+  shift           WarehouseShift?
+  startMinutes    Int?
+  endMinutes      Int?
+  notes           String?
+  createdById     String
+  createdBy       User            @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([date, status])
+  @@map("schedules")
+}
+
+enum AttendanceStatus {
+  HADIR
+  SETENGAH_HARI
+  IZIN
+  SAKIT
+  ALPA
+}
+
+model Attendance {
+  id              String           @id @default(cuid())
+  scheduleId      String           @unique
+  schedule        Schedule         @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
+  status          AttendanceStatus @default(HADIR)
+  checkInMinutes  Int?
+  checkOutMinutes Int?
+  checkInNextDay  Boolean          @default(false)
+  checkOutNextDay Boolean          @default(false)
+  notes           String?
+  updatedById     String
+  updatedBy       User             @relation(fields: [updatedById], references: [id], onDelete: Restrict)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@map("attendance")
+}
+
+enum MoneyKind {
+  LOAN
+  REPAYMENT
+  BONUS_EARNED
+  BONUS_WITHDRAWAL
+}
+
+enum MoneyStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model MoneyEntry {
+  payrollId     String?
+  payroll       Payroll?     @relation(fields: [payrollId], references: [id], onDelete: Restrict)
+  postingKey    String?      @unique
+  id            String       @id
+  employeeId    String
+  employee      Employee     @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  employeeName  String
+  date          DateTime     @db.Date
+  kind          MoneyKind
+  amount        Int
+  notes         String
+  status        MoneyStatus  @default(PENDING)
+  sourceId      String?
+  source        MoneyEntry?  @relation("LoanRepayments", fields: [sourceId], references: [id], onDelete: Restrict)
+  repayments    MoneyEntry[] @relation("LoanRepayments")
+  createdById   String
+  createdBy     User         @relation("MoneyCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  decidedById   String?
+  decidedBy     User?        @relation("MoneyDecider", fields: [decidedById], references: [id], onDelete: Restrict)
+  decidedAt     DateTime?
+  decisionNotes String?
+  createdAt     DateTime     @default(now())
+
+  @@index([employeeId, status, date])
+  @@index([sourceId, status])
+  @@map("money_entries")
+}
+
+enum PayrollStatus {
+  DRAFT
+  PAID
+  CANCELLED
+}
+
+model Payroll {
+  settlementPosts SettlementDeduction[]
+  settlementDeduction Int @default(0)
+  settlementPayments Json?
+  id             String        @id
+  employeeId     String
+  employee       Employee      @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  employeeName   String
+  startDate      DateTime      @db.Date
+  endDate        DateTime      @db.Date
+  status         PayrollStatus @default(DRAFT)
+  dailyRate      Int
+  backupRate     Int
+  paidUnits      Float
+  standbyDays    Int
+  basePay        Int
+  backupPay      Int
+  standbyPay     Int
+  warehouseBonus Int
+  bonusPaid      Int
+  lateDeduction  Int
+  loanDeduction  Int
+  otherDeduction Int
+  netPay         Int
+  details        Json
+  sales          Json
+  loanPayments   Json
+  sourceHash     String
+  notes          String
+  createdById    String
+  paidById       String?
+  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
+  moneyEntries   MoneyEntry[]
+
+  @@index([employeeId, startDate, endDate, status])
+  @@map("payrolls")
+}
+
+enum PartnerKind {
+  SUPPLIER
+  CUSTOMER
+}
+
+model Partner {
+  id              String      @id
+  kind            PartnerKind
+  name            String
+  city            String?
+  businessType    String?
+  contactPerson   String?
+  phone           String?
+  address         String?
+  notes           String?
+  outstandingDebt Int         @default(0)
+  createdById     String
+  createdBy       User        @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([kind, name])
+  @@index([kind, outstandingDebt])
+  @@map("partners")
+}
+
+model AccessRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  systemKey   String?  @unique
+  description String?
+  permissions Json     @default("{}")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       User[]
+
+  @@map("access_roles")
+}
+
+model OutletOperation {
+  settlementReviews SettlementReview[]
+  id String @id @default(cuid())
+  outletId String
+  outlet Outlet @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  outletName String
+  date DateTime @db.Date
+  crewId String
+  crew Employee @relation("OperationCrew", fields: [crewId], references: [id], onDelete: Restrict)
+  crewName String
+  trainingCrewId String?
+  trainingCrew Employee? @relation("OperationTraining", fields: [trainingCrewId], references: [id], onDelete: Restrict)
+  trainingCrewName String?
+  items Json
+  doughUsed Int?
+  expenseAmount Int?
+  expenseNotes String?
+  cashReceived Int?
+  bonusAmount Int?
+  bonusDailyRate Int?
+  totalGross Int
+  qris Int @default(0)
+  gofood Int @default(0)
+  grabfood Int @default(0)
+  shopeefood Int @default(0)
+  createdById String
+  createdBy User @relation("OperationCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedById String
+  updatedBy User @relation("OperationUpdater", fields: [updatedById], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([outletId, date])
+  @@index([date])
+  @@map("outlet_operations")
+}
+
+model SettlementReview {
+  id String @id @default(cuid())
+  operationId String
+  operation OutletOperation @relation(fields: [operationId], references: [id], onDelete: Restrict)
+  employeeId String
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  employeeName String
+  outletName String
+  date DateTime @db.Date
+  expectedCash Int
+  receivedCash Int
+  amount Int
+  sourceVersion String
+  status MoneyStatus
+  notes String
+  createdById String
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  deductions SettlementDeduction[]
+  @@index([operationId, createdAt])
+  @@index([employeeId, status, date])
+  @@map("settlement_reviews")
+}
+model SettlementDeduction {
+  id String @id @default(cuid())
+  reviewId String
+  review SettlementReview @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+  payrollId String
+  payroll Payroll @relation(fields: [payrollId], references: [id], onDelete: Restrict)
+  amount Int
+  createdAt DateTime @default(now())
+  @@unique([payrollId, reviewId])
+  @@index([reviewId])
+  @@map("settlement_deductions")
+}
+
+model FinancialAccount {
+  fixedAssets FixedAsset[]
+  operationalExpenses OperationalExpense[] @relation("ExpenseAccount")
+  expensePayments OperationalExpense[] @relation("ExpensePaymentAccount")
+  groupName String @default("") @db.VarChar(80)
+  subGroup String @default("Lainnya") @db.VarChar(120)
+  normalBalance String @default("DEBIT") @db.VarChar(6)
+  reportType String @default("") @db.VarChar(80)
+  defaultLevel String @default("") @db.VarChar(80)
+  sourceStatus String @default("AKTIF") @db.VarChar(20)
+  coaVersion String? @db.VarChar(30)
+  sourceType String @default("CUSTOM") @db.VarChar(10)
+  notes String @default("") @db.VarChar(2000)
+  id String @id @default(cuid())
+  code String @unique @db.VarChar(30)
+  name String @db.VarChar(120)
+  kind String @db.VarChar(20)
+  active Boolean @default(true)
+  createdById String
+  createdBy User @relation(fields:[createdById],references:[id],onDelete:Restrict)
+  sourceTransactions JournalTransaction[] @relation("JournalSource")
+  targetTransactions JournalTransaction[] @relation("JournalTarget")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("financial_accounts")
+}
+model JournalTransaction {
+  operationalExpense OperationalExpense?
+  id String @id @default(cuid())
+  postingKey String @unique @db.VarChar(36)
+  date DateTime @db.Date
+  sourceAccountId String
+  sourceAccount FinancialAccount @relation("JournalSource",fields:[sourceAccountId],references:[id],onDelete:Restrict)
+  targetAccountId String
+  targetAccount FinancialAccount @relation("JournalTarget",fields:[targetAccountId],references:[id],onDelete:Restrict)
+  sourceCode String @db.VarChar(30)
+  sourceName String @db.VarChar(120)
+  targetCode String @db.VarChar(30)
+  targetName String @db.VarChar(120)
+  sourceSide String @db.VarChar(6)
+  amount Int
+  notes String @db.VarChar(2000)
+  createdById String
+  createdBy User @relation(fields:[createdById],references:[id],onDelete:Restrict)
+  createdAt DateTime @default(now())
+  @@index([date,createdAt])
+  @@index([sourceAccountId,date])
+  @@index([targetAccountId,date])
+  @@map("journal_transactions")
+}
+
+model OperationalExpense {
+ id String @id @default(cuid())
+ postingKey String @unique @db.VarChar(36)
+ requestHash String @db.VarChar(64)
+ date DateTime @db.Date
+ expenseAccountId String
+ expenseAccount FinancialAccount @relation("ExpenseAccount",fields:[expenseAccountId],references:[id],onDelete:Restrict)
+ expenseCode String @db.VarChar(30)
+ expenseName String @db.VarChar(120)
+ category String @db.VarChar(120)
+ purpose String @db.VarChar(180)
+ amount Int
+ paymentMethod String @db.VarChar(4)
+ status String @db.VarChar(6)
+ paymentAccountId String?
+ paymentAccount FinancialAccount? @relation("ExpensePaymentAccount",fields:[paymentAccountId],references:[id],onDelete:Restrict)
+ paymentCode String? @db.VarChar(30)
+ paymentName String? @db.VarChar(120)
+ paidAt DateTime? @db.Date
+ notes String @default("") @db.VarChar(2000)
+ journalTransactionId String? @unique
+ journalTransaction JournalTransaction? @relation(fields:[journalTransactionId],references:[id],onDelete:Restrict)
+ createdById String
+ createdBy User @relation("ExpenseCreator",fields:[createdById],references:[id],onDelete:Restrict)
+ paidById String?
+ paidBy User? @relation("ExpensePayer",fields:[paidById],references:[id],onDelete:Restrict)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ @@index([date,status])
+ @@map("operational_expenses")
+}
+
+model FixedAsset {
+ id String @id @default(cuid())
+ code String @unique @db.VarChar(40)
+ name String @db.VarChar(160)
+ categoryAccountId String
+ categoryAccount FinancialAccount @relation(fields:[categoryAccountId],references:[id],onDelete:Restrict)
+ categoryCode String @db.VarChar(30)
+ categoryName String @db.VarChar(120)
+ brandModel String @default("") @db.VarChar(160)
+ serialNumber String @default("") @db.VarChar(100)
+ registrationType String @db.VarChar(8)
+ acquiredAt DateTime? @db.Date
+ inUseAt DateTime? @db.Date
+ acquisitionCost BigInt?
+ invoiceNumber String @default("") @db.VarChar(100)
+ evidenceUrl String @default("") @db.VarChar(1000)
+ locationType String @db.VarChar(6)
+ outletId String?
+ outlet Outlet? @relation(fields:[outletId],references:[id],onDelete:Restrict)
+ locationName String @db.VarChar(160)
+ locationDetail String @default("") @db.VarChar(160)
+ responsibleName String @default("") @db.VarChar(160)
+ condition String @db.VarChar(15)
+ status String @db.VarChar(12)
+ notes String @default("") @db.VarChar(2000)
+ createdById String
+ createdBy User @relation("AssetCreator",fields:[createdById],references:[id],onDelete:Restrict)
+ updatedById String
+ updatedBy User @relation("AssetUpdater",fields:[updatedById],references:[id],onDelete:Restrict)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ events AssetEvent[]
+ @@index([locationType,outletId,status])
+ @@map("fixed_assets")
+}
+model AssetEvent {
+ id String @id @default(cuid())
+ assetId String
+ asset FixedAsset @relation(fields:[assetId],references:[id],onDelete:Restrict)
+ type String @db.VarChar(10)
+ requestKey String @unique @db.Uuid
+ requestHash String @db.VarChar(64)
+ before Json?
+ after Json
+ notes String @default("") @db.VarChar(1000)
+ actorId String
+ actor User @relation(fields:[actorId],references:[id],onDelete:Restrict)
+ createdAt DateTime @default(now())
+ @@index([assetId,createdAt])
+ @@map("asset_events")
+}

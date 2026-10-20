@@ -1,0 +1,1 @@
+ALTER TABLE "outlets" ADD COLUMN "nameCode" VARCHAR(40);

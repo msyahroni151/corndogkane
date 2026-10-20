@@ -1,0 +1,20 @@
+/** Nama sheet rujukan untuk pengembangan modul berikutnya. Belum melakukan pembacaan data. */
+export const hrisModules = [
+  { label: "Master Karyawan", sheet: "MASTER_KARYAWAN" },
+  { label: "Master Outlet", sheet: "MASTER_OUTLET" },
+  { label: "Area & Penempatan", sheet: "MASTER_AREA" },
+  { label: "Input Jadwal", sheet: "INPUT_JADWAL" },
+  { label: "Jadwal Semua Area", sheet: "SHARE_JADWAL_SEMUA_AREA" },
+  { label: "Jadwal Gudang", sheet: "SHARE_JADWAL_GUDANG" },
+  { label: "Rekap Absensi", sheet: "REKAP_ABSENSI" },
+  { label: "Input Kasbon", sheet: "INPUT_KASBON" },
+  { label: "Rekap Kasbon", sheet: "REKAP_KASBON" },
+  { label: "Input Pengambilan Bonus", sheet: "INPUT_PENGAMBILAN_BONUS" },
+  { label: "Rekap Pengambilan Bonus", sheet: "REKAP_PENGAMBILAN_BONUS" },
+  { label: "Rekap Denda Telat", sheet: "REKAP_DENDA_TELAT" },
+  { label: "Rekap Selisih Setoran", sheet: "REKAP_SELISIH_SETORAN" },
+  { label: "Payroll", sheet: "PAYROLL" },
+  { label: "Slip Gaji", sheet: "SLIP_GAJI" },
+  { label: "Slip Kasbon", sheet: "SLIP_KASBON" },
+  { label: "Slip Bonus", sheet: "SLIP_BONUS" },
+] as const;

@@ -1,0 +1,53 @@
+.pinned-table-root {
+  min-width: 0;
+}
+.pinned-table-viewport {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pinned-table-viewport::-webkit-scrollbar {
+  display: none;
+}
+.pinned-table-toolbar {
+  background: white;
+  z-index: 35;
+}
+.pinned-table-toolbar[data-floating] {
+  box-shadow: 0 -3px 16px #18372a18;
+  border: 1px solid #dfe8e3;
+  border-bottom: 0;
+}
+.pinned-table-toolbar .table-pagination {
+  position: static;
+  min-width: 0;
+}
+.pinned-table-scrollbar {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  height: 16px;
+  scrollbar-color: #8b9991 #f2f6f3;
+}
+.pinned-table-scrollbar:focus-visible {
+  outline: 2px solid #3d6550;
+  outline-offset: -2px;
+}
+@media (max-width: 640px) {
+  .pinned-table-toolbar .table-pagination {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+}
+.pinned-table-scrollbar::-webkit-scrollbar {
+  height: 14px;
+}
+.pinned-table-scrollbar::-webkit-scrollbar-track {
+  background: #edf1ee;
+}
+.pinned-table-scrollbar::-webkit-scrollbar-thumb {
+  background: #8b9991;
+  border: 2px solid #edf1ee;
+  border-radius: 8px;
+}
+.pinned-table-scrollbar {
+  background: #edf1ee;
+}

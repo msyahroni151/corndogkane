@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: corndog-kane-demo
+    runtime: node
+    plan: free
+    region: singapore
+    autoDeployTrigger: off
+    buildCommand: corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm run build
+    startCommand: node scripts/start-demo.cjs
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: CHECKPOINT_DISABLE
+        value: "1"
+      - key: HRIS_DEMO_MODE
+        value: "1"
+      - key: HRIS_DEMO_PROJECT_REF
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DEMO_ADMIN_EMAIL
+        value: owner@demo.corndogkane.test
+      - key: DEMO_ADMIN_PASSWORD
+        generateValue: true
