@@ -9,6 +9,9 @@ datasource db {
 
 // Fondasi biodata karyawan. ID dari spreadsheet akan dipertahankan saat impor.
 model Employee {
+  portalLeaves PortalLeave[]
+  portalFace PortalFace?
+  portalCaptures PortalCapture[]
   settlementReviews SettlementReview[]
   outletCrewRecords OutletOperation[] @relation("OperationCrew")
   outletTrainingRecords OutletOperation[] @relation("OperationTraining")
@@ -46,6 +49,9 @@ model Employee {
 }
 
 model User {
+  editedReceiptTemplates ReceiptTemplate[]
+  inventoryOperations InventoryOperation[]
+  goodsReceipts GoodsReceipt[]
   assetsCreated FixedAsset[] @relation("AssetCreator")
   assetsUpdated FixedAsset[] @relation("AssetUpdater")
   assetEvents AssetEvent[]
@@ -126,6 +132,7 @@ model Area {
 }
 
 model Outlet {
+  receiptTemplates ReceiptTemplate[]
   fixedAssets FixedAsset[]
   operations OutletOperation[]
   nameCode       String?     @db.VarChar(40)
@@ -185,6 +192,7 @@ enum WarehouseShift {
 }
 
 model Schedule {
+  portalCaptures PortalCapture[]
   outletDailyRate Int?
   attendance      Attendance?
   id              String          @id @default(cuid())
@@ -334,6 +342,7 @@ enum PartnerKind {
 }
 
 model Partner {
+  goodsReceipts GoodsReceipt[]
   id              String      @id
   kind            PartnerKind
   name            String
@@ -343,6 +352,7 @@ model Partner {
   phone           String?
   address         String?
   notes           String?
+  defaultPaymentMethod String @default("TUNAI")
   outstandingDebt Int         @default(0)
   createdById     String
   createdBy       User        @relation(fields: [createdById], references: [id], onDelete: Restrict)
@@ -573,4 +583,216 @@ model AssetEvent {
  createdAt DateTime @default(now())
  @@index([assetId,createdAt])
  @@map("asset_events")
+}
+
+model InventoryItem {
+  kind String @default("RAW")
+  category String @default("Bahan Baku")
+  baseUnit String @default("PCS")
+  minimumStock Decimal @default(0) @db.Decimal(18,3)
+  active Boolean @default(true)
+  emoji String @default("")
+  photo String?
+  sellingPrice Int @default(0)
+  standardCost Int @default(0)
+  updatedAt DateTime @default(now()) @updatedAt
+  batches InventoryBatch[]
+  recipe InventoryRecipe[] @relation("RecipeOutput")
+  usedIn InventoryRecipe[] @relation("RecipeIngredient")
+
+  id String @id @default(cuid())
+  key String @unique
+  name String
+  packagingUnit String @default("PCS")
+  createdAt DateTime @default(now())
+  lines GoodsReceiptLine[]
+  @@map("inventory_items")
+}
+model GoodsReceipt {
+  id String @id @default(cuid())
+  postingKey String @unique
+  requestHash String
+  date DateTime @db.Date
+  supplierId String?
+  supplier Partner? @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  supplierName String?
+  paymentMethod String
+  paid Boolean
+  porterFee Int @default(0)
+  total Int
+  notes String?
+  createdById String
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  lines GoodsReceiptLine[]
+  @@index([date, paid])
+  @@index([supplierId])
+  @@map("goods_receipts")
+}
+model GoodsReceiptLine {
+  batch InventoryBatch?
+  id String @id @default(cuid())
+  receiptId String
+  receipt GoodsReceipt @relation(fields: [receiptId], references: [id], onDelete: Restrict)
+  itemId String
+  item InventoryItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  itemName String
+  packCount Decimal @db.Decimal(18, 3)
+  packagingUnit String
+  quantityPerPack Decimal @db.Decimal(18, 3)
+  inputUnit String
+  quantity Decimal @db.Decimal(18, 3)
+  baseUnit String
+  amount Int
+  @@index([itemId, baseUnit])
+  @@index([receiptId])
+  @@map("goods_receipt_lines")
+}
+
+model InventoryBatch {
+ id String @id @default(cuid())
+ itemId String
+ item InventoryItem @relation(fields:[itemId], references:[id], onDelete:Restrict)
+ sourceLineId String? @unique
+ sourceLine GoodsReceiptLine? @relation(fields:[sourceLineId], references:[id], onDelete:Restrict)
+ productionId String?
+ production InventoryOperation? @relation(fields:[productionId], references:[id], onDelete:Restrict)
+ receivedAt DateTime @db.Date
+ baseUnit String
+ initialQuantity Decimal @db.Decimal(18,3)
+ remainingQuantity Decimal @db.Decimal(18,3)
+ initialValue Decimal @db.Decimal(18,4)
+ remainingValue Decimal @db.Decimal(18,4)
+ version Int @default(0)
+ createdAt DateTime @default(now())
+ movements InventoryMovement[]
+ @@index([itemId, receivedAt])
+ @@map("inventory_batches")
+}
+model InventoryOperation {
+ id String @id @default(cuid())
+ postingKey String @unique
+ requestHash String
+ kind String
+ date DateTime @db.Date
+ notes String
+ createdById String
+ createdBy User @relation(fields:[createdById], references:[id], onDelete:Restrict)
+ createdAt DateTime @default(now())
+ movements InventoryMovement[]
+ outputBatches InventoryBatch[]
+ @@index([kind,date])
+ @@map("inventory_operations")
+}
+model InventoryMovement {
+ id String @id @default(cuid())
+ operationId String
+ operation InventoryOperation @relation(fields:[operationId], references:[id], onDelete:Restrict)
+ batchId String
+ batch InventoryBatch @relation(fields:[batchId], references:[id], onDelete:Restrict)
+ quantityBefore Decimal @db.Decimal(18,3)
+ quantityAfter Decimal @db.Decimal(18,3)
+ valueBefore Decimal @db.Decimal(18,4)
+ valueAfter Decimal @db.Decimal(18,4)
+ @@index([batchId])
+ @@index([operationId])
+ @@map("inventory_movements")
+}
+model InventoryRecipe {
+ id String @id @default(cuid())
+ outputId String
+ output InventoryItem @relation("RecipeOutput",fields:[outputId],references:[id],onDelete:Restrict)
+ ingredientId String
+ ingredient InventoryItem @relation("RecipeIngredient",fields:[ingredientId],references:[id],onDelete:Restrict)
+ quantity Decimal @db.Decimal(18,3)
+ baseUnit String
+ @@unique([outputId,ingredientId,baseUnit])
+ @@map("inventory_recipes")
+}
+
+model ReceiptTemplate {
+ id String @id
+ scope String
+ kind String
+ outletId String?
+ outlet Outlet? @relation(fields:[outletId],references:[id],onDelete:Restrict)
+ settings Json
+ revision Int @default(1)
+ updatedById String?
+ updatedBy User? @relation(fields:[updatedById],references:[id],onDelete:Restrict)
+ updatedAt DateTime @default(now()) @updatedAt
+ @@unique([scope,kind])
+ @@map("receipt_templates")
+}
+
+model PortalLeave {
+  id String @id @default(cuid())
+  requestKey String @unique
+  employeeId String
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  kind String
+  startDate DateTime @db.Date
+  endDate DateTime @db.Date
+  reason String
+  status String @default("PENDING")
+  createdById String
+  reviewedById String?
+  reviewedAt DateTime?
+  decisionNotes String?
+  createdAt DateTime @default(now())
+  @@index([employeeId, startDate, endDate])
+  @@map("portal_leaves")
+}
+model PortalFace {
+  employeeId String @id
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  descriptor Json
+  photo Bytes
+  status String @default("PENDING")
+  requestedById String
+  reviewedById String?
+  reviewedAt DateTime?
+  decisionNotes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("portal_faces")
+}
+model PortalChallenge {
+  id String @id @default(cuid())
+  employeeId String
+  userId String
+  scheduleId String
+  kind String
+  scheduleVersion String
+  attendanceVersion String
+  expiresAt DateTime
+  verifiedAt DateTime?
+  consumedAt DateTime?
+  attempts Int @default(0)
+  facePhoto Bytes?
+  distance Float?
+  createdAt DateTime @default(now())
+  @@index([userId, createdAt])
+  @@map("portal_challenges")
+}
+model PortalCapture {
+  id String @id @default(cuid())
+  challengeId String @unique
+  employeeId String
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  scheduleId String
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
+  kind String
+  scheduleVersion String
+  attendanceVersion String
+  facePhoto Bytes
+  cartPhoto Bytes
+  distance Float
+  capturedAt DateTime
+  status String @default("PENDING")
+  reviewedById String?
+  reviewedAt DateTime?
+  decisionNotes String?
+  @@index([employeeId, capturedAt])
+  @@map("portal_captures")
 }

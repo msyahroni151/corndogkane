@@ -1,22 +1,29 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { permissionForPath } from "@/lib/permissions";
 import { peopleMenu, payrollMenu } from "@/lib/navigation";
 import { UiIcon } from "@/components/ui-icon";
+import { SidebarLink } from "@/components/sidebar-link";
 import {
   financeMenu,
   mainMenu,
   nightOperationsMenu,
   salesMenu,
   relationMenu,
+  inventoryMenu,
   settingsMenu,
+  employeePortalMenu,
   activeMainMenu,
 } from "@/lib/navigation";
 export function Navigation({ permissions }: { permissions: string[] }) {
   const pathname = usePathname();
+  const query = useSearchParams();
+  const previewEmployee =
+    pathname.startsWith("/portal-karyawan") && permissions.includes("role")
+      ? query.get("employee")
+      : null;
   const active = activeMainMenu(pathname);
   const [expanded, setExpanded] = useState(false);
   const allowed = (href: string) => {
@@ -36,6 +43,8 @@ export function Navigation({ permissions }: { permissions: string[] }) {
   const groups = [
     { title: "FINANCE & ACOUNTING", items: financeMenu.filter((item) => allowed(item.href)) },
     { title: "RELASI", items: relationMenu.filter((item) => allowed(item.href)) },
+    { title: "INVENTORY & PEMBELIAN", items: inventoryMenu.filter((item) => allowed(item.href)) },
+    { title: "PORTAL KARYAWAN", items: employeePortalMenu.filter((item) => allowed(item.href)) },
     { title: "SETTING", items: settingsMenu.filter((item) => allowed(item.href)) },
   ];
   return (
@@ -51,85 +60,45 @@ export function Navigation({ permissions }: { permissions: string[] }) {
         {expanded ? "Tutup menu" : "Menu navigasi"}
       </button>
       <div id="workspace-navigation" className={`${expanded ? "block" : "hidden"} lg:block`}>
-        {visibleNightOperations.length > 0 && (
-          <section className="mb-7">
-            <p className="nav-caption">ADMIN OPERASIONAL MALAM</p>
-            <div className="space-y-1.5">
-              {visibleNightOperations.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  prefetch={false}
-                  onClick={() => setExpanded(false)}
-                  aria-current={active === item.href ? "page" : undefined}
-                  className={`nav-item relative ${active === item.href ? "nav-active" : ""}`}
-                >
-                  <UiIcon name={item.icon} />
-                  <span>{item.name}</span>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-        {visibleSales.length > 0 && (
-          <section className="mb-7">
-            <p className="nav-caption">PENJUALAN &amp; KASIR</p>
-            <div className="space-y-1.5">
-              {visibleSales.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  prefetch={false}
-                  onClick={() => setExpanded(false)}
-                  aria-current={active === item.href ? "page" : undefined}
-                  className={`nav-item relative ${active === item.href ? "nav-active" : ""}`}
-                >
-                  <UiIcon name={item.icon} />
-                  <span>{item.name}</span>
-                  {item.href === "/pos" && (
-                    <small className="ml-auto rounded-full bg-emerald-700 px-2 py-0.5 text-[9px] text-white">
-                      Baru
-                    </small>
-                  )}
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-        <p className="nav-caption">SDM &amp; OPERASIONAL</p>
-        <div className="space-y-1.5">
-          {visibleMain.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch={false}
-              onClick={() => setExpanded(false)}
-              aria-current={active === item.activeHref ? "page" : undefined}
-              className={`nav-item relative ${active === item.activeHref ? "nav-active" : ""}`}
-            >
-              <UiIcon name={item.icon} />
-              <span>{item.name}</span>
-            </Link>
-          ))}
-        </div>
-        {groups
+        {[
+          {
+            title: "ADMIN OPERASIONAL MALAM",
+            items: visibleNightOperations.map((item) => ({ ...item, activeHref: item.href })),
+          },
+          {
+            title: "PENJUALAN & KASIR",
+            items: visibleSales.map((item) => ({ ...item, activeHref: item.href })),
+          },
+          { title: "SDM & OPERASIONAL", items: visibleMain },
+          ...groups.map((group) => ({
+            ...group,
+            items: group.items.map((item) => ({
+              ...item,
+              href:
+                previewEmployee &&
+                item.href.startsWith("/portal-karyawan") &&
+                item.href !== "/portal-karyawan/persetujuan"
+                  ? item.href + "?employee=" + encodeURIComponent(previewEmployee)
+                  : item.href,
+              activeHref: item.href,
+            })),
+          })),
+        ]
           .filter((group) => group.items.length > 0)
           .map((group) => (
-            <section key={group.title}>
-              <p className="nav-caption mt-9">{group.title}</p>
+            <section key={group.title} className="sidebar-nav-group">
+              <p className="nav-caption">{group.title}</p>
               <div className="space-y-1.5">
                 {group.items.map((item) => (
-                  <Link
+                  <SidebarLink
                     key={item.href}
                     href={item.href}
-                    prefetch={false}
-                    onClick={() => setExpanded(false)}
-                    aria-current={active === item.href ? "page" : undefined}
-                    className={`nav-item relative ${active === item.href ? "nav-active" : ""}`}
-                  >
-                    <UiIcon name={item.icon} />
-                    <span>{item.name}</span>
-                  </Link>
+                    name={item.name}
+                    icon={item.icon}
+                    active={active === item.activeHref}
+                    badge={item.href === "/pos" ? "Baru" : undefined}
+                    onNavigate={() => setExpanded(false)}
+                  />
                 ))}
               </div>
             </section>

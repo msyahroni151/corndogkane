@@ -1,18 +1,14 @@
 {
-  "createdAt": "2026-10-20T05:04:04.165Z",
+  "createdAt": "2026-10-21T12:43:15.797Z",
   "containsRealData": false,
   "files": [
-    {
-      "path": ".gitignore",
-      "sha256": "39bfba1cef8b6d552c2151a1b74db37945459e65de624c4ca26bb2cd806aeab3"
-    },
     {
       "path": "DEMO-DEPLOYMENT.md",
       "sha256": "d770e47a7ecc4ddf0b2288ac9029d5b4d18c4ef613bdc8be38713a2708f34672"
     },
     {
-      "path": "README.md",
-      "sha256": "5f97fcd1fb5cc455c7d7b4728b36f3c841257a819d0a9093bd72ff81450defcd"
+      "path": "docs/employee-portal.md",
+      "sha256": "5607b019ef221d813ecb378468a19d15b87d22ac1d6c06987656c40a8dd726e8"
     },
     {
       "path": "eslint.config.mjs",
@@ -151,16 +147,72 @@
       "sha256": "18c218921981468d48e8f5deb4f97a87108ec26aa2338c96bd68b9142a2ad7b8"
     },
     {
+      "path": "prisma/migrations/20261021090000_supplier_default_payment_method/migration.sql",
+      "sha256": "2b0e48affa4a1530b7b2859e42f2d278e85f2f66cc4ae71ad7f2e6830ac63013"
+    },
+    {
+      "path": "prisma/migrations/20261021110000_goods_receipts/migration.sql",
+      "sha256": "c3440063465016c413adc231e05710ab92d31e2b0fa25d32802d317cad73bd6f"
+    },
+    {
+      "path": "prisma/migrations/20261021140000_inventory_management/migration.sql",
+      "sha256": "b2852c3bab9dc2c5792b4911ee893e710b850195352467de3e38d588c0764e9c"
+    },
+    {
+      "path": "prisma/migrations/20261021160000_receipt_templates/migration.sql",
+      "sha256": "e7bc97ab72eaa6738162088b3a04c729cd29de6717505d1d9708704f9606a767"
+    },
+    {
+      "path": "prisma/migrations/20261021190000_employee_portal/migration.sql",
+      "sha256": "6ac4e21b7fe2876575001c2471ebbd583cc2eccec75254370936f2145b1dfa37"
+    },
+    {
       "path": "prisma/migrations/migration_lock.toml",
       "sha256": "99836963713b4f5b269ad49af0ed3d7b0b2e336115c2f92dc9ac683d139d0900"
     },
     {
       "path": "prisma/schema.prisma",
-      "sha256": "b2cd080a77d06bbb3d50fb55823a7a4dc15087ee3bc7ddeda74d5c5b0d8a4e0b"
+      "sha256": "f662faba3be7c27d122ab620564c3998c5a52622a46a37ec9be33852df6ec6bb"
     },
     {
       "path": "public/corndog-kane-logo.png",
       "sha256": "e056067004f52b6f310625d0b061e51537982ec72b9cd746aeae54904ffc28e1"
+    },
+    {
+      "path": "public/face-api/face-api.js",
+      "sha256": "0160f7af3a8c78cece45c7ecc765383bad74becfd438bb787cdd627b2d6f2cf6"
+    },
+    {
+      "path": "public/face-api/LICENSE",
+      "sha256": "9a3442b79acaf4fbc7c2e07b7e2d8f84af9bb3871bf08a69d80304ab00640e9a"
+    },
+    {
+      "path": "public/face-api/models/face_landmark_68_tiny_model-weights_manifest.json",
+      "sha256": "9a1a5dd19fd814fd5095c3cb58f8e0d3193b8c5b9a6715b30a69d559aea31ad4"
+    },
+    {
+      "path": "public/face-api/models/face_landmark_68_tiny_model.bin",
+      "sha256": "b98e9f2f7da76f8a6dda9741a36ed485b224b889d552de2b2c1bb16217f67bfc"
+    },
+    {
+      "path": "public/face-api/models/face_recognition_model-weights_manifest.json",
+      "sha256": "cbaffa501b0b9275a12b63357a6843e7e30c054e1c9151e1a5f879b26e32986b"
+    },
+    {
+      "path": "public/face-api/models/face_recognition_model.bin",
+      "sha256": "b413e420d6840b2775fba32008db6f3cddb07d485967fb42cfcf379c16a8c589"
+    },
+    {
+      "path": "public/face-api/models/tiny_face_detector_model-weights_manifest.json",
+      "sha256": "5d1af4849ac48d5b985f4a9b16010c512353ddd6fcc63d50fd0bc9e9e64296e5"
+    },
+    {
+      "path": "public/face-api/models/tiny_face_detector_model.bin",
+      "sha256": "b7503ce7df31039b1c43316a9b865cab6a70dd748cc602d3fa28b551503c3871"
+    },
+    {
+      "path": "public/face-api/NOTICE.md",
+      "sha256": "b717b771cb6668e52a43fe2b25e60f9ac70a2ef0eb7dd620f2518cf1e0a1eead"
     },
     {
       "path": "public/file.svg",
@@ -192,7 +244,7 @@
     },
     {
       "path": "scripts/package-demo.cjs",
-      "sha256": "ae7b5c2ae4fbeb903fa725d05f861f40152d0a57cbc4e59102f42b940a57d612"
+      "sha256": "fed522bc03074998c06a389ef1905064b852561373a8b3a1abe178700bb38c75"
     },
     {
       "path": "scripts/seed-demo.ts",
@@ -221,6 +273,10 @@
     {
       "path": "src/app/(workspace)/akses-ditolak/page.tsx",
       "sha256": "0273814d53ecc5910576d4f63aefbc3275cad456914ae608343546eedc069381"
+    },
+    {
+      "path": "src/app/(workspace)/barang-masuk/page.tsx",
+      "sha256": "2b7c4f20cd119cfa4d031fdf990d01d9c18c7616f6b4cb1acd8027d1143ababf"
     },
     {
       "path": "src/app/(workspace)/bonus/page.tsx",
@@ -252,7 +308,7 @@
     },
     {
       "path": "src/app/(workspace)/finance/laporan-akuntansi/page.tsx",
-      "sha256": "ab5ef323f5187b2e2a9ed891df429a03b097703142f806e3ca54fc02e9660b36"
+      "sha256": "73d9ec9ad387ee16337e82685dfb577e646095162418c815a8b8ef9f9a04948c"
     },
     {
       "path": "src/app/(workspace)/finance/pengeluaran-operasional/page.tsx",
@@ -280,7 +336,7 @@
     },
     {
       "path": "src/app/(workspace)/layout.tsx",
-      "sha256": "1fc6b1a3b969ad6df9ae0dc0bd5b09437c75dd299ac31454347e97bb984ab25e"
+      "sha256": "ee008b824d7e2355cd9f12ce0eae59ecbab7fe1880c30a757953534e1d2606e3"
     },
     {
       "path": "src/app/(workspace)/master-area/page.tsx",
@@ -311,12 +367,16 @@
       "sha256": "7828a435bf5ee59c83bfc69029386f32e669972b88b43c0cba442e2ebd360c4e"
     },
     {
+      "path": "src/app/(workspace)/portal-karyawan/[[...section]]/page.tsx",
+      "sha256": "995564f35ecdb51e351877dc47d21500d56262793799aff506db56397d391bb0"
+    },
+    {
       "path": "src/app/(workspace)/pos/draft/page.tsx",
       "sha256": "935a1748e12bba7c87ee6cd5551837782cbc885f860f3a094a95e3022659e930"
     },
     {
       "path": "src/app/(workspace)/pos/page.tsx",
-      "sha256": "fc5c46a712c80e0d9d6099a66a0f8bc98b1b32e2e754726f14ed9e43d93f7905"
+      "sha256": "42e8e89be488fcc8a60bd26fd8883a1fadeb20b717f1231217df6613a4a625d1"
     },
     {
       "path": "src/app/(workspace)/rekap-saldo/page.tsx",
@@ -335,8 +395,16 @@
       "sha256": "d577c300ab656b49df2485997d1b8dd1e6053935cf8cb79d4ce66356e21248e3"
     },
     {
+      "path": "src/app/(workspace)/stok-inventory/page.tsx",
+      "sha256": "b20c03da19e6c861f47ff6e17863a0d6055f1253c75ff4c721fbc33c13d13584"
+    },
+    {
       "path": "src/app/(workspace)/supplier/page.tsx",
       "sha256": "49aaf396cbcffd07d786ef5c04f5874a54d78dced32ab55df852ea11db1fd5d3"
+    },
+    {
+      "path": "src/app/(workspace)/template-struk/page.tsx",
+      "sha256": "c4c19983ca8b0cf6a1fab1f5e766df0d7affd0a28188f4ede2f6da205cf455d3"
     },
     {
       "path": "src/app/api/health/database/route.ts",
@@ -359,6 +427,14 @@
       "sha256": "267db9f0ea60b318be3f8493ad5c76a7b2061e3d8bc884bbb67f5f5d11bb2d74"
     },
     {
+      "path": "src/app/api/portal/attendance/route.ts",
+      "sha256": "031f4919aa12da06a642510b17b50f82974a84c985f5d7e1312456bd10822c62"
+    },
+    {
+      "path": "src/app/api/portal/photo/[type]/[id]/route.ts",
+      "sha256": "2d3e0fdc4c8e626ae4c88fd6c3e688dc9b86504ceb72ebe9974203309b3ec8fa"
+    },
+    {
       "path": "src/app/api/schedules/share-warehouse/route.ts",
       "sha256": "0e45e3176bbae9ca456a033230d22b10a1a5e9eef66e67ce576ab3509181385a"
     },
@@ -372,7 +448,7 @@
     },
     {
       "path": "src/app/auth-actions.ts",
-      "sha256": "3abcc631d2d893ec7bab98fb61d11439de86bee39fcc3cddc79bf6194e8d920e"
+      "sha256": "6b9545e4c3e9960363849cf367802dc3429427aa03ee13844ac722436684b068"
     },
     {
       "path": "src/app/bonus-withdrawal-actions.ts",
@@ -399,8 +475,16 @@
       "sha256": "ae53dd7bc8ef0b8de233542e9d5847a445bae53e7fd839c07b62fa1072b743f3"
     },
     {
+      "path": "src/app/goods-receipt-actions.ts",
+      "sha256": "c5f5ed3aea49b50e51e026bd8de4a9e698de78c0bcec64e3aabc1490315250f2"
+    },
+    {
       "path": "src/app/icon.png",
       "sha256": "e056067004f52b6f310625d0b061e51537982ec72b9cd746aeae54904ffc28e1"
+    },
+    {
+      "path": "src/app/inventory-actions.ts",
+      "sha256": "41c04cd62eeeed4c87ddf79bfbbde9ec275e56a137a1e32073e644a1fa2a3a51"
     },
     {
       "path": "src/app/journal-actions.ts",
@@ -436,7 +520,7 @@
     },
     {
       "path": "src/app/partner-actions.ts",
-      "sha256": "98fc7d7a58773d2131e3567b0215b89f995a654327f174eb96a5ea42af5f97be"
+      "sha256": "322e0e95fa9bf6ab279543273234b768c9bc7b70b1d8fc495ed7d36b6692b777"
     },
     {
       "path": "src/app/payroll-actions.ts",
@@ -447,16 +531,28 @@
       "sha256": "13ffa4a7830af127a46e696104e056a7a16418970d0cfccdab4d8d25829b84d5"
     },
     {
+      "path": "src/app/portal-actions.ts",
+      "sha256": "ee0e52586091561f4038d3840d8b345b92588169e683a7e79cb8dd6156c112a5"
+    },
+    {
+      "path": "src/app/portal-review-actions.ts",
+      "sha256": "5e5b976faf78edcbd43dbf23f7507f48a941dc3ef731b7fe278f168dee99e80c"
+    },
+    {
+      "path": "src/app/receipt-template-actions.ts",
+      "sha256": "fc8dddf0e0b0ec070ea938b0faab8d58b17e24243954f85b9b4d22887a75f7d4"
+    },
+    {
       "path": "src/app/robots.ts",
       "sha256": "e68ad5f5ac2d937a00a3767f2fc701f18037dc0b6627de898d34e4521ea19568"
     },
     {
       "path": "src/app/role-actions.ts",
-      "sha256": "a5d4a9cd9abbce2e79d99cfafacf13cb6a5321f85cd92cbf6ca2682392e93895"
+      "sha256": "88769361b4d75a8b41b733062369412145986b3f046049b9ff1fba3a670ed74c"
     },
     {
       "path": "src/app/schedule-actions.ts",
-      "sha256": "38bf4dcacff3095e9bb1a0a11b0155f7e69f9bbbe839d4055509ce4ab2d80513"
+      "sha256": "edacc8a25962ef1f3cd6e9f1684b22508754d306e2cfdde2bda27fb948423a1f"
     },
     {
       "path": "src/app/settlement-actions.ts",
@@ -480,7 +576,7 @@
     },
     {
       "path": "src/components/auth-form.tsx",
-      "sha256": "4d1e98f25780f4858f74369a07c550503f917cc904d91034a9ca5c197be1c59b"
+      "sha256": "787d8e3105582141184f8279a40b214421c19883765aa9c0a53ef9e6db06e2fd"
     },
     {
       "path": "src/components/auth-screen.tsx",
@@ -539,6 +635,22 @@
       "sha256": "2b84a1211224401164474bc0c87b1b1e29443de4f7a78c5a06f9010d96f4c298"
     },
     {
+      "path": "src/components/goods-receipt-form.tsx",
+      "sha256": "85e83f2aea0629bb31bd0e3a22f58df171bb363215406577db62b9fe97e2fa60"
+    },
+    {
+      "path": "src/components/goods-receipts.css",
+      "sha256": "250b08790d784c33462905304b9b370ba0fc882edc0d9f2f9de80008a2490b09"
+    },
+    {
+      "path": "src/components/inventory-forms.tsx",
+      "sha256": "faef67c02bbac60db864554d8196dde4282cc145062e1bcf763c2814856d05fd"
+    },
+    {
+      "path": "src/components/inventory.css",
+      "sha256": "cc4a4436257fa42319d6edaa940ee8e1754d642b8e9229434bee6aae7f8e9d7d"
+    },
+    {
       "path": "src/components/journal-forms.tsx",
       "sha256": "d0e2117f2157416436730fca56be0c4792f98f89f783cfaa8784f57652cf6876"
     },
@@ -560,7 +672,7 @@
     },
     {
       "path": "src/components/navigation.tsx",
-      "sha256": "7ad69a4eb49cef9aa43deb48976f9a3790adcb35cb742a119dc29a66418d1669"
+      "sha256": "3339bf348efc861693d466daf6bc2fc2eec9b9f2c98e5c1fba6cb69eca34d9fe"
     },
     {
       "path": "src/components/notification-toasts.tsx",
@@ -592,7 +704,7 @@
     },
     {
       "path": "src/components/outlet-financial-report.css",
-      "sha256": "6ca2bfaa5ba272f567b0e2a74bcfc72b18b58b3bfe875ac943efc2896139bcc5"
+      "sha256": "c719b6499320ad2e568232244fc02067165ca8c6681ef920fa003b32c0c3396b"
     },
     {
       "path": "src/components/outlet-form.tsx",
@@ -636,11 +748,19 @@
     },
     {
       "path": "src/components/partner-form.tsx",
-      "sha256": "f1dd14bbf78309664cfc2a74c69b5851d12047cf572aa5a485e0839182ed3e09"
+      "sha256": "78cf58fe4b4f62ec60b15019b6c02bcbf9d8e71da5b9de1e00dc3ce9b7e94378"
     },
     {
       "path": "src/components/partner-page.tsx",
-      "sha256": "43e0cabc93465945e8f6ad16d15525e284110bfca84643a78038291d44c724e5"
+      "sha256": "7eb393b43866303edb2d13e5f9c5e229872bc6601fac046db4e84b146acd28a1"
+    },
+    {
+      "path": "src/components/password-input.css",
+      "sha256": "a2912aad188ac19308791d2bef9e64d284f36d96549eb1b3e53d34672454f9b2"
+    },
+    {
+      "path": "src/components/password-input.tsx",
+      "sha256": "eef7ff3a0975de36df48c957f81c653118911c1f707543d4fd17e9554ff4015b"
     },
     {
       "path": "src/components/payroll-form.tsx",
@@ -659,8 +779,16 @@
       "sha256": "dbd26e9714ca1183ea3b57a1664dc77c75f929270dabdc68b571019c95638a82"
     },
     {
+      "path": "src/components/portal-camera.tsx",
+      "sha256": "4249bd610735b9a38b1d762ab9c7239ef8c796b06d7e8420505d56ea9000c628"
+    },
+    {
+      "path": "src/components/portal-forms.tsx",
+      "sha256": "7ceadbaa0567b2401640fc5b72b6e0eb8a2c138dc3d9ddde0b25295c65928f74"
+    },
+    {
       "path": "src/components/pos-cashier.tsx",
-      "sha256": "8f792893166b088d868fc58e39e750d125bca4e2145c561eb2785bc60fda7bec"
+      "sha256": "f7225267d3e0211c58de726f80fe3511df02c0223a53f5505430a03d5514e6ef"
     },
     {
       "path": "src/components/pos-open-transactions.tsx",
@@ -675,6 +803,18 @@
       "sha256": "aded9ac77718c56021f4bef57ec0dce2d264fc86f83937376b8fd0350d81c245"
     },
     {
+      "path": "src/components/receipt-paper.tsx",
+      "sha256": "0dd781462f9d46e5287bd127b45e14ce0ad01de5c95f076725e8d216fb439de4"
+    },
+    {
+      "path": "src/components/receipt-template-editor.tsx",
+      "sha256": "57e35a763365364b6f02d50a49c1432033b23af22223e59b5c8382ffe6639a3b"
+    },
+    {
+      "path": "src/components/receipt-template.css",
+      "sha256": "c946ef63478418b8a6c939d50448d906eaa13d8beedd95148080f9a3a5cd02e2"
+    },
+    {
       "path": "src/components/record-form.tsx",
       "sha256": "3bd87cfc180dd2ac7a9ea2bb8e72573369bad56a483c2423fe9ef9c84492b4e3"
     },
@@ -684,7 +824,7 @@
     },
     {
       "path": "src/components/role-settings-forms.tsx",
-      "sha256": "effacc052280cc78daa832fc8514443bea1b56ba37b49e22e1310d4181dd36ed"
+      "sha256": "0b7b9c8ca729c0ed183ff363041d151f31ba6d6f6b9bcce930e9c7b11fc0ad08"
     },
     {
       "path": "src/components/schedule-form.tsx",
@@ -715,6 +855,18 @@
       "sha256": "c2b76b1506b52ef351b22d74d6686c0f30f14b8328fa78300d5c33d00825c7d9"
     },
     {
+      "path": "src/components/sidebar-link.tsx",
+      "sha256": "d985314047fae598b05f6ea4ffe8789f62cc9cb35660871df6f0685e6d566747"
+    },
+    {
+      "path": "src/components/sidebar-shell.tsx",
+      "sha256": "baa99c74dd84463bc21018325914c66004abc44d11a662c854e2121e57e5f2d7"
+    },
+    {
+      "path": "src/components/sidebar.css",
+      "sha256": "22338e1baa51da21f4de314a15e01a87850661f2bc77399fb5955512fdeb26e0"
+    },
+    {
       "path": "src/components/sortable-table.tsx",
       "sha256": "66b373e24dd8e985d96e43b145bb6a45bf16176a1073fc4639620dba2a91fd36"
     },
@@ -724,11 +876,11 @@
     },
     {
       "path": "src/components/ui-icon.tsx",
-      "sha256": "9a0384c9e94690c1c50bedd9a13638fda74eed52a99c6eb1c62a275117c2b635"
+      "sha256": "c693331cd397083dc586462a8d11bed1b6f130bfef1b567fdd9c96a5ffe8da04"
     },
     {
       "path": "src/components/workspace-heading.tsx",
-      "sha256": "0177dc93ac0862f3d34bd6e69e3cfe7c8d2c5017abaea1498375708c7dcc3b6d"
+      "sha256": "3cab25ae0e2355f44b0edeb5e13e973a6db8c6b1c31ccf3b6457ff08bcb5ef18"
     },
     {
       "path": "src/lib/asset-code.ts",
@@ -779,6 +931,10 @@
       "sha256": "5d2ab7d342e1fed3e532b76d9f268196a07545306e9bcd02d45c71ee4fd12990"
     },
     {
+      "path": "src/lib/employee-portal.ts",
+      "sha256": "1788d38941ec7145d6f4ab1541ee658e077fa719b5833a623450465e63de94c6"
+    },
+    {
       "path": "src/lib/financial-report-excel.ts",
       "sha256": "e656c88ca0aacafab13459572fe01611b01dae825b60fdcb6e99985f859622c3"
     },
@@ -807,8 +963,16 @@
       "sha256": "2fa70bd7929dc77e1828453a6f553ce44b5f31e539353692f97790cfd24f9cb2"
     },
     {
+      "path": "src/lib/goods-receipts.ts",
+      "sha256": "f4d98091e56178bad03b8e7c3d4268b98620885270f17a25efbaeb2d5fda2032"
+    },
+    {
       "path": "src/lib/hris/modules.ts",
       "sha256": "dd983c9dd1b93c5b1294d71e42b6e5bc75c79d339cd5b62cf8e1156bff7325c5"
+    },
+    {
+      "path": "src/lib/inventory.ts",
+      "sha256": "53fadf7cdf576a40e428292527ad397ce4643a22a6336114c95e4dc0e1ce5bad"
     },
     {
       "path": "src/lib/local-date.ts",
@@ -820,7 +984,7 @@
     },
     {
       "path": "src/lib/navigation.ts",
-      "sha256": "0ee64a8053c54f890fdd3a9f578d98a687c45090dbfd602ceaaa89f715536bc8"
+      "sha256": "d85c23fc7ba65f6d205352ceae5e712a975d5608e3aa4a48c7738847d4bf41d5"
     },
     {
       "path": "src/lib/operational-expenses.ts",
@@ -871,16 +1035,24 @@
       "sha256": "2303af4c04a22d56be8fe3313078bc711f6a0351fe5a629886e38b5e7d6d5951"
     },
     {
+      "path": "src/lib/password-policy.ts",
+      "sha256": "8f4ebd77dba0c78c7bb14c9390cd4fc78ebfdc016a15feeb306ec25a936ff2e7"
+    },
+    {
       "path": "src/lib/payroll.ts",
       "sha256": "f92173e1d8c51c3684af272a8dac00929133caa61667c8b80797f58c78165f1e"
     },
     {
       "path": "src/lib/permissions.ts",
-      "sha256": "6d81bebeee6b8b236e036d7551e6c0548ccfddae8b0b1187818ec5e16c6a4269"
+      "sha256": "1042d95ed634e241a00e4aca10a577e2c40242a1a1a5187ecc465664659299c9"
     },
     {
       "path": "src/lib/placements.ts",
       "sha256": "803b301b81bf3033f665c26f250451a07453f5f4c1dec4210f8b60b41d8edb86"
+    },
+    {
+      "path": "src/lib/portal-access.ts",
+      "sha256": "6db786bc2020cce9f80e8ef37f0f3cc3882f6332dc397f741fb0e585583da631"
     },
     {
       "path": "src/lib/pos-preview.ts",
@@ -889,6 +1061,14 @@
     {
       "path": "src/lib/position-badge.ts",
       "sha256": "2fa560f1e021b0f3900cdef79f1b209bc6417ca3f8e2e7090ef40d99b0438389"
+    },
+    {
+      "path": "src/lib/receipt-template-data.ts",
+      "sha256": "2cb5afe0f20c92d8dc08d6c95597bc00b77e781e4902ce18e6b3ece9e4dc5707"
+    },
+    {
+      "path": "src/lib/receipt-templates.ts",
+      "sha256": "af7c8f22ba77d5260de5b021cd50a7d9db73a227ee1e3de6133de6fac1b1e4e3"
     },
     {
       "path": "src/lib/record-fields.ts",
@@ -913,6 +1093,10 @@
     {
       "path": "src/lib/share-schedule.ts",
       "sha256": "d7a2b7b352da70049a5e691eecbc7f153efcd606474a9bcacff3be4cb4009c59"
+    },
+    {
+      "path": "src/lib/supplier-options.ts",
+      "sha256": "4cefcc739623abc67d81381cfd6bd88a7f2b478070a04960b9bc35bc084cf1b6"
     },
     {
       "path": "src/lib/warehouse-schedule-image.ts",

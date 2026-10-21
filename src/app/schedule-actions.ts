@@ -22,6 +22,39 @@ function failure(e: unknown): FormState {
         : "Jadwal belum tersimpan. Periksa data dan koneksi, lalu coba lagi.",
   };
 }
+async function checkPortalLeave(
+  tx: Prisma.TransactionClient,
+  employeeId: string,
+  rows: { date: Date | string; status?: string }[],
+) {
+  const active = rows
+    .filter((row) => row.status !== "LIBUR")
+    .map((row) => ({ ...row, date: new Date(row.date) }));
+  if (!active.length) return;
+  const dates = active.map((row) => row.date.getTime());
+  const leave = await tx.portalLeave.findFirst({
+    where: {
+      employeeId,
+      status: "APPROVED",
+      startDate: { lte: new Date(Math.max(...dates)) },
+      endDate: { gte: new Date(Math.min(...dates)) },
+    },
+  });
+  const leaves = leave
+    ? await tx.portalLeave.findMany({
+        where: {
+          employeeId,
+          status: "APPROVED",
+          startDate: { lte: new Date(Math.max(...dates)) },
+          endDate: { gte: new Date(Math.min(...dates)) },
+        },
+      })
+    : [];
+  if (active.some((row) => leaves.some((l) => row.date >= l.startDate && row.date <= l.endDate)))
+    invalid(
+      "Tanggal bertugas berbenturan dengan cuti/izin yang disetujui. Sesuaikan tanggal kerja atau libur sebelum menyimpan.",
+    );
+}
 export async function createSchedules(_: FormState, form: FormData): Promise<FormState> {
   const user = await requireAccess("jadwal");
   const get = (key: string) => String(form.get(key) || "").trim();
@@ -181,6 +214,7 @@ export async function createSchedules(_: FormState, form: FormData): Promise<For
             createdById: user.id,
           });
         }
+        await checkPortalLeave(tx, employeeId, dates);
         await tx.schedule.createMany({ data: dates });
       },
       { timeout: 10000 },
@@ -311,6 +345,7 @@ async function createBackupScheduleRows(form: FormData, userId: string): Promise
             createdById: userId,
           });
         }
+        await checkPortalLeave(tx, employeeId, schedules);
         await tx.schedule.createMany({ data: schedules });
       },
       { timeout: 20000 },
@@ -409,6 +444,7 @@ export async function updateSchedule(_: FormState, form: FormData): Promise<Form
           outletId = outlet.id;
           outletName = outlet.name;
         }
+        await checkPortalLeave(tx, record.employeeId, [{ date: record.date, status }]);
         await tx.schedule.update({
           where: { id: record.id },
           data: {

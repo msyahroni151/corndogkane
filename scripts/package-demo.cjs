@@ -13,6 +13,7 @@ async function packageDemo() {
   await fs.mkdir(destination, { recursive: true });
   const files = [];
   async function copy(relative) {
+    if (relative.replaceAll("\\", "/").startsWith("src/generated/")) return;
     const source = path.join(root, relative),
       stat = await fs.lstat(source);
     if (stat.isSymbolicLink()) throw Error("Tautan filesystem tidak boleh masuk paket demo.");
@@ -41,6 +42,7 @@ async function packageDemo() {
     "src",
     "prisma",
     "public",
+    "docs",
     "integrations/coa/master-coa-v1.json",
     "integrations/supabase/prod-ca-2021.crt",
     "package.json",

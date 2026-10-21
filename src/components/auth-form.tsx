@@ -1,4 +1,11 @@
 "use client";
+import { PasswordInput } from "@/components/password-input";
+import {
+  passwordHint,
+  passwordMinLength,
+  passwordMaxLength,
+  passwordPattern,
+} from "@/lib/password-policy";
 import { useActionState, useState } from "react";
 import { login, setupAdmin } from "@/app/auth-actions";
 import type { FormState } from "@/lib/form-state";
@@ -38,29 +45,32 @@ export function AuthForm({ setup = false }: { setup?: boolean }) {
       </label>
       <label className="field">
         Password
-        <input
+        <PasswordInput
           name="password"
-          type="password"
+          aria-label="Password"
           autoComplete={setup ? "new-password" : "current-password"}
           required
-          minLength={setup ? 12 : undefined}
-          maxLength={128}
+          minLength={setup ? passwordMinLength : undefined}
+          pattern={setup ? passwordPattern : undefined}
+          title={setup ? passwordHint : undefined}
+          maxLength={passwordMaxLength}
         />
       </label>
       {setup && (
         <>
           <p className="text-xs text-slate-500">
-            Gunakan minimal 12 karakter. Simpan password Anda untuk login berikutnya.
+            {passwordHint} Simpan password Anda untuk login berikutnya.
           </p>
           <label className="field">
             Ulangi password
-            <input
+            <PasswordInput
               name="confirmation"
-              type="password"
+              aria-label="Ulangi password"
+              visibilityLabel="ulangi password"
               autoComplete="new-password"
               required
-              minLength={12}
-              maxLength={128}
+              minLength={passwordMinLength}
+              maxLength={passwordMaxLength}
             />
           </label>
         </>

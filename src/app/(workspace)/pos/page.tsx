@@ -1,3 +1,4 @@
+import { loadReceiptTemplates } from "@/lib/receipt-template-data";
 import { hasPermission } from "@/lib/permissions";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
@@ -10,6 +11,7 @@ export default async function PosPage({
 }) {
   const user = await requireAccess("pos");
   const query = await searchParams;
+  const receiptTemplates = await loadReceiptTemplates();
   const masters = await getPrisma().outlet.findMany({
     where: { active: true, closed: false, area: { active: true } },
     select: { id: true, name: true, area: { select: { name: true } } },
@@ -31,6 +33,7 @@ export default async function PosPage({
       : undefined;
   return (
     <PosCashier
+      receiptTemplates={receiptTemplates}
       userId={user.id}
       userName={user.name}
       outlets={outlets}

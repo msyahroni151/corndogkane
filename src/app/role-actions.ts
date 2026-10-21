@@ -1,4 +1,5 @@
 "use server";
+import { isValidNewPassword, passwordError } from "@/lib/password-policy";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { hashPassword } from "@/lib/security";
@@ -81,8 +82,7 @@ export async function saveLoginAccount(_: FormState, form: FormData): Promise<Fo
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
       invalid("Isi email login yang valid.");
     const password = String(form.get("password") || "");
-    if ((!get("id") || password) && (password.length < 12 || password.length > 128))
-      invalid("Password harus terdiri dari 12–128 karakter.");
+    if ((!get("id") || password) && !isValidNewPassword(password)) invalid(passwordError);
     if (password && password !== form.get("confirmation"))
       invalid("Konfirmasi password belum sama.");
     if (!["true", "false"].includes(get("active"))) invalid("Status akun tidak valid.");

@@ -1,5 +1,8 @@
 import type { CSSProperties } from "react";
 export type IconName =
+  | "scan-face"
+  | "eye"
+  | "eye-off"
   | "dashboard"
   | "people"
   | "location"
@@ -25,12 +28,22 @@ export type IconName =
   | "cart"
   | "return"
   | "search"
+  | "package-in"
+  | "boxes"
   | "box"
   | "tag";
 const paths: Record<IconName, string> = {
+  "scan-face":
+    "M8 3H5a2 2 0 0 0-2 2v3 M16 3h3a2 2 0 0 1 2 2v3 M21 16v3a2 2 0 0 1-2 2h-3 M8 21H5a2 2 0 0 1-2-2v-3 M8 10h.01 M16 10h.01 M12 10v3 M8 16a5 5 0 0 0 8 0",
+  eye: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12 M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
+  "eye-off":
+    "M10.6 10.6a2 2 0 0 0 2.8 2.8 M9.9 5.2A11 11 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 3.8 M6.6 6.6A19 19 0 0 0 2 12s3.5 7 10 7a11 11 0 0 0 5.4-1.4 M3 3l18 18",
   cart: "M3 3h2l3 12h11l3-9H6 M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2 M18 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2",
   return: "M3 4v6h6 M3 10a9 9 0 1 1 2 8 M12 7v5l3 2",
   search: "M21 21l-5-5 M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
+  "package-in": "M3 7l9-5 9 5v6 M3 7l9 5 9-5 M3 7v10l9 5v-10 M7 4l10 5 M15 18h7 M19 15l3 3-3 3",
+  boxes:
+    "M12 2l5 3-5 3-5-3z M7 5v6l5 3 5-3V5 M12 8v6 M6 11l5 3-5 3-5-3z M1 14v6l5 3 5-3v-6 M6 17v6 M18 11l5 3-5 3-5-3z M13 14v6l5 3 5-3v-6 M18 17v6",
   box: "M3 7l9-5 9 5v10l-9 5-9-5z M3 7l9 5 9-5 M12 12v10 M7 4l10 5",
   tag: "M3 3h8l10 10-8 8L3 11z M7 7h.01",
   shield: "M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6z M8 12l3 3 5-6",

@@ -1,0 +1,20 @@
+.receipt-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.receipt-section > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #4ca259;
+  color: white;
+  font-size: 12px;
+}

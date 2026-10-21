@@ -1,49 +1,70 @@
 export const permissionMenus = [
-  { key: "dashboard", label: "Dashboard", href: "/dashboard" },
+  { key: "dashboard", label: "Dashboard - Karyawan & SDM", href: "/dashboard" },
   {
     key: "admin-malam-dashboard",
-    label: "Admin Operasional Malam · Dashboard",
+    label: "Dashboard - Admin Operasional Malam",
     href: "/admin-malam/dashboard",
   },
   {
     key: "monitoring-outlet",
-    label: "Admin Operasional Malam · Monitoring Outlet",
+    label: "Monitoring Outlet - Admin Operasional Malam",
     href: "/admin-malam/monitoring-outlet",
   },
   {
     key: "open-transaction",
-    label: "Finance · Transfer Antar Akun",
+    label: "Transfer Antar Akun - Finance & Acounting",
     href: "/open-transaction",
   },
   {
     key: "master-akun",
-    label: "Finance · Laporan & Akuntansi / COA",
+    label: "Laporan & Akuntansi - Finance & Acounting",
     href: "/admin-malam/master-akun",
   },
-  { key: "finance-budgeting", label: "Finance · Budgeting & RAB", href: "/finance/budgeting-rab" },
-  { key: "finance-assets", label: "Finance · Aset Tetap", href: "/finance/aset-tetap" },
-  { key: "finance-ledger", label: "Finance · Finance & Ledger", href: "/finance/finance-ledger" },
+  {
+    key: "finance-budgeting",
+    label: "Budgeting & RAB - Finance & Acounting",
+    href: "/finance/budgeting-rab",
+  },
+  { key: "finance-assets", label: "Aset Tetap - Finance & Acounting", href: "/finance/aset-tetap" },
+  {
+    key: "finance-ledger",
+    label: "Finance & Ledger - Finance & Acounting",
+    href: "/finance/finance-ledger",
+  },
   {
     key: "finance-expenses",
-    label: "Finance · Pengeluaran Operasional",
+    label: "Pengeluaran Operasional - Finance & Acounting",
     href: "/finance/pengeluaran-operasional",
   },
-  { key: "pos", label: "POS Kasir", href: "/pos" },
-  { key: "retur-pembeli", label: "Retur Pembeli", href: "/retur-pembeli" },
+  { key: "pos", label: "POS Kasir - Penjualan dan Kasir", href: "/pos" },
+  { key: "retur-pembeli", label: "Retur Pembeli - Penjualan dan Kasir", href: "/retur-pembeli" },
 
-  { key: "karyawan", label: "Data Karyawan", href: "/karyawan" },
-  { key: "jadwal", label: "Jadwal", href: "/jadwal" },
-  { key: "absensi", label: "Absensi", href: "/absensi" },
-  { key: "payroll", label: "Payroll", href: "/payroll" },
-  { key: "rekap-saldo", label: "Rekap Saldo", href: "/rekap-saldo" },
-  { key: "kasbon", label: "Kasbon", href: "/kasbon" },
-  { key: "bonus", label: "Bonus", href: "/bonus" },
-  { key: "selisih-setor", label: "Selisih Setoran", href: "/selisih-setor" },
-  { key: "master-area", label: "Master Area", href: "/master-area" },
-  { key: "master-outlet", label: "Master Outlet", href: "/master-outlet" },
-  { key: "supplier", label: "Supplier", href: "/supplier" },
-  { key: "pelanggan", label: "Pelanggan", href: "/pelanggan" },
-  { key: "role", label: "Role & Akun Login", href: "/role" },
+  { key: "template-struk", label: "Template Struk - Penjualan dan Kasir", href: "/template-struk" },
+  { key: "karyawan", label: "Data Karyawan - Karyawan & SDM", href: "/karyawan" },
+  { key: "jadwal", label: "Jadwal - Karyawan & SDM", href: "/jadwal" },
+  { key: "absensi", label: "Absensi - Karyawan & SDM", href: "/absensi" },
+  { key: "payroll", label: "Payroll - SDM & Operasional", href: "/payroll" },
+  { key: "rekap-saldo", label: "Rekap Saldo - Payroll", href: "/rekap-saldo" },
+  { key: "kasbon", label: "Kasbon - Payroll", href: "/kasbon" },
+  { key: "bonus", label: "Bonus - Payroll", href: "/bonus" },
+  { key: "selisih-setor", label: "Selisih Setoran - Payroll", href: "/selisih-setor" },
+  { key: "master-area", label: "Master Area - SDM & Operasional", href: "/master-area" },
+  { key: "master-outlet", label: "Master Outlet - SDM & Operasional", href: "/master-outlet" },
+  { key: "supplier", label: "Supplier - Relasi", href: "/supplier" },
+  { key: "pelanggan", label: "Pelanggan - Relasi", href: "/pelanggan" },
+  { key: "barang-masuk", label: "Barang Masuk - Inventory & Pembelian", href: "/barang-masuk" },
+  {
+    key: "stok-inventory",
+    label: "Stok & Inventori - Inventory & Pembelian",
+    href: "/stok-inventory",
+  },
+  { key: "portal-karyawan", label: "Portal Karyawan - Layanan Karyawan", href: "/portal-karyawan" },
+  {
+    key: "portal-review",
+    label: "Persetujuan - Portal Karyawan",
+    href: "/portal-karyawan/persetujuan",
+  },
+  { key: "role", label: "Role - Setting", href: "/role" },
 ] as const;
 export type PermissionKey = (typeof permissionMenus)[number]["key"];
 export function rolePermissions(role: {
@@ -78,6 +99,7 @@ export function homeFor(permissions: readonly string[]) {
   return permissionMenus.find((item) => permissions.includes(item.key))?.href || "/akses-ditolak";
 }
 export function permissionForPath(pathname: string): PermissionKey | undefined {
+  if (pathname === "/portal-karyawan/persetujuan") return "portal-review";
   if (pathname === "/finance/jurnal-umum" || pathname.startsWith("/finance/jurnal-umum/"))
     return "finance-expenses";
   if (

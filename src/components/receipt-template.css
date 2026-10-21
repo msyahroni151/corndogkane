@@ -1,0 +1,108 @@
+.kane-receipt {
+  max-width: 100%;
+  margin: 0 auto;
+  background: white;
+  color: #111;
+  font:
+    11px/1.45 Arial,
+    Helvetica,
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.kane-receipt h2 {
+  margin: 5px 0;
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+.kane-receipt p {
+  margin: 3px 0;
+}
+.kane-receipt hr {
+  margin: 10px 0;
+  border: 0;
+  border-top: 1px dashed #777;
+}
+.kane-receipt .receipt-center {
+  text-align: center;
+}
+.kane-receipt .receipt-line {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 3px 0;
+}
+.kane-receipt .receipt-line > span:last-child {
+  text-align: right;
+  flex-shrink: 0;
+  max-width: 65%;
+}
+.kane-receipt .receipt-logo {
+  display: block;
+  margin: 0 auto 5px;
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+}
+.kane-receipt .receipt-small {
+  font-size: 10px;
+}
+.kane-receipt .receipt-item {
+  margin: 9px 0;
+}
+.kane-receipt .receipt-item-name,
+.kane-receipt .receipt-heading {
+  font-weight: 700;
+}
+.kane-receipt .receipt-total {
+  font-size: 14px;
+  font-weight: 700;
+}
+.kane-receipt .receipt-multiline {
+  white-space: pre-wrap;
+}
+.kane-receipt .receipt-preview-mark {
+  border: 1px dashed #333;
+  margin: 8px 0;
+  padding: 4px;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+}
+.receipt-editor-preview {
+  align-self: start;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #edf2f6;
+  padding: 20px;
+}
+.receipt-editor-roll {
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 16px auto 0;
+  padding: 4mm;
+  border-top: 3px solid #d6dce0;
+  background: white;
+  box-shadow: 0 4px 12px #0f172a1a;
+}
+@media (min-width: 1024px) {
+  .receipt-editor-preview {
+    position: sticky;
+    top: 100px;
+    max-height: calc(100dvh - 124px);
+    overflow-y: auto;
+  }
+}
+@media print {
+  .kane-receipt {
+    max-width: none;
+    margin: 0;
+  }
+  #pos-print-receipt .kane-receipt p {
+    margin: 3px 0;
+  }
+  #pos-print-receipt .kane-receipt hr {
+    margin: 10px 0;
+  }
+}

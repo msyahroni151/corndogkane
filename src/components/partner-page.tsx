@@ -122,7 +122,11 @@ export async function PartnerPage({
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <FormDialog title={supplier ? "Tambah Supplier" : "Tambah Pelanggan"} trigger="+ Tambah">
+        <FormDialog
+          title={supplier ? "Tambah Supplier Baru" : "Tambah Pelanggan"}
+          trigger="+ Tambah"
+          subtitle={supplier ? "Daftarkan pemasok baru" : undefined}
+        >
           <PartnerForm kind={kind} successRoute={successRoute} />
         </FormDialog>
       </div>
@@ -248,6 +252,7 @@ export async function PartnerPage({
                           id: p.id,
                           version: p.updatedAt.toISOString(),
                           name: p.name,
+                          defaultPaymentMethod: p.defaultPaymentMethod,
                           city: p.city || "",
                           businessType: p.businessType || "",
                           contactPerson: p.contactPerson || "",

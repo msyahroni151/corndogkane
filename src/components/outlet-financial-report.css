@@ -566,3 +566,14 @@
     min-width: 130px;
   }
 }
+
+.report-period-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+}
+.report-period-heading .report-heading {
+  margin-left: auto;
+}

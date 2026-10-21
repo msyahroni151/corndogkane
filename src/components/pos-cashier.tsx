@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { UiIcon } from "@/components/ui-icon";
 import { notifySuccess } from "@/components/notification-toasts";
@@ -16,10 +15,20 @@ import {
   type CartItem,
   type PaymentMethod,
 } from "@/lib/pos-preview";
+import { PrintableReceipt } from "@/components/receipt-paper";
+import {
+  resolveReceiptSettings,
+  type ReceiptKind,
+  type ReceiptTemplateRecord,
+} from "@/lib/receipt-templates";
 import { APP_TIME_ZONE } from "@/lib/local-date";
 import { rupiah } from "@/lib/money";
 export type PosOutlet = { id: string; name: string; areaName: string; reference?: boolean };
 type Receipt = {
+  dateISO: string;
+  outletId: string;
+  kind: ReceiptKind;
+  preview: true;
   id: string;
   date: string;
   outlet: string;
@@ -47,12 +56,14 @@ export function PosCashier({
   outlets,
   draftId,
   canUseDrafts,
+  receiptTemplates = [],
 }: {
   userId: string;
   userName: string;
   outlets: PosOutlet[];
   draftId?: string;
   canUseDrafts: boolean;
+  receiptTemplates?: ReceiptTemplateRecord[];
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -66,11 +77,11 @@ export function PosCashier({
   const [cash, setCash] = useState("");
   const [open, setOpen] = useState(false);
   const [print, setPrint] = useState(false);
+  const [receiptKind, setReceiptKind] = useState<ReceiptKind>("CUSTOMER");
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [savedId, setSavedId] = useState<string | undefined>(draftId);
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
-  const printed = useRef<string | undefined>(undefined);
   const outlet = outlets.find((item) => item.id === outletId);
   useEffect(() => {
     const tick = () => setNow(new Date());
@@ -105,12 +116,6 @@ export function PosCashier({
       document.body.style.overflow = previous;
     };
   }, [open]);
-  useEffect(() => {
-    if (receipt?.print && printed.current !== receipt.id) {
-      printed.current = receipt.id;
-      window.print();
-    }
-  }, [receipt]);
   const products = previewProducts.filter(
     (product) =>
       (category === "Semua" || product.category === category) &&
@@ -199,6 +204,10 @@ export function PosCashier({
     const timestamp = new Date();
     setReceipt({
       id: "PREVIEW-" + timestamp.getTime(),
+      dateISO: timestamp.toISOString(),
+      outletId: outlet.id,
+      kind: receiptKind,
+      preview: true,
       date:
         new Intl.DateTimeFormat("id-ID", {
           day: "2-digit",
@@ -635,6 +644,19 @@ export function PosCashier({
                 <strong>{rupiah(received - total)}</strong>
               </p>
             )}
+            {print && (
+              <label className="field">
+                Jenis Struk
+                <select
+                  value={receiptKind}
+                  onChange={(e) => setReceiptKind(e.target.value as ReceiptKind)}
+                >
+                  <option value="CUSTOMER">Pelanggan</option>
+                  <option value="PRODUCTION">Dapur / Produksi</option>
+                  <option value="PACKING">Packing / Topping</option>
+                </select>
+              </label>
+            )}
             <button
               type="button"
               className="button-primary w-full"
@@ -646,45 +668,14 @@ export function PosCashier({
           </div>
         </dialog>
       )}
-      {receipt &&
-        createPortal(
-          <div id="pos-print-receipt" className="pos-print-receipt">
-            <h2>CORNDOG KANE</h2>
-            <p>PRATINJAU — BUKAN BUKTI PEMBAYARAN</p>
-            <p>
-              {receipt.outlet}
-              <br />
-              {receipt.cashier}
-              <br />
-              {receipt.date}
-              <br />
-              {receipt.id}
-            </p>
-            <hr />
-            {receipt.items.map((item, index) => (
-              <div key={index}>
-                <p>{item.name}</p>
-                <p>
-                  {item.quantity} × {rupiah(item.price)}{" "}
-                  <strong>{rupiah(item.price * item.quantity)}</strong>
-                </p>
-              </div>
-            ))}
-            <hr />
-            <p>
-              <strong>TOTAL {rupiah(receipt.total)}</strong>
-            </p>
-            <p>
-              {receipt.method}
-              <br />
-              Diterima {rupiah(receipt.received)}
-              <br />
-              Kembalian {rupiah(Math.max(0, receipt.received - receipt.total))}
-            </p>
-            <p>Terima kasih</p>
-          </div>,
-          document.body,
-        )}
+      {receipt?.print && (
+        <PrintableReceipt
+          data={receipt}
+          settings={resolveReceiptSettings(receiptTemplates, receipt.outletId, receipt.kind)}
+          kind={receipt.kind}
+          printKey={receipt.id}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 "use server";
+import { isValidNewPassword, passwordError } from "@/lib/password-policy";
 import { homeFor, rolePermissions } from "@/lib/permissions";
 import { authNoticeCookie } from "@/lib/auth-notice";
 import { cookies } from "next/headers";
@@ -17,8 +18,7 @@ export async function setupAdmin(_: FormState, form: FormData): Promise<FormStat
   const password = String(form.get("password") || "");
   if (!name || name.length > 100 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
     return { error: "Lengkapi nama dan email yang valid." };
-  if (password.length < 12 || password.length > 128)
-    return { error: "Password harus terdiri dari 12–128 karakter." };
+  if (!isValidNewPassword(password)) return { error: passwordError };
   if (password !== form.get("confirmation")) return { error: "Konfirmasi password belum sama." };
   const passwordHash = await hashPassword(password);
   const id = await getPrisma().$transaction(async (tx) => {

@@ -1,4 +1,5 @@
 "use server";
+import { supplierPaymentMethods } from "@/lib/supplier-options";
 import { hasPermission } from "@/lib/permissions";
 import { allocateBusinessId } from "@/lib/business-id";
 import { requireUser } from "@/lib/auth";
@@ -16,7 +17,8 @@ export async function savePartner(_: FormState, form: FormData): Promise<FormSta
   const get = (key: string) => String(form.get(key) || "").trim();
   try {
     const kind = get("kind");
-    if (!hasPermission(user, kind === "SUPPLIER" ? "supplier" : "pelanggan")) return { error: "Anda tidak memiliki akses ke menu ini." };
+    if (!hasPermission(user, kind === "SUPPLIER" ? "supplier" : "pelanggan"))
+      return { error: "Anda tidak memiliki akses ke menu ini." };
     if (!["SUPPLIER", "CUSTOMER"].includes(kind)) invalid("Jenis relasi tidak valid.");
     const name = get("name");
     if (!name || name.length > 150) invalid("Nama wajib diisi, maksimal 150 karakter.");
@@ -33,7 +35,12 @@ export async function savePartner(_: FormState, form: FormData): Promise<FormSta
     if (!/^\d+$/.test(raw) || Number(raw) > 1000000000)
       invalid("Saldo hutang harus rupiah bulat antara 0 dan 1 miliar.");
     if (kind === "CUSTOMER" && Number(raw) !== 0) invalid("Saldo hutang hanya untuk supplier.");
+    const defaultPaymentMethod =
+      kind === "SUPPLIER" ? get("defaultPaymentMethod") || "TUNAI" : "TUNAI";
+    if (!supplierPaymentMethods.includes(defaultPaymentMethod))
+      invalid("Metode default harus Tunai, Transfer, atau COD.");
     const data = {
+      defaultPaymentMethod,
       name,
       city: get("city") || null,
       businessType: get("businessType") || null,

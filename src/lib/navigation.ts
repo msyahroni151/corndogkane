@@ -7,6 +7,7 @@ export const nightOperationsMenu: MenuItem[] = [
 export const salesMenu: MenuItem[] = [
   { href: "/pos", name: "POS Kasir", icon: "cart" },
   { href: "/retur-pembeli", name: "Retur Pembeli", icon: "return" },
+  { href: "/template-struk", name: "Template Struk", icon: "receipt" },
 ];
 export const financeMenu: MenuItem[] = [
   { href: "/finance/budgeting-rab", name: "Budgeting & RAB", icon: "coins" },
@@ -39,10 +40,25 @@ export const relationMenu: MenuItem[] = [
   { href: "/supplier", name: "Supplier", icon: "truck" },
   { href: "/pelanggan", name: "Pelanggan", icon: "people" },
 ];
+export const inventoryMenu: MenuItem[] = [
+  { href: "/barang-masuk", name: "Barang Masuk", icon: "package-in" },
+  { href: "/stok-inventory", name: "Stok & Inventori", icon: "boxes" },
+];
+export const employeePortalMenu: MenuItem[] = [
+  { href: "/portal-karyawan", name: "Beranda", icon: "dashboard" },
+  { href: "/portal-karyawan/gaji", name: "Gaji Saya", icon: "coins" },
+  { href: "/portal-karyawan/kasbon", name: "Kasbon", icon: "wallet" },
+  { href: "/portal-karyawan/jadwal", name: "Shift", icon: "calendar" },
+  { href: "/portal-karyawan/absensi", name: "Absen", icon: "scan-face" },
+  { href: "/portal-karyawan/cuti", name: "Cuti", icon: "calendar" },
+  { href: "/portal-karyawan/persetujuan", name: "Persetujuan", icon: "shield" },
+];
 export const settingsMenu: MenuItem[] = [{ href: "/role", name: "Role", icon: "shield" }];
 export const matchesMenu = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(href + "/");
 export function activeMainMenu(pathname: string) {
+  const portal = employeePortalMenu.find((item) => item.href === pathname);
+  if (portal) return portal.href;
   const finance = financeMenu.find((item) => matchesMenu(pathname, item.href));
   if (finance) return finance.href;
   const nightMenu = nightOperationsMenu.find((item) => matchesMenu(pathname, item.href));
@@ -54,6 +70,8 @@ export function activeMainMenu(pathname: string) {
   if (payrollMenu.some((item) => matchesMenu(pathname, item.href))) return "/payroll";
   if (relationMenu.some((item) => matchesMenu(pathname, item.href)))
     return relationMenu.find((item) => matchesMenu(pathname, item.href))?.href;
+  const inventory = inventoryMenu.find((item) => matchesMenu(pathname, item.href));
+  if (inventory) return inventory.href;
   if (settingsMenu.some((item) => matchesMenu(pathname, item.href)))
     return settingsMenu.find((item) => matchesMenu(pathname, item.href))?.href;
   return mainMenu.find((item) => matchesMenu(pathname, item.href))?.href;

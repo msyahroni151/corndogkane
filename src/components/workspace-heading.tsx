@@ -17,6 +17,11 @@ const headings: Record<string, { title: string; description: string; icon: IconN
     description: "Pilih menu, susun pesanan, dan tinjau pembayaran.",
     icon: "cart",
   },
+  "/template-struk": {
+    title: "Template Struk",
+    description: "Atur tampilan struk kasir Corndog Kane.",
+    icon: "receipt",
+  },
   "/retur-pembeli": {
     title: "Retur Pembeli",
     description: "Tinjau pengembalian barang dari pelanggan.",
@@ -67,6 +72,41 @@ const headings: Record<string, { title: string; description: string; icon: IconN
     description: "Catat perpindahan dana antar akun kas dan bank.",
     icon: "wallet",
   },
+  "/portal-karyawan": {
+    title: "Portal Karyawan",
+    description: "Gaji, kasbon, jadwal, absensi, dan pengajuan pribadi.",
+    icon: "phone",
+  },
+  "/portal-karyawan/gaji": {
+    title: "Gaji Saya",
+    description: "Portal Karyawan - Slip dan rincian gaji yang sudah dibayar.",
+    icon: "coins",
+  },
+  "/portal-karyawan/kasbon": {
+    title: "Kasbon",
+    description: "Portal Karyawan - Pengajuan, pembayaran, dan sisa kasbon pribadi.",
+    icon: "wallet",
+  },
+  "/portal-karyawan/jadwal": {
+    title: "Shift",
+    description: "Portal Karyawan - Jadwal dan lokasi bertugas Anda.",
+    icon: "calendar",
+  },
+  "/portal-karyawan/absensi": {
+    title: "Absen",
+    description: "Portal Karyawan - Absensi kamera dan rekap kehadiran pribadi.",
+    icon: "scan-face",
+  },
+  "/portal-karyawan/cuti": {
+    title: "Cuti",
+    description: "Portal Karyawan - Pengajuan cuti, izin, sakit, dan libur.",
+    icon: "calendar",
+  },
+  "/portal-karyawan/persetujuan": {
+    title: "Persetujuan",
+    description: "Portal Karyawan - Pemeriksaan pengajuan oleh admin.",
+    icon: "shield",
+  },
   "/role": {
     title: "Role",
     description: "Kelola role, hak akses menu, dan akun login karyawan.",
@@ -76,6 +116,16 @@ const headings: Record<string, { title: string; description: string; icon: IconN
     title: "Hak Akses",
     description: "Pengaturan akses menu akun Anda.",
     icon: "shield",
+  },
+  "/barang-masuk": {
+    title: "Barang Masuk",
+    description: "Penerimaan barang dari supplier dan pembelian.",
+    icon: "package-in",
+  },
+  "/stok-inventory": {
+    title: "Stok & Inventori",
+    description: "Persediaan barang dan pemantauan stok.",
+    icon: "boxes",
   },
   "/supplier": {
     title: "Supplier",

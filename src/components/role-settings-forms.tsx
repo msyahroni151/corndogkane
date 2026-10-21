@@ -1,4 +1,11 @@
 "use client";
+import { PasswordInput } from "@/components/password-input";
+import {
+  passwordHint,
+  passwordMinLength,
+  passwordMaxLength,
+  passwordPattern,
+} from "@/lib/password-policy";
 import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useCloseFormDialog } from "@/components/form-dialog";
@@ -211,27 +218,30 @@ export function LoginAccountForm({
         </label>
         <label className="field">
           {values ? "Password baru (opsional)" : "Password *"}
-          <input
+          <PasswordInput
             aria-label="Password akun"
+            visibilityLabel="password akun"
             name="password"
-            type="password"
             required={!values}
-            minLength={12}
-            maxLength={128}
+            minLength={passwordMinLength}
+            pattern={passwordPattern}
+            title={passwordHint}
+            maxLength={passwordMaxLength}
             autoComplete="new-password"
           />
           <span className="text-xs font-normal text-slate-500">
-            Minimal 12 karakter.{values ? " Kosongkan agar password tetap." : ""}
+            {passwordHint}
+            {values ? " Kosongkan agar password tetap." : ""}
           </span>
         </label>
         <label className="field">
           Konfirmasi password
-          <input
+          <PasswordInput
             aria-label="Konfirmasi password"
+            visibilityLabel="konfirmasi password"
             name="confirmation"
-            type="password"
             required={!values}
-            maxLength={128}
+            maxLength={passwordMaxLength}
             autoComplete="new-password"
           />
         </label>

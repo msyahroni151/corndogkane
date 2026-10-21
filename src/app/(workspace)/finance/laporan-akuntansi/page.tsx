@@ -292,16 +292,28 @@ export default async function ReportPage({
               />
             )}
           </form>
-          <div className="report-presets" aria-label="Periode cepat">
-            {presets.map(([label, date]) => (
-              <Link
-                key={label}
-                href={href({ from: date, to: today })}
-                aria-current={from === date && to === today ? "date" : undefined}
-              >
-                {label}
-              </Link>
-            ))}
+          <div className="report-period-heading">
+            <div className="report-presets" aria-label="Periode cepat">
+              {presets.map(([label, date]) => (
+                <Link
+                  key={label}
+                  href={href({ from: date, to: today })}
+                  aria-current={from === date && to === today ? "date" : undefined}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+            {!error && outlet && (
+              <div className="report-heading">
+                <div>
+                  <h2>Laporan Keuangan · {outlet.name}</h2>
+                  <p>
+                    {outlet.area.name} · {dateToDisplay(from)} – {dateToDisplay(to)} · WIB
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
           {error ? (
             <p role="alert" className="report-notice">
@@ -311,14 +323,6 @@ export default async function ReportPage({
             <p className="panel p-6">Tambahkan outlet terlebih dahulu untuk melihat laporan.</p>
           ) : (
             <>
-              <div className="report-heading">
-                <div>
-                  <h2>Laporan Keuangan · {outlet.name}</h2>
-                  <p>
-                    {outlet.area.name} · {dateToDisplay(from)} – {dateToDisplay(to)} · WIB
-                  </p>
-                </div>
-              </div>
               <p className="report-notice">
                 Laporan sementara dari rekap operasional outlet. HPP, gaji, penyusutan, biaya pusat,
                 dan saldo awal belum terhubung. Laba dan neraca ditampilkan “—” sampai datanya
