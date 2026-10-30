@@ -1,14 +1,18 @@
 {
-  "createdAt": "2026-10-30T11:22:20.553Z",
+  "createdAt": "2026-10-30T13:07:41.987Z",
   "containsRealData": false,
   "files": [
     {
       "path": "DEMO-DEPLOYMENT.md",
-      "sha256": "27ef0d566513d02b467242cb3bdc48815a062f51c72769a501060500e4de0c48"
+      "sha256": "9c530d7b66600f0d71249722c7abf54c1161b90817652b32a0828c0fc07e4dc3"
     },
     {
       "path": "docs/control-stok.md",
       "sha256": "a2913bea24c6958d21594b07d01173ce7d9bdd6a0d8e2425c10a627ff787dff4"
+    },
+    {
+      "path": "docs/data-retention.md",
+      "sha256": "e152b3c51a6121958b6b2efa9c288673df1a446f92b892c85777142f662b9404"
     },
     {
       "path": "docs/employee-portal.md",
@@ -25,6 +29,10 @@
     {
       "path": "eslint.config.mjs",
       "sha256": "6f2dcf8232fbda26cf15ae68b3d8a1e0da59764ea53fc3e6537915a328af20ff"
+    },
+    {
+      "path": "integrations/catalog/fixed-products-v1.json",
+      "sha256": "238464ab65686b5e9e9588275230ebec36231c17d681d8849d48497b30ce5864"
     },
     {
       "path": "integrations/coa/master-coa-v1.json",
@@ -216,7 +224,11 @@
     },
     {
       "path": "prisma/migrations/20261030210000_production_remainders_rls/migration.sql",
-      "sha256": "3061f2d4e6af93dc2217eab6c6d5269f1f60286a8a80d2893a330e70f2ff5b53"
+      "sha256": "00866cbd6d788e656b14ed557d8ad601a9dc6d47ef28d656eae84d0d2e43cc11"
+    },
+    {
+      "path": "prisma/migrations/20261030220000_restore_fixed_sales_products/migration.sql",
+      "sha256": "72be28d994a08d5e0b150390be23703d7f2baf51f02af71592448e2e13b1642a"
     },
     {
       "path": "prisma/migrations/migration_lock.toml",
@@ -231,16 +243,12 @@
       "sha256": "e056067004f52b6f310625d0b061e51537982ec72b9cd746aeae54904ffc28e1"
     },
     {
-      "path": "public/face-api/LICENSE",
-      "sha256": "9a3442b79acaf4fbc7c2e07b7e2d8f84af9bb3871bf08a69d80304ab00640e9a"
-    },
-    {
-      "path": "public/face-api/NOTICE.md",
-      "sha256": "b717b771cb6668e52a43fe2b25e60f9ac70a2ef0eb7dd620f2518cf1e0a1eead"
-    },
-    {
       "path": "public/face-api/face-api.js",
       "sha256": "0160f7af3a8c78cece45c7ecc765383bad74becfd438bb787cdd627b2d6f2cf6"
+    },
+    {
+      "path": "public/face-api/LICENSE",
+      "sha256": "9a3442b79acaf4fbc7c2e07b7e2d8f84af9bb3871bf08a69d80304ab00640e9a"
     },
     {
       "path": "public/face-api/models/face_landmark_68_tiny_model-weights_manifest.json",
@@ -265,6 +273,10 @@
     {
       "path": "public/face-api/models/tiny_face_detector_model.bin",
       "sha256": "b7503ce7df31039b1c43316a9b865cab6a70dd748cc602d3fa28b551503c3871"
+    },
+    {
+      "path": "public/face-api/NOTICE.md",
+      "sha256": "b717b771cb6668e52a43fe2b25e60f9ac70a2ef0eb7dd620f2518cf1e0a1eead"
     },
     {
       "path": "public/file.svg",
@@ -296,7 +308,7 @@
     },
     {
       "path": "scripts/package-demo.cjs",
-      "sha256": "fed522bc03074998c06a389ef1905064b852561373a8b3a1abe178700bb38c75"
+      "sha256": "688732838e4e4fa8fb8b19d8fcb83436f93474264af9ebf9a41589d63164d998"
     },
     {
       "path": "scripts/seed-demo.ts",

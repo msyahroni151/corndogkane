@@ -5,7 +5,7 @@ Target: Render Free (website Next.js) + Supabase Free (PostgreSQL), region Singa
 ## Isi demo
 
 - Akun Owner Demo; autentikasi dan izin tetap berjalan seperti aplikasi asli.
-- Data isian bisnis dimulai kosong. Bootstrap hanya membuat akun owner dan penanda inisialisasi; tidak mengisi karyawan, outlet, transaksi, atau aset contoh.
+- Katalog 28 Produk penjualan tetap tersedia sesuai master yang disetujui. Sub Produk dan data operasional (karyawan, outlet, transaksi, stok, aset) dimulai kosong. Bootstrap tidak mengisi data operasional contoh.
 - Master COA mengikuti struktur aplikasi. Laba dan neraca tetap ditandai belum lengkap jika sumbernya belum terhubung.
 - Label MODE DEMO pada halaman masuk dan halaman aplikasi; robots/noindex untuk halaman administrasi.
 - Tidak mengimpor biodata karyawan, nomor rekening, transaksi, sesi, atau password dari database asli.

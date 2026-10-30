@@ -44,6 +44,7 @@ async function packageDemo() {
     "public",
     "docs",
     "integrations/coa/master-coa-v1.json",
+    "integrations/catalog/fixed-products-v1.json",
     "integrations/supabase/prod-ca-2021.crt",
     "package.json",
     "pnpm-lock.yaml",
