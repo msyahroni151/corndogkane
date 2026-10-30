@@ -1,5 +1,7 @@
 import { operationalCash } from "@/lib/outlet-operations";
 export type OutletRecapRow = {
+  salesSource?: string;
+  hasManual?: boolean;
   id: string;
   reference: string;
   date: string;
@@ -28,6 +30,7 @@ export const recapColumns = [
   { key: "reference", label: "ID Rekap", group: "Identitas Rekap" },
   { key: "date", label: "Tanggal Operasional", group: "Identitas Rekap" },
   { key: "outletName", label: "Cabang", group: "Identitas Rekap" },
+  { key: "salesSource", label: "Sumber Penjualan", group: "Identitas Rekap" },
   { key: "crewId", label: "ID Crew", group: "Identitas Rekap" },
   { key: "crewName", label: "Nama Crew", group: "Identitas Rekap" },
   { key: "trainingCrewName", label: "Crew Training", group: "Identitas Rekap" },
@@ -69,13 +72,24 @@ export const recapMoneyKeys = new Set<string>([
   "difference",
 ]);
 export function recapValue(row: OutletRecapRow, key: string): string | number | null {
+  if (key === "salesSource")
+    return (
+      {
+        MANUAL: "Rekap total manual",
+        POS: "POS",
+        MANUAL_ADD: "Tambahan manual",
+        POS_MANUAL_ADD: "POS + tambahan manual",
+        REVIEW: "Perlu rekonsiliasi",
+      } as Record<string, string>
+    )[row.salesSource || "MANUAL"];
   if (key === "date") return row.date;
   if (key === "doughUsed") return row.doughUsed ?? null;
   if (key === "reference" || key === "outletName" || key === "crewId") return row[key];
   if (key === "crewName") return row.crewCode || row.crewName;
   if (key === "trainingCrewName") return row.trainingCrewName;
   if (key === "expenseAmount" || key === "expenseNotes") return row[key];
-  if (Object.hasOwn(row.quantities, key)) return row.quantities[key];
+  if (Object.hasOwn(row.quantities, key))
+    return row.salesSource && row.salesSource !== "MANUAL" ? null : row.quantities[key];
   if (
     key === "totalGross" ||
     key === "qris" ||

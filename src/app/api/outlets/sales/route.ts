@@ -30,126 +30,100 @@ export async function GET(request: Request) {
     start,
     end,
   );
-  const manualRows = await getPrisma().outletOperation.findMany({
+  const rows = await getPrisma().outletOperation.findMany({
     where: {
       date: { gte: parseCivilDate(start), lte: parseCivilDate(end) },
       outlet: { active: true, closed: false },
     },
-    select: {
-      outletId: true,
-      totalGross: true,
-      expenseAmount: true,
-      qris: true,
-      gofood: true,
-      grabfood: true,
-      shopeefood: true,
-      crewName: true,
-      crew: { select: { fullName: true, employeeCode: true } },
-      trainingCrewName: true,
+    include: { _count: { select: { sales: true } }, crew: { select: { employeeCode: true } } },
+  });
+  const crews = await getPrisma().saleTransaction.groupBy({
+    by: ["operationId", "crewName"],
+    where: {
+      date: { gte: parseCivilDate(start), lte: parseCivilDate(end) },
+      outletId: { in: local.map((o) => o.id) },
     },
   });
-  const manual: Record<string, OutletSales> = {};
-  const expenses: Record<string, number> = {};
-  for (const row of manualRows) {
-    const value = (manual[row.outletId] ||= {
+  const values: Record<string, OutletSales> = {};
+  const reconciliations = rows.map((row) => {
+    const value = (values[row.outletId] ||= {
+      source: "manual",
+      countKnown: true,
+      cashKnown: true,
       total: 0,
       count: 0,
       cash: 0,
       qris: 0,
       online: 0,
       expense: 0,
-      source: "manual",
-      countKnown: false,
-      cashKnown: true,
-      days: 0,
       crewNames: [],
+      days: 0,
+      stockPending: 0,
     });
+    const source = row.salesPending
+      ? "review"
+      : row.salesSource === "POS"
+        ? "pos"
+        : row.salesSource === "POS_MANUAL_ADD"
+          ? "mixed"
+          : "manual";
+    value.source =
+      value.source === "review" || source === "review"
+        ? "review"
+        : value.days
+          ? value.source === source
+            ? source
+            : "mixed"
+          : source;
     value.total += row.totalGross;
     value.qris += row.qris;
     value.online += row.gofood + row.grabfood + row.shopeefood;
     value.cash += operationalCash(row);
     value.expense = (value.expense || 0) + (row.expenseAmount ?? 0);
-    expenses[row.outletId] = (expenses[row.outletId] || 0) + (row.expenseAmount ?? 0);
+    value.count += row._count.sales;
+    value.countKnown =
+      value.countKnown &&
+      ["POS", "POS_MANUAL_ADD", "MANUAL_ADD"].includes(row.salesSource) &&
+      !row.salesPending;
     value.days = (value.days || 0) + 1;
-    const crewName = [row.crew.fullName.trim() || row.crewName, row.crew.employeeCode?.trim()]
-      .filter(Boolean)
-      .join(" - ");
+    value.stockPending = (value.stockPending || 0) + row.stockPending;
     value.crewNames = [
       ...new Set(
-        [...(value.crewNames || []), crewName, row.trainingCrewName].filter(
-          (name): name is string => !!name,
-        ),
+        [
+          ...(value.crewNames || []),
+          row.crew.employeeCode || row.crewName,
+          ...crews.filter((s) => s.operationId === row.id).map((s) => s.crewName),
+          row.trainingCrewName || "",
+        ].filter(Boolean),
       ),
     ];
-  }
-  const empty: MonitoringSales = { status: "unconfigured", start, end, outlets: manual, schedules };
-  const endpoint = process.env.POS_MONITORING_URL,
-    key = process.env.POS_MONITORING_KEY;
-  if (!endpoint || !key || key.length < 32) return json(empty);
-  try {
-    const url = new URL(endpoint);
-    if (
-      url.origin !== "https://script.google.com" ||
-      !/^\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(url.pathname)
-    )
-      throw Error();
-    url.searchParams.set("action", "monitoring-sales");
-    url.searchParams.set("key", key);
-    url.searchParams.set("start", start);
-    url.searchParams.set("end", end);
-    const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(25000) });
-    if (!response.ok) throw Error();
-    const text = await response.text();
-    if (text.length > 2000000) throw Error();
-    const data = JSON.parse(text);
-    if (
-      data.ok !== true ||
-      data.start !== start ||
-      data.end !== end ||
-      !Array.isArray(data.outlets) ||
-      data.outlets.length > 10000
-    )
-      throw Error();
-    const source: { name: string; sales: OutletSales }[] = data.outlets.map(
-      (entry: { name: unknown; sales: OutletSales }) => {
-        if (
-          typeof entry.name !== "string" ||
-          !entry.sales ||
-          !["total", "count", "cash", "qris", "online"].every(
-            (field) =>
-              Number.isSafeInteger(
-                entry.sales[field as "total" | "count" | "cash" | "qris" | "online"],
-              ) && entry.sales[field as "total" | "count" | "cash" | "qris" | "online"] >= 0,
-          )
-        )
-          throw Error();
-        return {
-          name: entry.name,
-          sales: {
-            total: entry.sales.total,
-            count: entry.sales.count,
-            cash: entry.sales.cash,
-            qris: entry.sales.qris,
-            online: entry.sales.online,
-          },
-        };
-      },
-    );
-    const posValues = matchOutletSales(source, local);
-    for (const [id, value] of Object.entries(posValues)) {
-      value.expense = expenses[id] || 0;
-      value.cash = value.total - value.qris - value.online - value.expense;
-      if (manual[id]?.crewNames) value.crewNames = manual[id].crewNames;
-    }
-    return json({
-      status: "connected",
-      schedules,
-      start,
-      end,
-      outlets: { ...manual, ...posValues },
-      fetchedAt: new Date().toISOString(),
-    } satisfies MonitoringSales);
-  } catch {
-    return json({ ...empty, status: "error" } satisfies MonitoringSales);
-  }
+    const manual =
+      row.manualSales && typeof row.manualSales === "object" && !Array.isArray(row.manualSales)
+        ? Number((row.manualSales as { totalGross?: number }).totalGross)
+        : row.hasManual
+          ? row.totalGross
+          : null;
+    return {
+      id: row.id,
+      outletId: row.outletId,
+      outletName: row.outletName,
+      date: row.date.toISOString().slice(0, 10),
+      version: row.updatedAt.toISOString(),
+      pos: row.posGross,
+      additional: row.additionalGross,
+      manual: Number.isFinite(manual) ? manual : null,
+      current: row.totalGross,
+      pending: row.salesPending,
+      stockPending: row.stockPending,
+    };
+  });
+  return json({
+    status: "connected",
+    start,
+    end,
+    outlets: values,
+    schedules,
+    reconciliations,
+    fetchedAt: new Date().toISOString(),
+  });
 }

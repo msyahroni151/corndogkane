@@ -3,7 +3,7 @@ export const permissionMenus = [
   {
     key: "admin-malam-dashboard",
     label: "Dashboard - Admin Operasional Malam",
-    href: "/admin-malam/dashboard",
+    href: "/menu-utama/dashboard",
   },
   {
     key: "monitoring-outlet",
@@ -36,6 +36,7 @@ export const permissionMenus = [
     label: "Pengeluaran Operasional - Finance & Acounting",
     href: "/finance/pengeluaran-operasional",
   },
+  { key: "setting-menu", label: "Setting Menu - Penjualan dan Kasir", href: "/setting-menu" },
   { key: "pos", label: "POS Kasir - Penjualan dan Kasir", href: "/pos" },
   { key: "retur-pembeli", label: "Retur Pembeli - Penjualan dan Kasir", href: "/retur-pembeli" },
 
@@ -50,9 +51,15 @@ export const permissionMenus = [
   { key: "selisih-setor", label: "Selisih Setoran - Payroll", href: "/selisih-setor" },
   { key: "master-area", label: "Master Area - SDM & Operasional", href: "/master-area" },
   { key: "master-outlet", label: "Master Outlet - SDM & Operasional", href: "/master-outlet" },
-  { key: "supplier", label: "Supplier - Relasi", href: "/supplier" },
+  { key: "supplier", label: "Supplier - Inventory & Pembelian", href: "/supplier" },
   { key: "pelanggan", label: "Pelanggan - Relasi", href: "/pelanggan" },
   { key: "barang-masuk", label: "Barang Masuk - Inventory & Pembelian", href: "/barang-masuk" },
+  {
+    key: "produksi-gudang",
+    label: "Produksi Gudang - Inventory & Pembelian",
+    href: "/produksi-gudang",
+  },
+  { key: "control-stok", label: "Control Stok - Inventory & Pembelian", href: "/control-stok" },
   {
     key: "stok-inventory",
     label: "Stok & Inventori - Inventory & Pembelian",
@@ -82,6 +89,16 @@ export function rolePermissions(role: {
     .filter(
       (item) =>
         flags[item.key] === true ||
+        (item.key === "produksi-gudang" &&
+          flags[item.key] === undefined &&
+          (flags["setting-menu"] === true ||
+            (flags["setting-menu"] === undefined && flags["stok-inventory"] === true))) ||
+        (item.key === "control-stok" &&
+          flags[item.key] === undefined &&
+          flags["stok-inventory"] === true) ||
+        (item.key === "setting-menu" &&
+          flags[item.key] === undefined &&
+          flags["stok-inventory"] === true) ||
         (item.key === "finance-expenses" &&
           flags[item.key] === undefined &&
           flags["open-transaction"] === true) ||
@@ -96,6 +113,7 @@ export function hasPermission(user: { permissions: readonly string[] }, key: Per
   return user.permissions.includes(key);
 }
 export function homeFor(permissions: readonly string[]) {
+  if (permissions.includes("admin-malam-dashboard")) return "/menu-utama/dashboard";
   return permissionMenus.find((item) => permissions.includes(item.key))?.href || "/akses-ditolak";
 }
 export function permissionForPath(pathname: string): PermissionKey | undefined {

@@ -25,6 +25,7 @@ export function FormDialog({
   extraWide = false,
   compact = false,
   subtitle,
+  danger = false,
 }: {
   title: string;
   trigger: string;
@@ -35,6 +36,7 @@ export function FormDialog({
   extraWide?: boolean;
   compact?: boolean;
   subtitle?: string;
+  danger?: boolean;
 }) {
   const [open, setOpen] = useState(initiallyOpen);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -67,7 +69,7 @@ export function FormDialog({
       <button
         ref={triggerButton}
         type="button"
-        className="button-primary"
+        className={"button-primary" + (danger ? " button-danger" : "")}
         onClick={() => setOpen(true)}
       >
         {trigger}
@@ -99,7 +101,7 @@ export function FormDialog({
               onClick={cancel}
               aria-label="Tutup popup"
             >
-              {compact ? "×" : "Tutup"}
+              {compact ? "\u00d7" : "Tutup"}
             </button>
           </div>
           <DialogContext.Provider value={close}>

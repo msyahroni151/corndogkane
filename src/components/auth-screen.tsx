@@ -17,16 +17,16 @@ export function AuthScreen({
           <span className="text-lg font-bold tracking-wide">CORNDOG KANE</span>
         </div>
         <div>
-          <p className="mb-5 text-sm text-emerald-200">HRIS & PAYROLL</p>
+          <p className="mb-5 text-sm text-emerald-200">Back Office</p>
           <h1 className="max-w-lg text-5xl font-semibold leading-tight">
             Administrasi tim dalam satu tempat.
           </h1>
           <p className="mt-7 max-w-md leading-7 text-emerald-100/80">
-            Kelola biodata karyawan, lalu lanjutkan ke jadwal, absensi, dan payroll secara bertahap.
+            Kelola operasional outlet, persediaan, keuangan, dan administrasi karyawan dalam satu sistem.
           </p>
         </div>
         <p className="text-sm text-emerald-100/60">
-          Corndog Kane · {process.env.HRIS_DEMO_MODE === "1" ? "Demo aplikasi" : "HRIS & Payroll"}
+          Corndog Kane · Back Office{process.env.HRIS_DEMO_MODE === "1" ? " · Demo" : ""}
         </p>
       </section>
       <section className="flex items-center justify-center p-6 sm:p-12">

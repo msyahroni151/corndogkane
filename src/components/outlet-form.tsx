@@ -1,4 +1,5 @@
 "use client";
+import { OutletLocationFields } from "@/components/outlet-location-fields";
 import { LocalInput } from "@/components/local-input";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -22,6 +23,9 @@ export function OutletForm({
     closed?: boolean;
     dailyRate: number | null;
     hours: OutletHours | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    address?: string | null;
   };
   successRoute: string;
   cancelRoute: string;
@@ -121,6 +125,7 @@ export function OutletForm({
             </span>
           </label>
         </div>
+        <OutletLocationFields initial={initial} />
         <section>
           <h3 className="font-bold">Jam Operasional Senin–Minggu</h3>
           <p className="mb-4 mt-1 text-xs text-slate-500">

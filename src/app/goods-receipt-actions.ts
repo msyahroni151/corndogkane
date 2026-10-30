@@ -1,4 +1,5 @@
 "use server";
+import { warehouseKinds } from "@/lib/inventory";
 import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireAccess } from "@/lib/auth";
@@ -57,15 +58,20 @@ export async function createGoodsReceipt(_: FormState, form: FormData): Promise<
             create: {
               key,
               name: line.name,
+              category: "Persediaan Gudang",
               packagingUnit: line.packagingUnit,
               baseUnit: line.baseUnit,
             },
           });
+          if (!warehouseKinds.some((k) => k === item.kind))
+            invalid(
+              "Barang ini merupakan menu jual. Pilih atau buat barang stok gudang terlebih dahulu.",
+            );
           if (!item.active)
             invalid(
               "Barang " +
                 item.name +
-                " sedang nonaktif. Aktifkan melalui Stok & Inventori terlebih dahulu.",
+                " berada di Sampah. Kembalikan melalui Stok & Inventori terlebih dahulu.",
             );
           itemIds.set(key, item.id);
         }

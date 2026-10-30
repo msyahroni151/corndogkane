@@ -5,7 +5,7 @@ Target: Render Free (website Next.js) + Supabase Free (PostgreSQL), region Singa
 ## Isi demo
 
 - Akun Owner Demo; autentikasi dan izin tetap berjalan seperti aplikasi asli.
-- Lima karyawan sintetis, tiga outlet contoh, tujuh hari jadwal/absensi/rekap penjualan, saldo bonus contoh, dan dua aset contoh.
+- Data isian bisnis dimulai kosong. Bootstrap hanya membuat akun owner dan penanda inisialisasi; tidak mengisi karyawan, outlet, transaksi, atau aset contoh.
 - Master COA mengikuti struktur aplikasi. Laba dan neraca tetap ditandai belum lengkap jika sumbernya belum terhubung.
 - Label MODE DEMO pada halaman masuk dan halaman aplikasi; robots/noindex untuk halaman administrasi.
 - Tidak mengimpor biodata karyawan, nomor rekening, transaksi, sesi, atau password dari database asli.
@@ -20,14 +20,14 @@ Akun GitHub (repository privat untuk source), Supabase, dan Render. Pilih paket 
 4. Buat Render Blueprint dari repository tersebut dengan `render.yaml`. Paket website harus `free`, region `singapore`.
 5. Masukkan `HRIS_DEMO_PROJECT_REF` dan `DATABASE_URL` project demo. Jangan menyalin URL database asli.
 6. Password demo dibuat acak oleh Render melalui `DEMO_ADMIN_PASSWORD`. Email masuk: `owner@demo.corndogkane.test`. Password hanya disimpan di environment Render; lihat di dashboard Render saat hendak masuk. Nilai tersebut digunakan sekali saat akun pertama dibuat, bukan untuk mereset password setiap restart.
-7. Render membangun aplikasi, lalu `scripts/start-demo.cjs` memverifikasi target, menjalankan migrasi, mengisi data contoh satu kali, dan menjalankan Next.js pada port hosting.
+7. Render membangun aplikasi, lalu `scripts/start-demo.cjs` memverifikasi target, menjalankan migrasi, menyiapkan akun owner satu kali, dan menjalankan Next.js pada port hosting.
 8. Setelah URL `.onrender.com` tersedia, uji login, jadwal, monitoring outlet, laporan per outlet, dan unduhan Excel/PDF melalui HP.
 
 ## Perilaku data dan restart
 
 Target harus project Supabase yang disebut secara eksplisit. Database yang berisi data tanpa penanda demo ditolak sebelum migrasi. Proses tidak menjalankan reset, truncate, atau impor database asli.
 
-Data demo tidak diisi ulang setiap boot; perubahan percobaan dipertahankan. Struktur tabel aplikasi memakai Row Level Security, tanpa kebijakan akses publik, dan izin tabel untuk role API `anon` / `authenticated` dicabut. Website mengakses PostgreSQL melalui proses server dan login aplikasinya sendiri. Koneksi database tidak dikirim ke browser.
+Data isian bisnis tidak dibuat otomatis saat boot; perubahan yang diinput melalui aplikasi dipertahankan. Struktur tabel aplikasi memakai Row Level Security, tanpa kebijakan akses publik, dan izin tabel untuk role API `anon` / `authenticated` dicabut. Website mengakses PostgreSQL melalui proses server dan login aplikasinya sendiri. Koneksi database tidak dikirim ke browser.
 
 Saat aplikasi sudah digunakan sehari-hari nanti, buat lingkungan produksi terpisah dan jalankan penyiapan produksi, bukan bootstrap demo ini.
 

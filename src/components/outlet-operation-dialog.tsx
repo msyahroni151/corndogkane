@@ -1,8 +1,9 @@
 "use client";
 import { outletBonus, outletBonusRate } from "@/lib/outlet-bonus";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { EditableCombobox } from "@/components/editable-combobox";
 import { LocalInput } from "@/components/local-input";
 
 import { notifySuccess } from "@/components/notification-toasts";
@@ -228,6 +229,11 @@ function OperationFields({
   onSaved: () => void;
 }) {
   const entry = loaded.entry;
+  const preferPos =
+    !!loaded.liveSales &&
+    (entry?.hasManual === false ||
+      entry?.salesSource === "POS" ||
+      entry?.salesSource === "POS_MANUAL_ADD");
 
   const [crewId, setCrewId] = useState(entry?.crewId || ""),
     [trainingCrewName, setTrainingCrewName] = useState(entry?.trainingCrewName || "");
@@ -244,8 +250,6 @@ function OperationFields({
     entry?.cashReceived == null ? "" : String(entry.cashReceived),
   );
   const [expenseNotes, setExpenseNotes] = useState(entry?.expenseNotes || "");
-
-  const crewListId = useId();
 
   const [crewSearch, setCrewSearch] = useState(
     loaded.employees.find((employee) => employee.id === entry?.crewId)?.name ||
@@ -268,7 +272,9 @@ function OperationFields({
       operationalPayments.map((item) => [
         item.key,
 
-        entry?.[item.key] ? String(entry[item.key]) : "",
+        (preferPos && loaded.liveSales ? loaded.liveSales[item.key] : entry?.[item.key])
+          ? String(preferPos && loaded.liveSales ? loaded.liveSales[item.key] : entry?.[item.key])
+          : "",
       ]),
     ),
   );
@@ -278,11 +284,17 @@ function OperationFields({
 
   const price = (key: string, fallback: number) => entry?.unitPrices[key] ?? fallback;
 
-  const total = operationalProducts.reduce(
-    (sum, item) => sum + Number(quantities[item.key] || 0) * price(item.key, item.price),
-
-    0,
+  const [salesMode, setSalesMode] = useState<"TOTAL" | "POS">(
+    preferPos && loaded.liveSales ? "POS" : "TOTAL",
   );
+  const total =
+    salesMode === "POS" && loaded.liveSales
+      ? loaded.liveSales.totalGross
+      : operationalProducts.reduce(
+          (sum, item) => sum + Number(quantities[item.key] || 0) * price(item.key, item.price),
+
+          0,
+        );
 
   const noncash = operationalPayments.reduce(
     (sum, item) => sum + Number(payments[item.key] || 0),
@@ -332,6 +344,7 @@ function OperationFields({
 
         body: JSON.stringify({
           outletId,
+          salesMode,
 
           date,
 
@@ -379,18 +392,16 @@ function OperationFields({
         <div className="operation-crews">
           <label className="field">
             Nama Crew *
-            <input
+            <EditableCombobox
               type="text"
               aria-label="Nama Crew"
               aria-autocomplete="list"
-              list={crewListId}
+              options={loaded.employees.map((employee) => employee.name)}
               required
               autoComplete="off"
               placeholder="Ketik untuk mencari kode crew..."
               value={crewSearch}
-              onChange={(event) => {
-                const text = event.target.value;
-
+              onValueChange={(text) => {
                 setCrewSearch(text);
 
                 const matched = loaded.employees.find(
@@ -405,11 +416,6 @@ function OperationFields({
                 if (matched) setCrewSearch(matched.name);
               }}
             />
-            <datalist id={crewListId}>
-              {loaded.employees.map((employee) => (
-                <option key={employee.id} value={employee.name} />
-              ))}
-            </datalist>
           </label>
 
           <label className="field">
@@ -432,44 +438,71 @@ function OperationFields({
           </p>
         )}
 
-        {["Isian", "Balutan", "Topping"].map((group) => (
-          <section className="operation-product-group" key={group}>
-            <h3>{group}</h3>
+        {loaded.liveSales && (
+          <label className="field mb-4">
+            Sumber total penjualan
+            <select
+              aria-label="Sumber total penjualan"
+              value={salesMode}
+              onChange={(e) => {
+                const value = e.target.value as typeof salesMode;
+                setSalesMode(value);
+                if (value === "POS" && loaded.liveSales)
+                  setPayments(
+                    Object.fromEntries(
+                      operationalPayments.map((p) => [p.key, String(loaded.liveSales![p.key])]),
+                    ),
+                  );
+              }}
+            >
+              <option value="POS">Gunakan transaksi POS + tambahan manual</option>
+              <option value="TOTAL">Isi rekap total harian manual (akan dibandingkan)</option>
+            </select>
+            <small className="font-normal text-slate-500">
+              Rekap total manual tidak ditambahkan ke omzet POS. Jika keduanya tersedia, admin
+              mengonfirmasi sumber final.
+            </small>
+          </label>
+        )}
+        <fieldset disabled={salesMode === "POS"} className={salesMode === "POS" ? "hidden" : ""}>
+          {["Isian", "Balutan", "Topping"].map((group) => (
+            <section className="operation-product-group" key={group}>
+              <h3>{group}</h3>
 
-            <div className="operation-product-grid">
-              {operationalProducts
+              <div className="operation-product-grid">
+                {operationalProducts
 
-                .filter((item) => item.group === group)
+                  .filter((item) => item.group === group)
 
-                .map((item) => (
-                  <label className="operation-product-input" key={item.key}>
-                    <span>
-                      <strong>{item.label}</strong>
+                  .map((item) => (
+                    <label className="operation-product-input" key={item.key}>
+                      <span>
+                        <strong>{item.label}</strong>
 
-                      <small>{rupiah(price(item.key, item.price))}/pcs</small>
-                    </span>
+                        <small>{rupiah(price(item.key, item.price))}/pcs</small>
+                      </span>
 
-                    <input
-                      type="number"
-                      aria-label={`QTY ${item.label}`}
-                      inputMode="numeric"
-                      min={0}
-                      max={10000}
-                      step={1}
-                      value={quantities[item.key]}
-                      placeholder="0"
-                      onChange={(event) =>
-                        setQuantities((old) => ({ ...old, [item.key]: event.target.value }))
-                      }
-                    />
+                      <input
+                        type="number"
+                        aria-label={`QTY ${item.label}`}
+                        inputMode="numeric"
+                        min={0}
+                        max={10000}
+                        step={1}
+                        value={quantities[item.key]}
+                        placeholder="0"
+                        onChange={(event) =>
+                          setQuantities((old) => ({ ...old, [item.key]: event.target.value }))
+                        }
+                      />
 
-                    <small>QTY</small>
-                  </label>
-                ))}
-            </div>
-          </section>
-        ))}
-
+                      <small>QTY</small>
+                    </label>
+                  ))}
+              </div>
+            </section>
+          ))}
+        </fieldset>
         <section className="operation-product-group">
           <h3>Pemakaian Adonan</h3>
           <label className="field operation-date">
@@ -491,7 +524,6 @@ function OperationFields({
             1 pcs = 500 gram adonan + 1 sendok teh parmifan. Tidak dihitung sebagai omzet.
           </p>
         </section>
-
         <section className="operation-product-group">
           <h3>Pembayaran non-tunai</h3>
 
@@ -505,6 +537,7 @@ function OperationFields({
                   inputMode="numeric"
                   maxLength={13}
                   placeholder="0"
+                  disabled={salesMode === "POS"}
                   value={(payments[item.key] || "").replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
                   onChange={(event) =>
                     setPayments((old) => ({

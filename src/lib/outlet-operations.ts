@@ -17,6 +17,8 @@ export const operationalPayments = [
   { key: "shopeefood", label: "ShopeeFood" },
 ] as const;
 export type OperationalEntry = {
+  hasManual?: boolean;
+  salesSource?: string;
   version: string;
   crewId: string;
   crewLabel?: string;
@@ -34,6 +36,13 @@ export type OperationalEntry = {
   shopeefood: number;
 };
 export type OperationalLoad = {
+  liveSales?: {
+    totalGross: number;
+    qris: number;
+    gofood: number;
+    grabfood: number;
+    shopeefood: number;
+  } | null;
   dailyRate?: number | null;
   outletName?: string;
   entry: OperationalEntry | null;

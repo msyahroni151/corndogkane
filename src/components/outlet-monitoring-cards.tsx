@@ -1,5 +1,6 @@
 "use client";
 
+import { SalesReconciliation } from "@/components/sales-reconciliation";
 import { useEffect, useState } from "react";
 import { outletScheduleLabel } from "@/lib/outlet-schedule-status";
 import { rupiah } from "@/lib/money";
@@ -93,6 +94,20 @@ export function OutletMonitoringCards({
       if (timer) clearInterval(timer);
     };
   }, [view, period.start, period.end, period.mode, refresh]);
+  useEffect(() => {
+    const update = () => {
+      if (document.visibilityState === "visible") setRefresh((n) => n + 1);
+    };
+    const stored = (e: StorageEvent) => {
+      if (e.key === "ck:sales-updated") update();
+    };
+    window.addEventListener("focus", update);
+    window.addEventListener("storage", stored);
+    return () => {
+      window.removeEventListener("focus", update);
+      window.removeEventListener("storage", stored);
+    };
+  }, []);
   const [selectedOutlet, setSelectedOutlet] = useState<OutletCard | null>(null);
   useEffect(() => {
     const controller = new AbortController();
@@ -122,7 +137,7 @@ export function OutletMonitoringCards({
     if (period.mode === "live")
       timer = setInterval(() => {
         void read();
-      }, 60000);
+      }, 30000);
     return () => {
       controller.abort();
       if (timer) clearInterval(timer);
@@ -201,6 +216,15 @@ export function OutletMonitoringCards({
             : unknown;
   return (
     <div className="outlet-monitoring">
+      <SalesReconciliation
+        rows={(currentSales?.reconciliations || []).filter((r) =>
+          outlets.some((o) => o.id === r.outletId && (!area || o.areaId === area)),
+        )}
+        onSaved={() => {
+          setRefresh((n) => n + 1);
+          setRecap(null);
+        }}
+      />
       {selectedOutlet && (
         <OutletOperationDialog
           outlet={selectedOutlet}
@@ -342,7 +366,7 @@ export function OutletMonitoringCards({
             : currentSales?.status === "error"
               ? "Sumber omzet POS belum dapat dibaca. Coba Terapkan atau Live kembali."
               : "Sambungan omzet POS Apps Script belum aktif. Angka omzet ditampilkan — sampai penghubung dipublikasikan."}{" "}
-        Stok dan closing belum terhubung.
+        Transaksi lokal mengikuti POS dan rekap manual yang sudah dikonfirmasi.
       </p>
       {view === "table" ? (
         <OutletRecapTable
@@ -420,7 +444,10 @@ export function OutletMonitoringCards({
                     {values[outlet.id]?.crewNames?.join(", ") || "Crew belum diisi"}
                   </span>
                   <span>
-                    <UiIcon name="box" size={15} /> Stok belum terhubung
+                    <UiIcon name="box" size={15} />{" "}
+                    {values[outlet.id]?.stockPending
+                      ? `${values[outlet.id]?.stockPending} menu perlu pemeriksaan stok`
+                      : "Stok mengikuti transaksi beresep"}
                   </span>
                 </div>
                 <details className="monitor-hours">

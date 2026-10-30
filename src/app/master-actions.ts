@@ -1,4 +1,5 @@
 "use server";
+import { readOutletLocation } from "@/lib/outlet-location";
 import { readOutletHours, type OutletHours } from "@/lib/outlet-settings";
 import { allocateBusinessId } from "@/lib/business-id";
 import { revalidatePath } from "next/cache";
@@ -83,6 +84,9 @@ export async function saveOutlet(_: FormState, form: FormData): Promise<FormStat
       areaId: string;
       dailyRate: number;
       operatingHours: OutletHours;
+      latitude: number | null;
+      longitude: number | null;
+      address: string | null;
     },
     id: string;
   try {
@@ -104,6 +108,7 @@ export async function saveOutlet(_: FormState, form: FormData): Promise<FormStat
       areaId: read(form, "areaId"),
       dailyRate: Number(rawRate),
       operatingHours: hours,
+      ...readOutletLocation(read(form, "latitude"), read(form, "longitude"), read(form, "address")),
     };
     if (!data.areaId) throw new Error("Pilih area untuk outlet.");
     id = existingId || requestedId(form, "OUT");
@@ -135,5 +140,6 @@ export async function saveOutlet(_: FormState, form: FormData): Promise<FormStat
   revalidatePath("/master-outlet");
   revalidatePath("/penempatan");
   revalidatePath("/admin-malam/monitoring-outlet");
+  revalidatePath("/menu-utama/dashboard");
   return { success: "Master outlet berhasil disimpan." };
 }

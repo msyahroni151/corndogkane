@@ -13,7 +13,7 @@ async function Content() {
   return (
     <AuthScreen
       title="Selamat datang"
-      description="Masuk untuk mengelola HRIS & Payroll Corndog Kane."
+      description="Masuk untuk mengelola Back Office Corndog Kane."
     >
       <AuthForm />
       {needsSetup && (

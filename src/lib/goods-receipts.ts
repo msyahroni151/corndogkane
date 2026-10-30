@@ -1,3 +1,4 @@
+import { normalizeInputUnit, validStockUnit } from "@/lib/stock-units";
 import { parseCivilDate } from "@/lib/placements";
 export const receiptMethods = ["TUNAI", "TRANSFER", "HUTANG", "COD"] as const;
 export const receiptUnits = ["PCS", "GRAM", "KG", "ML", "LITER"] as const;
@@ -11,11 +12,12 @@ export type ReceiptLineDraft = {
   inputUnit: string;
   amount: string;
 };
-export type ItemOption = { name: string; packagingUnit: string };
+export type ItemOption = { name: string; packagingUnit: string; baseUnit?: string };
 export const itemKey = (name: string) => name.trim().replace(/\s+/g, " ").toUpperCase();
 export const quantityLabel = (quantity: number, unit: string) =>
   quantity.toLocaleString("id-ID", { maximumFractionDigits: 3 }) + " " + unit.toLowerCase();
 export function normalizedQuantity(count: number, perPack: number, unit: string) {
+  unit = normalizeInputUnit(unit);
   const factor = unit === "KG" || unit === "LITER" ? 1000 : 1;
   return {
     quantity: Math.round(count * perPack * factor * 1000) / 1000,
@@ -64,12 +66,11 @@ export function parseGoodsReceipt(form: FormData, today: string) {
       packagingUnit = String(row.packagingUnit || "")
         .trim()
         .toUpperCase(),
-      inputUnit = String(row.inputUnit || "");
+      inputUnit = normalizeInputUnit(row.inputUnit);
     if (!name || name.length > 150) fail("Nama barang wajib diisi, maksimal 150 karakter.");
     if (!packagingUnit || packagingUnit.length > 40)
       fail("Satuan kemasan wajib diisi, maksimal 40 karakter.");
-    if (!receiptUnits.includes(inputUnit as (typeof receiptUnits)[number]))
-      fail("Satuan isi kemasan tidak valid.");
+    if (!validStockUnit(inputUnit)) fail("Satuan isi kemasan tidak valid.");
     const packCount = decimal(row.packCount),
       quantityPerPack = decimal(row.quantityPerPack),
       amount = money(row.amount),

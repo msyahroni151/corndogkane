@@ -1,5 +1,6 @@
 export type OutletSales = {
-  source?: "manual";
+  source?: "manual" | "pos" | "mixed" | "review";
+  stockPending?: number;
   countKnown?: boolean;
   cashKnown?: boolean;
   days?: number;
@@ -12,7 +13,21 @@ export type OutletSales = {
   expense?: number;
 };
 import type { OutletSchedulePeriod } from "@/lib/outlet-schedule-status";
+export type ReconciliationRow = {
+  id: string;
+  outletId: string;
+  outletName: string;
+  date: string;
+  version: string;
+  pos: number;
+  additional: number;
+  manual: number | null;
+  current: number;
+  pending: boolean;
+  stockPending: number;
+};
 export type MonitoringSales = {
+  reconciliations?: ReconciliationRow[];
   schedules?: Record<string, OutletSchedulePeriod>;
   status: "connected" | "unconfigured" | "error";
   start: string;

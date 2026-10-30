@@ -9,7 +9,7 @@ export async function syncLegacyOutletBonuses(_: FormState): Promise<FormState> 
   const user = await requireAccess("bonus"),
     db = getPrisma();
   const rows = await db.outletOperation.findMany({
-    where: { bonusAmount: null },
+    where: { bonusAmount: null, hasManual: true, salesPending: false },
     select: { id: true, outletId: true, date: true },
     orderBy: [{ date: "asc" }, { id: "asc" }],
     take: 100,

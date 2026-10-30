@@ -1,4 +1,7 @@
 "use server";
+import { registerProductionRemainder, consumeRemainder } from "@/lib/production-remainders";
+import { runInventoryItemLifecycle } from "@/lib/inventory-item-lifecycle";
+import { normalizeStockUnit, validStockUnit } from "@/lib/stock-units";
 import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireAccess } from "@/lib/auth";
@@ -7,7 +10,8 @@ import { itemKey } from "@/lib/goods-receipts";
 import { todayWib, parseCivilDate } from "@/lib/placements";
 import {
   catalogKinds,
-  stockUnits,
+  warehouseKinds,
+  recipeIngredientAllowed,
   inventoryNumber,
   inventoryRound,
   changedBatch,
@@ -29,7 +33,10 @@ function failure(e: unknown): FormState {
 }
 function refresh() {
   revalidatePath("/stok-inventory");
+  revalidatePath("/setting-menu");
+  revalidatePath("/produksi-gudang");
   revalidatePath("/barang-masuk");
+  revalidatePath("/control-stok");
 }
 function actionData(form: FormData) {
   const get = (key: string) => String(form.get(key) || "").trim(),
@@ -51,25 +58,29 @@ async function previous(tx: Prisma.TransactionClient, postingKey: string, reques
   return row;
 }
 export async function saveInventoryItem(_: FormState, form: FormData): Promise<FormState> {
-  const user = await requireAccess("stok-inventory");
+  const user = await requireAccess(
+    String(form.get("catalogScope")) === "warehouse" ||
+      String(form.get("kind")) === "RAW" ||
+      String(form.get("kind")) === "FINISHED"
+      ? "stok-inventory"
+      : "setting-menu",
+  );
   void user;
   const get = (key: string) => String(form.get(key) || "").trim();
-  let minimumStock: number,
-    sellingPrice: number,
-    standardCost: number,
-    recipe: { ingredientId: string; quantity: number; baseUnit: string }[];
+  let minimumStock: number, sellingPrice: number, standardCost: number;
   const name = get("name").replace(/\s+/g, " "),
     key = itemKey(name),
     kind = get("kind"),
-    baseUnit = get("baseUnit"),
-    category = get("category"),
-    emoji = get("emoji");
+    baseUnit = normalizeStockUnit(get("baseUnit")),
+    category = get("catalogScope") === "warehouse" ? "Persediaan Gudang" : get("category"),
+    emoji = get("catalogScope") === "warehouse" ? "" : get("emoji");
   try {
     if (
       !name ||
+      (get("catalogScope") === "warehouse" && !warehouseKinds.some((k) => k === kind)) ||
       name.length > 150 ||
       !catalogKinds.includes(kind as (typeof catalogKinds)[number]) ||
-      !stockUnits.includes(baseUnit as (typeof stockUnits)[number])
+      !validStockUnit(baseUnit)
     )
       throw Error("Nama, jenis barang, dan satuan wajib diisi dengan benar.");
     if (category.length > 100 || emoji.length > 20)
@@ -82,25 +93,13 @@ export async function saveInventoryItem(_: FormState, form: FormData): Promise<F
     };
     sellingPrice = money(get("sellingPrice") || "0");
     standardCost = money(get("standardCost") || "0");
-    const raw: unknown = kind === "SUB" ? JSON.parse(get("recipe") || "[]") : [];
-    if (!Array.isArray(raw) || raw.length > 50) throw Error("Resep maksimal 50 bahan.");
-    recipe = raw.map((row) => {
-      if (!row || typeof row !== "object") throw Error("Resep tidak valid.");
-      const ingredientId = String(row.ingredientId || ""),
-        unit = String(row.baseUnit || "");
-      if (!ingredientId || !stockUnits.includes(unit as (typeof stockUnits)[number]))
-        throw Error("Pilih bahan dan satuan resep yang valid.");
-      return { ingredientId, baseUnit: unit, quantity: inventoryNumber(row.quantity) };
-    });
-    if (new Set(recipe.map((row) => row.ingredientId + ":" + row.baseUnit)).size !== recipe.length)
-      throw Error("Bahan dan satuan yang sama cukup dicantumkan sekali di resep.");
   } catch (e) {
     return { error: e instanceof SyntaxError ? "Data resep tidak valid." : (e as Error).message };
   }
   let photo: string | undefined;
   try {
     const upload = form.get("photo");
-    if (upload instanceof File && upload.size > 0) {
+    if (get("catalogScope") !== "warehouse" && upload instanceof File && upload.size > 0) {
       if (upload.size > 256 * 1024)
         return { error: "Foto maksimal 256 KB (PNG, JPEG, atau WebP)." };
       const bytes = Buffer.from(await upload.arrayBuffer());
@@ -123,32 +122,40 @@ export async function saveInventoryItem(_: FormState, form: FormData): Promise<F
           : null;
         if (get("id") && (!current || current.updatedAt.toISOString() !== get("version")))
           invalid("Data barang sudah berubah. Tutup form dan muat ulang sebelum mengedit.");
+        if (
+          current &&
+          current.baseUnit !== baseUnit &&
+          ((await tx.outletStock.count({ where: { itemId: current.id } })) > 0 ||
+            (await tx.outletStockOrderLine.count({ where: { itemId: current.id } })) > 0)
+        )
+          invalid(
+            "Satuan barang yang sudah dipakai dalam stok / permintaan outlet tidak dapat diubah.",
+          );
+        if (
+          current &&
+          current.baseUnit !== baseUnit &&
+          (await tx.inventoryRecipe.count({
+            where: { OR: [{ outputId: current.id }, { ingredientId: current.id }] },
+          })) > 0
+        )
+          invalid(
+            "Satuan barang yang sudah dipakai dalam resep tidak dapat diubah. Atur ulang resep terlebih dahulu.",
+          );
         const duplicate = await tx.inventoryItem.findUnique({ where: { key } });
         if (duplicate && duplicate.id !== current?.id)
           invalid(
-            "Nama barang ini sudah terdaftar. Gunakan nama lain atau edit barang yang sudah ada.",
+            duplicate.active
+              ? "Nama barang ini sudah terdaftar. Gunakan nama lain atau edit barang yang sudah ada."
+              : "Nama barang ini tersimpan di Sampah. Buka filter Sampah untuk mengembalikan bahan.",
           );
         if (current && current.kind !== kind)
           invalid("Jenis barang tidak dapat diubah setelah dibuat.");
         if (
           current &&
           current.baseUnit !== baseUnit &&
-          (current.kind === "SUB" || current.kind === "PRODUCT") &&
           (await tx.inventoryBatch.count({ where: { itemId: current.id } })) > 0
         )
-          invalid("Satuan produk yang sudah memiliki batch tidak dapat diubah.");
-        const ingredients = await tx.inventoryItem.findMany({
-          where: { id: { in: recipe.map((row) => row.ingredientId) } },
-        });
-        if (
-          recipe.some(
-            (row) =>
-              !ingredients.some(
-                (item) => item.id === row.ingredientId && item.kind === "RAW" && item.active,
-              ),
-          )
-        )
-          invalid("Resep harus memakai bahan baku aktif yang terdaftar.");
+          invalid("Satuan barang yang sudah memiliki batch tidak dapat diubah.");
         const data = {
           name,
           key,
@@ -156,21 +163,20 @@ export async function saveInventoryItem(_: FormState, form: FormData): Promise<F
           category: category || "Lainnya",
           baseUnit,
           minimumStock,
-          active: get("active") === "true",
+          active:
+            get("catalogScope") === "warehouse"
+              ? (current?.active ?? true)
+              : get("active") === "true",
           emoji,
           sellingPrice,
           standardCost,
           ...(photo ? { photo } : {}),
-          ...(get("removePhoto") === "true" ? { photo: null } : {}),
+          ...(get("catalogScope") !== "warehouse" && get("removePhoto") === "true"
+            ? { photo: null }
+            : {}),
         };
-        const item = current
-          ? await tx.inventoryItem.update({ where: { id: current.id }, data })
-          : await tx.inventoryItem.create({ data: { ...data, packagingUnit: baseUnit } });
-        await tx.inventoryRecipe.deleteMany({ where: { outputId: item.id } });
-        if (recipe.length)
-          await tx.inventoryRecipe.createMany({
-            data: recipe.map((row) => ({ ...row, outputId: item.id })),
-          });
+        if (current) await tx.inventoryItem.update({ where: { id: current.id }, data });
+        else await tx.inventoryItem.create({ data: { ...data, packagingUnit: baseUnit } });
       },
       { timeout: 20000 },
     );
@@ -180,6 +186,110 @@ export async function saveInventoryItem(_: FormState, form: FormData): Promise<F
   refresh();
   return { success: "Data barang berhasil disimpan." };
 }
+export async function reclassifyWarehouseStock(_: FormState, form: FormData): Promise<FormState> {
+  const user = await requireAccess("stok-inventory");
+  let data: ReturnType<typeof actionData>, id: string, version: string, name: string;
+  try {
+    data = actionData(form);
+    id = data.get("id");
+    version = data.get("version");
+    name = data.get("warehouseName").replace(/\s+/g, " ");
+    if (!id || !version || !name || name.length > 150)
+      throw Error("Isi nama barang gudang, maksimal 150 karakter.");
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  const requestHash = createHash("sha256")
+    .update(JSON.stringify({ actorId: user.id, id, version, name, date: data.date }))
+    .digest("hex");
+  try {
+    await getPrisma().$transaction(
+      async (tx) => {
+        if (await previous(tx, data.postingKey, requestHash)) return;
+        const old = await tx.inventoryItem.findUnique({
+          where: { id },
+          include: { batches: { include: { sourceLine: true } } },
+        });
+        if (
+          !old ||
+          old.kind !== "PRODUCT" ||
+          old.updatedAt.toISOString() !== version ||
+          !old.batches.length
+        )
+          invalid("Stok lama sudah berubah. Muat ulang halaman sebelum memisahkan.");
+        if (
+          old.batches.some(
+            (b) => b.baseUnit !== old.baseUnit || (b.sourceLine && b.sourceLine.itemId !== old.id),
+          )
+        )
+          invalid("Satuan atau sumber batch lama perlu diperiksa sebelum dipisahkan.");
+        if (
+          (await tx.outletStock.count({ where: { itemId: id } })) ||
+          (await tx.outletStockOrderLine.count({ where: { itemId: id } }))
+        )
+          invalid(
+            "Barang ini sudah terhubung ke stok outlet. Periksa hubungan stok sebelum memisahkan.",
+          );
+        const key = itemKey(name);
+        if (await tx.inventoryItem.findUnique({ where: { key } }))
+          invalid("Nama barang gudang sudah digunakan. Pilih nama lain.");
+        const stock = await tx.inventoryItem.create({
+          data: {
+            key,
+            name,
+            kind: "FINISHED",
+            category: "Persediaan Gudang",
+            baseUnit: old.baseUnit,
+            packagingUnit: old.packagingUnit,
+            active: old.active,
+            minimumStock: old.minimumStock,
+            emoji: old.emoji,
+            photo: old.photo,
+          },
+        });
+        const operation = await tx.inventoryOperation.create({
+          data: {
+            postingKey: data.postingKey,
+            requestHash,
+            kind: "CLASSIFY",
+            date: parseCivilDate(data.date),
+            notes: `Pisahkan stok lama dari menu ${old.name} (${old.id}) menjadi ${stock.name} (${stock.id}). Jumlah dan nilai batch tetap; menu jual dan resep tidak diubah.`,
+            createdById: user.id,
+          },
+        });
+        for (const batch of old.batches) {
+          await tx.inventoryBatch.update({
+            where: { id: batch.id },
+            data: { itemId: stock.id, version: { increment: 1 } },
+          });
+          if (batch.sourceLineId)
+            await tx.goodsReceiptLine.update({
+              where: { id: batch.sourceLineId },
+              data: { itemId: stock.id },
+            });
+          await tx.inventoryMovement.create({
+            data: {
+              operationId: operation.id,
+              batchId: batch.id,
+              quantityBefore: batch.remainingQuantity,
+              quantityAfter: batch.remainingQuantity,
+              valueBefore: batch.remainingValue,
+              valueAfter: batch.remainingValue,
+            },
+          });
+        }
+        await tx.inventoryItem.update({ where: { id: old.id }, data: { updatedAt: new Date() } });
+      },
+      { timeout: 20000 },
+    );
+  } catch (e) {
+    return failure(e);
+  }
+  refresh();
+  revalidatePath("/control-stok");
+  return { success: "Stok lama berhasil dipisahkan menjadi bahan jadi gudang." };
+}
+
 export async function adjustInventory(_: FormState, form: FormData): Promise<FormState> {
   const user = await requireAccess("stok-inventory");
   let data: ReturnType<typeof actionData>,
@@ -309,13 +419,14 @@ export async function adjustInventory(_: FormState, form: FormData): Promise<For
   };
 }
 export async function produceInventory(_: FormState, form: FormData): Promise<FormState> {
-  const user = await requireAccess("stok-inventory");
-  let data: ReturnType<typeof actionData>, itemId: string, quantity: number;
+  const user = await requireAccess("produksi-gudang");
+  let data: ReturnType<typeof actionData>, itemId: string, quantity: number, batchCount: number;
   try {
     data = actionData(form);
     itemId = data.get("itemId");
     quantity = inventoryNumber(data.get("quantity"));
-    if (!itemId) throw Error("Pilih sub-produk yang ingin diproduksi.");
+    batchCount = inventoryNumber(data.get("batchCount"));
+    if (!itemId) throw Error("Pilih barang hasil produksi gudang.");
   } catch (e) {
     return { error: (e as Error).message };
   }
@@ -327,6 +438,11 @@ export async function produceInventory(_: FormState, form: FormData): Promise<Fo
         notes: data.notes,
         itemId,
         quantity,
+        batchCount,
+        reuseBatchId: data.get("reuseBatchId"),
+        reuseVersion: data.get("reuseVersion"),
+        reuseQuantity: data.get("reuseQuantity"),
+        recipeVersion: data.get("recipeVersion"),
       }),
     )
     .digest("hex");
@@ -338,27 +454,43 @@ export async function produceInventory(_: FormState, form: FormData): Promise<Fo
           where: { id: itemId },
           include: { recipe: { include: { ingredient: true } } },
         });
-        if (!item || !item.active || item.kind !== "SUB")
-          invalid("Pilih sub-produk aktif yang terdaftar.");
+        if (!item || !item.active || !["SUB", "FINISHED"].includes(item.kind))
+          invalid("Pilih bahan setengah jadi atau bahan jadi aktif yang terdaftar.");
         if (item.updatedAt.toISOString() !== data.get("recipeVersion"))
           invalid("Resep berubah sejak form dibuka. Tutup dan buka kembali form produksi.");
         if (!item.recipe.length)
-          invalid("Atur resep bahan baku sub-produk terlebih dahulu melalui Edit Sub Produk.");
+          invalid(
+            "Atur resep hasil produksi terlebih dahulu melalui Produksi Gudang / Resep Produksi.",
+          );
+        if (
+          item.recipe.some(
+            (row) =>
+              !recipeIngredientAllowed(item.kind, row.ingredient.kind) ||
+              row.baseUnit !== row.ingredient.baseUnit,
+          )
+        )
+          invalid(
+            "Satuan atau jenis bahan pada resep tidak sesuai. Perbarui melalui Resep Produksi.",
+          );
         if (item.recipe.some((row) => !row.ingredient.active))
-          invalid("Resep mengandung bahan nonaktif. Perbarui resep sebelum memproduksi.");
+          invalid(
+            "Resep mengandung bahan di Sampah. Kembalikan bahan atau perbarui resep sebelum memproduksi.",
+          );
         const operation = await tx.inventoryOperation.create({
           data: {
             postingKey: data.postingKey,
             requestHash,
             kind: "PRODUCTION",
             date: parseCivilDate(data.date),
-            notes: data.notes || "Produksi " + item.name,
+            notes:
+              `Produksi ${item.name}; ${batchCount} batch; hasil standar ${inventoryRound(batchCount * Number(item.productionYield))} ${item.baseUnit.toLowerCase()}; hasil aktual ${quantity} ${item.baseUnit.toLowerCase()}.` +
+              (data.notes ? "\n" + data.notes : ""),
             createdById: user.id,
           },
         });
         let outputValue = 0;
         for (const component of item.recipe) {
-          let needed = inventoryRound(quantity * Number(component.quantity));
+          let needed = inventoryRound(batchCount * Number(component.quantity));
           if (needed <= 0 || needed > 1_000_000_000)
             invalid("Jumlah kebutuhan bahan terlalu kecil atau terlalu besar.");
           const batches = await tx.inventoryBatch.findMany({
@@ -428,6 +560,21 @@ export async function produceInventory(_: FormState, form: FormData): Promise<Fo
             needed = inventoryRound(needed - take);
           }
         }
+        if (data.get("reuseBatchId")) {
+          outputValue = inventoryRound(
+            outputValue +
+              (await consumeRemainder(tx, {
+                batchId: data.get("reuseBatchId"),
+                version: Number(data.get("reuseVersion")),
+                itemId: item.id,
+                quantity: inventoryNumber(data.get("reuseQuantity")),
+                date: data.date,
+                operationId: operation.id,
+              })),
+            4,
+          );
+        } else if (Number(data.get("reuseQuantity") || "0") !== 0)
+          invalid("Pilih batch sisa yang akan digunakan.");
         if (outputValue > 1_000_000_000) invalid("Nilai produksi maksimal Rp1 miliar.");
         const output = await tx.inventoryBatch.create({
           data: {
@@ -458,5 +605,44 @@ export async function produceInventory(_: FormState, form: FormData): Promise<Fo
     return failure(e);
   }
   refresh();
-  return { success: "Produksi sub-produk berhasil disimpan." };
+  return { success: "Produksi gudang berhasil disimpan." };
+}
+
+export async function changeInventoryItemStatus(_: FormState, form: FormData): Promise<FormState> {
+  const user = await requireAccess("stok-inventory");
+  try {
+    const { get, postingKey, date } = actionData(form);
+    await runInventoryItemLifecycle(getPrisma(), user.id, {
+      id: get("id"),
+      version: get("version"),
+      operation: get("operation"),
+      postingKey,
+      date,
+      confirmationName: get("confirmationName"),
+    });
+    refresh();
+    return { success: "Status bahan berhasil diperbarui." };
+  } catch (e) {
+    return failure(e);
+  }
+}
+
+export async function saveProductionRemainder(_: FormState, form: FormData): Promise<FormState> {
+  const user = await requireAccess("produksi-gudang");
+  try {
+    const { get, postingKey, date, notes } = actionData(form);
+    await registerProductionRemainder(getPrisma(), user.id, {
+      sourceBatchId: get("sourceBatchId"),
+      version: Number(get("version")),
+      quantity: inventoryNumber(get("quantity")),
+      date,
+      location: get("location"),
+      notes,
+      postingKey,
+    });
+    refresh();
+    return { success: "Sisa produksi berhasil dicatat." };
+  } catch (e) {
+    return failure(e);
+  }
 }

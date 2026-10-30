@@ -27,6 +27,8 @@ export async function GET(request: Request) {
     orderBy: [{ date: "desc" }, { outletName: "asc" }, { id: "asc" }],
     take: 10001,
     select: {
+      hasManual: true,
+      salesSource: true,
       id: true,
       date: true,
       outletId: true,
@@ -67,6 +69,8 @@ export async function GET(request: Request) {
     const date = entry.date.toISOString().slice(0, 10),
       items = snapshotItems(entry.items);
     return {
+      hasManual: entry.hasManual,
+      salesSource: entry.salesSource,
       id: entry.id,
       reference: `RKP-${date.replaceAll("-", "")}-${entry.outletId}`,
       date,
@@ -85,11 +89,13 @@ export async function GET(request: Request) {
       cashReceived: entry.cashReceived,
       bonusAmount:
         entry.bonusAmount ??
-        outletBonus(
-          entry.totalGross,
-          entry.bonusDailyRate ??
-            outletBonusRate(entry.outlet.name, date, entry.outlet.dailyRate, entry.totalGross),
-        ),
+        (entry.hasManual
+          ? outletBonus(
+              entry.totalGross,
+              entry.bonusDailyRate ??
+                outletBonusRate(entry.outlet.name, date, entry.outlet.dailyRate, entry.totalGross),
+            )
+          : null),
       quantities: Object.fromEntries(
         Object.entries(items).map(([key, item]) => [key, item.quantity]),
       ),

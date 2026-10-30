@@ -473,14 +473,17 @@ export const draftEvent = "ck:pos-preview-drafts";
 function key(userId: string) {
   return "ck:pos-preview:" + userId;
 }
-export function normalizeCart(value: unknown): CartItem[] {
+export function normalizeCart(
+  value: unknown,
+  catalogue: readonly PosProduct[] = previewProducts,
+): CartItem[] {
   if (!Array.isArray(value)) return [];
   const result = new Map<string, number>();
   for (const item of value.slice(0, 100)) {
     if (!item || typeof item !== "object") continue;
     const { productId, quantity } = item as CartItem;
     if (
-      !previewProducts.some((product) => product.id === productId) ||
+      !catalogue.some((product) => product.id === productId) ||
       !Number.isInteger(quantity) ||
       quantity < 1 ||
       quantity > 100
@@ -490,7 +493,10 @@ export function normalizeCart(value: unknown): CartItem[] {
   }
   return Array.from(result, ([productId, quantity]) => ({ productId, quantity }));
 }
-export function readPreviewDrafts(userId: string): PreviewDraft[] {
+export function readPreviewDrafts(
+  userId: string,
+  catalogue: readonly PosProduct[] = previewProducts,
+): PreviewDraft[] {
   try {
     const raw = localStorage.getItem(key(userId));
     if (!raw || raw.length > 200000) return [];
@@ -506,7 +512,7 @@ export function readPreviewDrafts(userId: string): PreviewDraft[] {
         !Number.isFinite(Date.parse(entry.createdAt))
       )
         return [];
-      const items = normalizeCart(entry.items);
+      const items = normalizeCart(entry.items, catalogue);
       return items.length
         ? [
             {
@@ -531,9 +537,13 @@ export function writePreviewDrafts(userId: string, drafts: PreviewDraft[]) {
   localStorage.setItem(key(userId), JSON.stringify(drafts.slice(0, 50)));
   window.dispatchEvent(new Event(draftEvent));
 }
-export function cartTotal(items: CartItem[], method: PaymentMethod = "TUNAI") {
+export function cartTotal(
+  items: CartItem[],
+  method: PaymentMethod = "TUNAI",
+  catalogue: readonly PosProduct[] = previewProducts,
+) {
   return items.reduce((sum, item) => {
-    const product = previewProducts.find((product) => product.id === item.productId);
+    const product = catalogue.find((product) => product.id === item.productId);
     return sum + (product ? productPrice(product, method) : 0) * item.quantity;
   }, 0);
 }

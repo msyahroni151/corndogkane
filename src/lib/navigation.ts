@@ -1,13 +1,14 @@
 import type { IconName } from "@/components/ui-icon";
 export type MenuItem = { href: string; name: string; icon: IconName };
 export const nightOperationsMenu: MenuItem[] = [
-  { href: "/admin-malam/dashboard", name: "Dashboard", icon: "dashboard" },
+  { href: "/menu-utama/dashboard", name: "Dashboard", icon: "dashboard" },
   { href: "/admin-malam/monitoring-outlet", name: "Monitoring Outlet", icon: "building" },
 ];
 export const salesMenu: MenuItem[] = [
   { href: "/pos", name: "POS Kasir", icon: "cart" },
   { href: "/retur-pembeli", name: "Retur Pembeli", icon: "return" },
   { href: "/template-struk", name: "Template Struk", icon: "receipt" },
+  { href: "/setting-menu", name: "Setting Menu", icon: "tag" },
 ];
 export const financeMenu: MenuItem[] = [
   { href: "/finance/budgeting-rab", name: "Budgeting & RAB", icon: "coins" },
@@ -36,13 +37,13 @@ export const mainMenu: MenuItem[] = [
   { href: "/master-area", name: "Master Area", icon: "location" },
   { href: "/master-outlet", name: "Master Outlet", icon: "building" },
 ];
-export const relationMenu: MenuItem[] = [
-  { href: "/supplier", name: "Supplier", icon: "truck" },
-  { href: "/pelanggan", name: "Pelanggan", icon: "people" },
-];
+export const relationMenu: MenuItem[] = [{ href: "/pelanggan", name: "Pelanggan", icon: "people" }];
 export const inventoryMenu: MenuItem[] = [
+  { href: "/supplier", name: "Supplier", icon: "truck" },
   { href: "/barang-masuk", name: "Barang Masuk", icon: "package-in" },
   { href: "/stok-inventory", name: "Stok & Inventori", icon: "boxes" },
+  { href: "/produksi-gudang", name: "Produksi Gudang", icon: "box" },
+  { href: "/control-stok", name: "Control Stok", icon: "check" },
 ];
 export const employeePortalMenu: MenuItem[] = [
   { href: "/portal-karyawan", name: "Beranda", icon: "dashboard" },

@@ -1,6 +1,7 @@
 "use client";
+import { EditableCombobox } from "@/components/editable-combobox";
 import { LocalInput } from "@/components/local-input";
-import { useActionState, useEffect, useId, useRef, useState, type ChangeEvent } from "react";
+import { useActionState, useEffect, useRef, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCloseFormDialog } from "@/components/form-dialog";
@@ -25,7 +26,6 @@ export function RecordForm({
 }) {
   const defaults = Object.fromEntries(fields.map((field) => [field.key, field.defaultValue || ""]));
   const [draft, setDraft] = useState<Record<string, string>>({ ...defaults, ...initial });
-  const suggestionId = useId();
   const router = useRouter();
   const closeDialog = useCloseFormDialog();
   const change = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -68,25 +68,26 @@ export function RecordForm({
                   </option>
                 ))}
               </select>
+            ) : field.suggestions ? (
+              <EditableCombobox
+                name={field.key}
+                options={field.suggestions}
+                value={draft[field.key] || ""}
+                onValueChange={(value) => setDraft((old) => ({ ...old, [field.key]: value }))}
+                readOnly={field.readOnly}
+                required={field.required}
+                maxLength={100}
+              />
             ) : (
               <LocalInput
                 name={field.key}
                 value={draft[field.key] || ""}
                 onChange={change}
                 type={field.type || "text"}
-                list={field.suggestions ? suggestionId + "-" + field.key : undefined}
-                autoComplete={field.suggestions ? "off" : undefined}
                 readOnly={field.readOnly}
                 required={field.required}
                 maxLength={100}
               />
-            )}
-            {field.suggestions && (
-              <datalist id={suggestionId + "-" + field.key}>
-                {field.suggestions.map((value) => (
-                  <option key={value} value={value} />
-                ))}
-              </datalist>
             )}
             {field.help && (
               <span className="text-xs font-normal leading-5 text-slate-500">{field.help}</span>

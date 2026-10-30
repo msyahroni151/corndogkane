@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -8,6 +8,8 @@ import { createGoodsReceipt } from "@/app/goods-receipt-actions";
 
 import { useCloseFormDialog } from "@/components/form-dialog";
 
+import { EditableCombobox } from "@/components/editable-combobox";
+import { StockUnitInput } from "@/components/stock-unit-input";
 import { LocalInput } from "@/components/local-input";
 
 import {
@@ -16,7 +18,6 @@ import {
   packagingUnits,
   quantityLabel,
   receiptMethods,
-  receiptUnits,
   type ItemOption,
   type ReceiptLineDraft,
 } from "@/lib/goods-receipts";
@@ -40,6 +41,46 @@ const blankLine = (key: string): ReceiptLineDraft => ({
 
   amount: "",
 });
+
+function RupiahInput({
+  value,
+  onValueChange,
+  required = false,
+}: {
+  value: string;
+  onValueChange: (value: string) => void;
+  required?: boolean;
+}) {
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      required={required}
+      placeholder="0"
+      value={value.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+      onChange={(event) => {
+        const input = event.currentTarget;
+        const digitsBeforeCursor = input.value
+          .slice(0, input.selectionStart ?? input.value.length)
+          .replace(/\D/g, "").length;
+        const raw = input.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+        const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        input.setCustomValidity(
+          Number(raw) > 1_000_000_000 ? "Nominal maksimal Rp 1.000.000.000." : "",
+        );
+        onValueChange(raw);
+        input.value = formatted;
+        let cursor = 0;
+        let digits = 0;
+        while (cursor < formatted.length && digits < digitsBeforeCursor) {
+          if (/\d/.test(formatted[cursor])) digits++;
+          cursor++;
+        }
+        input.setSelectionRange(cursor, cursor);
+      }}
+    />
+  );
+}
 
 export function GoodsReceiptForm({
   today,
@@ -65,8 +106,7 @@ export function GoodsReceiptForm({
   const [state, action, pending] = useActionState<FormState, FormData>(createGoodsReceipt, {}),
     close = useCloseFormDialog(),
     router = useRouter(),
-    handled = useRef(false),
-    id = useId();
+    handled = useRef(false);
 
   useEffect(() => {
     if (state.success && !pending && !handled.current) {
@@ -214,18 +254,6 @@ export function GoodsReceiptForm({
             <span>2</span> Daftar Barang
           </h3>
 
-          <datalist id={id + "-items"}>
-            {items.map((item) => (
-              <option key={item.name} value={item.name} />
-            ))}
-          </datalist>
-
-          <datalist id={id + "-packs"}>
-            {packagingUnits.map((unit) => (
-              <option key={unit} value={unit} />
-            ))}
-          </datalist>
-
           {lines.map((row, index) => {
             const normalized = normalizedQuantity(
               Number(row.packCount),
@@ -242,15 +270,14 @@ export function GoodsReceiptForm({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="field sm:col-span-2">
                     Nama Barang *
-                    <input
-                      list={id + "-items"}
+                    <EditableCombobox
+                      options={items.map((item) => item.name)}
                       required
                       maxLength={150}
                       placeholder="Cari / pilih barang, atau ketik nama baru..."
                       value={row.name}
-                      onChange={(e) => {
-                        const name = e.target.value,
-                          match = items.find((item) => itemKey(item.name) === itemKey(name));
+                      onValueChange={(name) => {
+                        const match = items.find((item) => itemKey(item.name) === itemKey(name));
 
                         update(row.key, {
                           name,
@@ -258,6 +285,7 @@ export function GoodsReceiptForm({
                           ...(match
                             ? {
                                 packagingUnit: match.packagingUnit,
+                                inputUnit: match.baseUnit || row.inputUnit,
 
                                 quantityPerPack:
                                   match.packagingUnit === "PCS" ? "1" : row.quantityPerPack,
@@ -286,13 +314,13 @@ export function GoodsReceiptForm({
 
                   <label className="field">
                     Satuan Kemasan *
-                    <input
-                      list={id + "-packs"}
+                    <EditableCombobox
+                      options={[...packagingUnits, ...items.map((item) => item.packagingUnit)]}
                       required
                       maxLength={40}
                       placeholder="Karton, pack, karung..."
                       value={row.packagingUnit}
-                      onChange={(e) => update(row.key, { packagingUnit: e.target.value })}
+                      onValueChange={(value) => update(row.key, { packagingUnit: value })}
                     />
                   </label>
 
@@ -312,29 +340,20 @@ export function GoodsReceiptForm({
 
                   <label className="field">
                     Satuan Isi *
-                    <select
+                    <StockUnitInput
+                      receipt
                       value={row.inputUnit}
-                      onChange={(e) => update(row.key, { inputUnit: e.target.value })}
-                    >
-                      {receiptUnits.map((unit) => (
-                        <option key={unit} value={unit}>
-                          {unit.toLowerCase()}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => update(row.key, { inputUnit: value })}
+                      units={items.flatMap((item) => (item.baseUnit ? [item.baseUnit] : []))}
+                    />
                   </label>
 
                   <label className="field sm:col-span-2">
                     Harga Total Barang (Rp) *
-                    <input
-                      type="number"
-                      min="0"
-                      max="1000000000"
-                      step="1"
+                    <RupiahInput
                       required
-                      placeholder="0"
                       value={row.amount}
-                      onChange={(e) => update(row.key, { amount: e.target.value })}
+                      onValueChange={(amount) => update(row.key, { amount })}
                     />
                     <span className="text-xs font-normal text-slate-500">
                       Total harga untuk seluruh kemasan barang ini.
@@ -389,14 +408,7 @@ export function GoodsReceiptForm({
             {porter && (
               <label className="field mt-3">
                 Biaya Porter (Rp)
-                <input
-                  type="number"
-                  min="0"
-                  max="1000000000"
-                  step="1"
-                  value={fee}
-                  onChange={(e) => setFee(e.target.value)}
-                />
+                <RupiahInput value={fee} onValueChange={setFee} />
               </label>
             )}
           </details>

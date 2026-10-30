@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { NavigationLink } from "@/components/navigation-link";
 import { createPortal } from "react-dom";
 import { useEffect, useId, useState, type MouseEvent, type FocusEvent } from "react";
 import { UiIcon, type IconName } from "@/components/ui-icon";
@@ -52,9 +52,8 @@ export function SidebarLink({
   }, [visible]);
   return (
     <>
-      <Link
+      <NavigationLink
         href={href}
-        prefetch={false}
         aria-label={name}
         aria-current={active ? "page" : undefined}
         aria-describedby={visible ? id : undefined}
@@ -75,7 +74,7 @@ export function SidebarLink({
             {badge}
           </small>
         )}
-      </Link>
+      </NavigationLink>
       {visible &&
         createPortal(
           <div id={id} role="tooltip" className="sidebar-menu-tooltip" style={position}>

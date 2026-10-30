@@ -22,7 +22,7 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
           <BrandLogo size={46} />
           <div className="sidebar-brand-copy">
             <p className="text-[13px] font-extrabold tracking-wide">CORNDOG KANE</p>
-            <p className="mt-1 text-[11px] text-slate-400">People & Payroll</p>
+            <p className="mt-1 text-[11px] text-slate-400">Back Office</p>
           </div>
         </div>
         <div className="sidebar-menu-scroll min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain">
@@ -40,7 +40,7 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
                 : "Tim, penempatan, dan operasional dalam satu tempat."}
             </p>
           </div>
-          <p className="mt-5 px-2 text-[10px] text-slate-400">Corndog Kane · HRIS & Payroll</p>
+          <p className="mt-5 px-2 text-[10px] text-slate-400">Corndog Kane · Back Office</p>
         </div>
       </aside>
       <div className="min-w-0">

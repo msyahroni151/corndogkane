@@ -53,8 +53,9 @@ export function OutletRecapTable({
         <span>{rows.length} rekap</span>
       </div>
       <p className="operation-recap-note">
-        Rekap manual tersimpan per outlet dan tanggal, termasuk riwayat outlet yang sudah tidak
-        aktif. Jumlah produk, pembayaran, dan pengeluaran mengikuti isian formulir operasional.
+        Angka penjualan memakai sumber final per outlet dan tanggal. Rekap total manual tidak
+        dijumlahkan lagi dengan transaksi POS. Kolom jumlah isian/balutan/topping khusus rekap
+        manual; rincian produk transaksi tersedia di riwayat POS.
       </p>
       {error && (
         <p role="alert" className="operation-error">

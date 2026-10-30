@@ -989,3 +989,5 @@ select:not([multiple])[size="1"] {
     background-image: none !important;
   }
 }
+.button-primary.button-danger { background: #dc2626; }
+.button-primary.button-danger:hover { background: #b91c1c; }

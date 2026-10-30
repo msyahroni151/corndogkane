@@ -2,13 +2,29 @@ export const inventoryTabs = [
   { key: "stock", name: "Stok & Batch", icon: "boxes" },
   { key: "susut", name: "Susut", icon: "alert" },
   { key: "opname", name: "Hitung Stok", icon: "check" },
+] as const;
+export const settingMenuTabs = [
   { key: "produk", name: "Produk", icon: "tag" },
   { key: "subproduk", name: "Sub Produk", icon: "box" },
+  { key: "resep", name: "Resep & HPP", icon: "receipt" },
 ] as const;
-export const stockUnits = ["PCS", "GRAM", "ML"] as const;
-export const catalogKinds = ["RAW", "PRODUCT", "SUB"] as const;
+export { defaultStockUnits as stockUnits } from "@/lib/stock-units";
+export const warehouseKinds = ["RAW", "SUB", "FINISHED"] as const;
+export const warehouseKindNames: Record<string, string> = {
+  RAW: "Bahan Mentah",
+  SUB: "Bahan Setengah Jadi",
+  FINISHED: "Bahan Jadi",
+};
+export const recipeIngredientAllowed = (output: string, ingredient: string) =>
+  output === "SUB"
+    ? ingredient === "RAW"
+    : output === "FINISHED"
+      ? ["RAW", "SUB"].includes(ingredient)
+      : output === "PRODUCT" && warehouseKinds.some((kind) => kind === ingredient);
+export const catalogKinds = ["RAW", "PRODUCT", "SUB", "FINISHED"] as const;
 export const kindNames: Record<string, string> = {
   RAW: "Bahan Baku",
+  FINISHED: "Bahan Jadi",
   PRODUCT: "Produk",
   SUB: "Sub Produk",
 };
@@ -79,9 +95,21 @@ export type CatalogDraft = {
   recipe: RecipeDraft[];
 };
 export type SubProductOption = {
+  productionYield?: number;
+  ready?: boolean;
   version: string;
   id: string;
   name: string;
   unit: string;
   recipe: { ingredientId: string; name: string; quantity: number; unit: string }[];
+};
+
+export type RemainderBatchOption = {
+  id: string;
+  itemId: string;
+  label: string;
+  unit: string;
+  quantity: number;
+  value: number;
+  version: number;
 };

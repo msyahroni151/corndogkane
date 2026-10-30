@@ -186,6 +186,9 @@ export async function MasterPage({
                           closed: editOutlet.closed,
                           dailyRate: editOutlet.dailyRate,
                           hours: readOutletHours(editOutlet.operatingHours),
+                          latitude: editOutlet.latitude,
+                          longitude: editOutlet.longitude,
+                          address: editOutlet.address,
                         }
                       : undefined
                   }

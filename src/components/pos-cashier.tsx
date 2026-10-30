@@ -3,10 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UiIcon } from "@/components/ui-icon";
 import { notifySuccess } from "@/components/notification-toasts";
-import { PosPreviewBanner } from "@/components/pos-preview-banner";
+import type { SaleInput } from "@/lib/sale-input";
 import {
-  previewProducts,
-  previewCategories,
+  type PosProduct,
   paymentMethods,
   productPrice,
   readPreviewDrafts,
@@ -28,7 +27,7 @@ type Receipt = {
   dateISO: string;
   outletId: string;
   kind: ReceiptKind;
-  preview: true;
+  preview: boolean;
   id: string;
   date: string;
   outlet: string;
@@ -57,7 +56,15 @@ export function PosCashier({
   draftId,
   canUseDrafts,
   receiptTemplates = [],
+  catalog,
+  crews,
+  today,
+  employeeId,
 }: {
+  catalog: PosProduct[];
+  crews: { id: string; name: string; outletIds: string[] }[];
+  today: string;
+  employeeId?: string;
   userId: string;
   userName: string;
   outlets: PosOutlet[];
@@ -66,6 +73,100 @@ export function PosCashier({
   receiptTemplates?: ReceiptTemplateRecord[];
 }) {
   const router = useRouter();
+  function scheduledCrew(outletId: string) {
+    const assigned = crews.filter((crew) => crew.outletIds.includes(outletId));
+    return (
+      assigned.find((crew) => crew.id === employeeId)?.id ||
+      (assigned.length === 1 ? assigned[0].id : "")
+    );
+  }
+  const [crewId, setCrewId] = useState(() => scheduledCrew(outlets[0]?.id || ""));
+  const [pending, setPending] = useState(false),
+    [recoveryError, setRecoveryError] = useState(false);
+  const attempt = useRef<SaleInput | null>(null),
+    posting = useRef(false),
+    pendingKey = "ck:pos-checkout:" + userId;
+  useEffect(() => {
+    let disposed = false;
+    async function recover() {
+      try {
+        const text = localStorage.getItem(pendingKey);
+        if (!text) return;
+        setRecoveryError(true);
+        const body = JSON.parse(text) as SaleInput;
+        if (!body.key || !Array.isArray(body.items)) throw Error("Data tertunda tidak valid.");
+        const response = await fetch("/api/pos/sales?key=" + encodeURIComponent(body.key), {
+          cache: "no-store",
+        });
+        if (disposed) return;
+        if (response.ok) {
+          const result = await response.json();
+          attempt.current = null;
+          try {
+            localStorage.removeItem(pendingKey);
+          } catch {}
+          const saved = result.receipt;
+          setReceipt({
+            ...saved,
+            kind: "CUSTOMER",
+            print: false,
+            date:
+              new Intl.DateTimeFormat("id-ID", {
+                timeZone: APP_TIME_ZONE,
+                dateStyle: "medium",
+                timeStyle: "short",
+              }).format(new Date(saved.dateISO)) + " WIB",
+          });
+          setRecoveryError(false);
+          notifySuccess(
+            "Pembayaran sebelumnya sudah tersimpan. Riwayat dipulihkan tanpa membuat transaksi baru.",
+          );
+          router.refresh();
+          return;
+        }
+        if (response.status !== 404)
+          throw Error(
+            "Status pembayaran belum dapat diperiksa. Jangan membuat transaksi yang sama lagi.",
+          );
+        if (!body.items.every((i) => catalog.some((p) => p.id === i.productId))) {
+          attempt.current = null;
+          try {
+            localStorage.removeItem(pendingKey);
+          } catch {}
+          setRecoveryError(false);
+          setError(
+            "Pembayaran tertunda belum tercatat dan menu sudah berubah. Periksa kembali pesanan sebelum membayar.",
+          );
+          return;
+        }
+        attempt.current = body;
+        setCart(body.items);
+        setOutletId(body.outletId);
+        setCrewId(body.crewId);
+        setMethod(body.method);
+        setCash(String(body.received));
+        setOpen(true);
+        setRecoveryError(false);
+        setError(
+          "Ada pembayaran yang belum tercatat. Coba ulang; kunci transaksi yang sama mencegah pencatatan ganda.",
+        );
+      } catch (reason) {
+        if (!disposed) {
+          setRecoveryError(true);
+          setError(
+            reason instanceof Error
+              ? reason.message
+              : "Periksa pembayaran tertunda sebelum membuat transaksi baru.",
+          );
+        }
+      }
+    }
+    void recover();
+    return () => {
+      disposed = true;
+    };
+  }, [pendingKey]);
+
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("Semua");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -91,7 +192,7 @@ export function PosCashier({
   }, []);
   useEffect(() => {
     if (!draftId) return;
-    const draft = readPreviewDrafts(userId).find((item) => item.id === draftId);
+    const draft = readPreviewDrafts(userId, catalog).find((item) => item.id === draftId);
     queueMicrotask(() => {
       if (draft) {
         setCart(draft.items);
@@ -116,16 +217,23 @@ export function PosCashier({
       document.body.style.overflow = previous;
     };
   }, [open]);
-  const products = previewProducts.filter(
+  const products = catalog.filter(
     (product) =>
       (category === "Semua" || product.category === category) &&
       product.name.toLocaleLowerCase("id-ID").includes(query.trim().toLocaleLowerCase("id-ID")),
   );
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const total = cartTotal(cart, method);
+  const total = cartTotal(cart, method, catalog);
   const received = Number(cash || 0);
   const validCash = Number.isSafeInteger(received) && received >= total && received <= 1000000000;
-  const canPay = cart.length > 0 && !!outlet && (method !== "TUNAI" || validCash);
+  const canPay =
+    !pending &&
+    !recoveryError &&
+    total > 0 &&
+    cart.length > 0 &&
+    !!outlet &&
+    !!crewId &&
+    (method !== "TUNAI" || validCash);
   function add(productId: string) {
     const quantity = Number(quantities[productId] || "1");
     const existing = cart.find((item) => item.productId === productId)?.quantity || 0;
@@ -157,7 +265,7 @@ export function PosCashier({
   function saveDraft() {
     if (!cart.length || !outlet || !canUseDrafts) return;
     try {
-      const drafts = readPreviewDrafts(userId);
+      const drafts = readPreviewDrafts(userId, catalog);
       if (!savedId && drafts.length >= 50) {
         setError("Maksimal 50 draft pratinjau. Hapus draft lama terlebih dahulu.");
         return;
@@ -184,66 +292,130 @@ export function PosCashier({
     }
   }
   function close() {
+    if (posting.current || attempt.current) {
+      setError("Konfirmasikan ulang pembayaran yang tertunda sebelum menutup popup.");
+      return;
+    }
     setOpen(false);
     trigger.current?.focus();
   }
-  function finish() {
-    if (!canPay || !outlet) return;
-    if (savedId) {
-      try {
-        writePreviewDrafts(
-          userId,
-          readPreviewDrafts(userId).filter((item) => item.id !== savedId),
-        );
-      } catch {
-        setError("Draft belum dapat dihapus dari browser.");
-        close();
-        return;
-      }
-    }
-    const timestamp = new Date();
-    setReceipt({
-      id: "PREVIEW-" + timestamp.getTime(),
-      dateISO: timestamp.toISOString(),
-      outletId: outlet.id,
-      kind: receiptKind,
-      preview: true,
-      date:
-        new Intl.DateTimeFormat("id-ID", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          timeZone: APP_TIME_ZONE,
-        }).format(timestamp) +
-        " " +
-        clockLabel(timestamp) +
-        " WIB",
-      outlet: outlet.name,
-      cashier: userName,
-      method,
-      received: method === "TUNAI" ? received : total,
-      total,
-      print,
-      items: cart.map((item) => {
-        const product = previewProducts.find((product) => product.id === item.productId)!;
-        return {
-          name: product.name,
-          quantity: item.quantity,
-          price: productPrice(product, method),
-        };
-      }),
-    });
-    close();
-    setCart([]);
-    setSavedId(undefined);
-    setCash("");
+  async function finish() {
+    if (posting.current || !outlet || (!attempt.current && !canPay)) return;
+    posting.current = true;
+    setPending(true);
     setError("");
-    if (draftId) router.replace("/pos");
-    notifySuccess("Pratinjau struk selesai. Tidak ada transaksi yang dikirim atau dicatat.");
+    try {
+      const body = attempt.current || {
+        key:
+          savedId && /^[A-F0-9-]{36}$/.test(savedId.slice(6))
+            ? savedId.slice(6).toLowerCase()
+            : crypto.randomUUID(),
+        outletId: outlet.id,
+        crewId,
+        date: today,
+        source: "POS" as const,
+        method,
+        received: method === "TUNAI" ? received : total,
+        quotedTotal: total,
+        notes: "",
+        items: cart,
+      };
+      if (!attempt.current) {
+        try {
+          localStorage.setItem(pendingKey, JSON.stringify(body));
+        } catch {
+          throw Error(
+            "Penyimpanan browser tidak tersedia. Transaksi belum dikirim; aktifkan penyimpanan browser terlebih dahulu.",
+          );
+        }
+      }
+      attempt.current = body;
+      const response = await fetch("/api/pos/sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 400) {
+          attempt.current = null;
+          try {
+            localStorage.removeItem(pendingKey);
+          } catch {}
+        }
+        throw Error(
+          result.error || "Pembayaran belum dikonfirmasi. Coba ulang transaksi yang sama.",
+        );
+      }
+      const saved = result.receipt,
+        timestamp = new Date(saved.dateISO);
+      attempt.current = null;
+      try {
+        localStorage.removeItem(pendingKey);
+      } catch {}
+      if (savedId) {
+        try {
+          writePreviewDrafts(
+            userId,
+            readPreviewDrafts(userId, catalog).filter((d) => d.id !== savedId),
+          );
+        } catch {
+          /* Receipt already persisted; do not retry it as a new sale. */
+        }
+      }
+      setReceipt({
+        ...saved,
+        kind: receiptKind,
+        print,
+        date:
+          new Intl.DateTimeFormat("id-ID", {
+            timeZone: APP_TIME_ZONE,
+            dateStyle: "medium",
+            timeStyle: "short",
+          }).format(timestamp) + " WIB",
+      });
+      try {
+        localStorage.setItem("ck:sales-updated", Date.now().toString());
+      } catch {}
+      setOpen(false);
+      setCart([]);
+      setCash("");
+      setSavedId(undefined);
+      notifySuccess(
+        saved.stockPending
+          ? "Transaksi tersimpan. Ada pemakaian bahan yang belum diproses; periksa Monitoring Outlet."
+          : "Transaksi tersimpan dan Monitoring Outlet diperbarui.",
+      );
+      if (draftId) router.replace("/pos");
+      else router.refresh();
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Koneksi terputus. Coba ulang pembayaran yang sama.",
+      );
+    } finally {
+      posting.current = false;
+      setPending(false);
+    }
   }
   return (
     <div className="space-y-3">
-      <PosPreviewBanner />
+      <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-xs text-emerald-800">
+        POS terhubung ke Monitoring Outlet. Harga mengikuti Setting Menu; bahan berkurang dari stok
+        outlet sesuai resep yang tersedia.
+      </div>
+      {!outlets.length && (
+        <p role="alert" className="rounded-xl bg-amber-50 p-3 text-sm">
+          Belum ada outlet aktif sesuai jadwal Anda. Hubungi admin untuk memeriksa jadwal HR.
+        </p>
+      )}
+      {outlets.length > 0 && !crewId && (
+        <p role="alert" className="rounded-xl bg-amber-50 p-3 text-sm">
+          Petugas POS belum dapat ditentukan dari jadwal HR outlet ini. Periksa jadwal dan gunakan
+          akun crew yang bertugas sebelum mencatat transaksi.
+        </p>
+      )}
       <section aria-label="Informasi kasir" className="kane-outlet-bar panel">
         <div>
           <h2>CORNDOG KANE</h2>
@@ -260,7 +432,10 @@ export function PosCashier({
             <select
               aria-label="Outlet kasir"
               value={outletId}
-              onChange={(event) => setOutletId(event.target.value)}
+              onChange={(event) => {
+                setOutletId(event.target.value);
+                setCrewId(scheduledCrew(event.target.value));
+              }}
             >
               {outlets.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -307,7 +482,7 @@ export function PosCashier({
               )}
             </label>
             <div className="pos-categories" aria-label="Kategori menu">
-              {previewCategories.map((value) => (
+              {["Semua", ...new Set(catalog.map((p) => p.category))].map((value) => (
                 <button
                   key={value}
                   type="button"
@@ -426,7 +601,7 @@ export function PosCashier({
                   </button>
                 </div>
                 {cart.map((item) => {
-                  const product = previewProducts.find((product) => product.id === item.productId)!;
+                  const product = catalog.find((product) => product.id === item.productId)!;
                   const price = productPrice(product, method);
                   return (
                     <div className="pos-cart-row" key={item.productId}>
@@ -603,7 +778,7 @@ export function PosCashier({
         >
           <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
             <h2 id="pos-payment-title" className="font-bold">
-              Pratinjau Struk
+              Konfirmasi Pembayaran
             </h2>
             <button
               type="button"
@@ -616,14 +791,15 @@ export function PosCashier({
           </div>
           <div className="space-y-4 p-6">
             <p className="rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-800">
-              Hanya pratinjau. Transaksi belum disimpan ke database atau Apps Script.
+              Pembayaran ini akan disimpan sebagai transaksi nyata di outlet yang dipilih. Pastikan
+              pesanan dan uang diterima sudah benar.
             </p>
             <p className="text-sm font-semibold">
               {outlet?.name} · {userName}
             </p>
             <div className="space-y-2 text-xs">
               {cart.map((item) => {
-                const product = previewProducts.find((product) => product.id === item.productId)!;
+                const product = catalog.find((product) => product.id === item.productId)!;
                 return (
                   <div key={item.productId} className="flex justify-between gap-3">
                     <span>
@@ -657,13 +833,18 @@ export function PosCashier({
                 </select>
               </label>
             )}
+            {error && (
+              <p role="alert" className="rounded-xl bg-red-50 p-3 text-xs text-red-700">
+                {error}
+              </p>
+            )}
             <button
               type="button"
               className="button-primary w-full"
-              disabled={!canPay}
+              disabled={pending || (!canPay && !attempt.current)}
               onClick={finish}
             >
-              {print ? "Cetak Pratinjau Struk" : "Selesai Pratinjau"}
+              {pending ? "Menyimpan…" : print ? "Simpan & Cetak Struk" : "Konfirmasi & Simpan"}
             </button>
           </div>
         </dialog>

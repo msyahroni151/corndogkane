@@ -31,7 +31,9 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
         date: true,
       },
     }),
-    db.outletOperation.count({ where: { bonusAmount: null } }),
+    db.outletOperation.count({
+      where: { bonusAmount: null, hasManual: true, salesPending: false },
+    }),
   ]);
   const balances = bonusBalances(employees, entries, today).filter(
     (e) => !query.employee || e.id === query.employee,

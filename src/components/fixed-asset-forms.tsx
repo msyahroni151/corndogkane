@@ -1,7 +1,8 @@
 "use client";
-import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCloseFormDialog } from "@/components/form-dialog";
+import { EditableCombobox } from "@/components/editable-combobox";
 import { LocalInput } from "@/components/local-input";
 import { notifySuccess } from "@/components/notification-toasts";
 import { createFixedAsset, updateFixedAsset, moveFixedAsset } from "@/app/fixed-asset-actions";
@@ -94,23 +95,17 @@ function LocationFields({ choices, record }: { choices: AssetChoices; record?: A
   );
 }
 function PersonField({ choices, value }: { choices: AssetChoices; value?: string }) {
-  const id = useId();
   return (
     <label className="field">
       Penanggung jawab
-      <input
+      <EditableCombobox
         aria-label="Penanggung jawab"
         name="responsibleName"
-        list={id}
+        options={choices.people}
         maxLength={160}
         defaultValue={value || ""}
         placeholder="Pilih atau ketik nama"
       />
-      <datalist id={id}>
-        {choices.people.map((p) => (
-          <option key={p} value={p} />
-        ))}
-      </datalist>
     </label>
   );
 }

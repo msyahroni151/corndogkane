@@ -62,7 +62,7 @@ export function Navigation({ permissions }: { permissions: string[] }) {
       <div id="workspace-navigation" className={`${expanded ? "block" : "hidden"} lg:block`}>
         {[
           {
-            title: "ADMIN OPERASIONAL MALAM",
+            title: "MENU UTAMA",
             items: visibleNightOperations.map((item) => ({ ...item, activeHref: item.href })),
           },
           {

@@ -15,6 +15,14 @@ export async function syncOutletBonus(
   userId: string,
 ) {
   if (row.bonusAmount == null) return;
+  const current = await tx.outletOperation.findUnique({
+    where: { id: row.id },
+    select: { salesPending: true },
+  });
+  if (current?.salesPending)
+    throw new BonusSyncError(
+      "Konfirmasikan sumber penjualan terlebih dahulu sebelum memproses bonus.",
+    );
   const postingKey = `OUTLET-BONUS:${row.id}`;
   const latest = () =>
     tx.moneyEntry.findFirst({

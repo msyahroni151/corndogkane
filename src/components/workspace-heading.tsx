@@ -2,15 +2,20 @@
 import { usePathname } from "next/navigation";
 import { UiIcon, type IconName } from "@/components/ui-icon";
 const headings: Record<string, { title: string; description: string; icon: IconName }> = {
-  "/admin-malam/dashboard": {
-    title: "Dashboard Admin Operasional Malam",
-    description: "Ringkasan data outlet untuk administrasi operasional malam.",
+  "/menu-utama/dashboard": {
+    title: "Dashboard",
+    description: "Ringkasan bisnis, perkembangan outlet, dan informasi yang perlu ditindaklanjuti.",
     icon: "dashboard",
   },
   "/admin-malam/monitoring-outlet": {
     title: "Kontrol Operasional Seluruh Outlet",
     description: "Monitoring Outlet · Ringkasan outlet aktif yang terdaftar di Master Outlet.",
     icon: "building",
+  },
+  "/setting-menu": {
+    title: "Setting Menu",
+    description: "Kelola produk jual, sub produk, dan resep Corndog Kane.",
+    icon: "tag",
   },
   "/pos": {
     title: "POS Kasir",
@@ -121,6 +126,16 @@ const headings: Record<string, { title: string; description: string; icon: IconN
     title: "Barang Masuk",
     description: "Penerimaan barang dari supplier dan pembelian.",
     icon: "package-in",
+  },
+  "/produksi-gudang": {
+    title: "Produksi Gudang",
+    description: "Catat pengolahan bahan, hasil produksi, dan riwayat stok gudang.",
+    icon: "box",
+  },
+  "/control-stok": {
+    title: "Control Stok",
+    description: "Pantau ketersediaan stok dan pencatatan tiap outlet.",
+    icon: "check",
   },
   "/stok-inventory": {
     title: "Stok & Inventori",

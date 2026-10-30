@@ -1,12 +1,14 @@
 import { hasPermission, rolePermissions, type PermissionKey } from "@/lib/permissions";
 import "server-only";
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { randomBytes } from "node:crypto";
 import { getPrisma } from "@/lib/db";
 import { digest, nextMidnight } from "@/lib/security";
 export const sessionCookie = "ck_hris_session";
-export async function currentUser() {
+// Deduplikasi hanya selama satu render request; sesi tetap diperiksa pada request berikutnya.
+export const currentUser = cache(async function currentUser() {
   const token = (await cookies()).get(sessionCookie)?.value;
   if (!token || !/^[a-f0-9]{64}$/.test(token)) return null;
   const session = await getPrisma().session.findUnique({
@@ -41,7 +43,7 @@ export async function currentUser() {
     roleName: session.user.role.name,
     permissions: rolePermissions(session.user.role),
   };
-}
+});
 export async function requireUser() {
   const user = await currentUser();
   if (!user) redirect("/login");

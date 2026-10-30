@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title:
-    process.env.HRIS_DEMO_MODE === "1" ? "DEMO | Corndog Kane" : "Corndog Kane | HRIS & Payroll",
+    process.env.HRIS_DEMO_MODE === "1" ? "DEMO | Corndog Kane" : "Corndog Kane | Back Office",
   description: "Website administrasi SDM, operasional outlet, dan keuangan Corndog Kane.",
   robots: { index: false, follow: false },
 };

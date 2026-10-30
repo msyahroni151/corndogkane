@@ -1,3 +1,6 @@
+import { refreshDailySales, salesAmounts } from "@/lib/daily-sales";
+import { SaleError } from "@/lib/sale-input";
+import { Prisma } from "@/generated/prisma/client";
 import { revalidatePath } from "next/cache";
 import { outletBonus, outletBonusRate } from "@/lib/outlet-bonus";
 import { syncOutletBonus, BonusSyncError } from "@/lib/outlet-bonus-ledger";
@@ -54,12 +57,45 @@ export async function GET(request: Request) {
       department: true,
     },
   });
-  const items = snapshotItems(entry?.items);
+  const manual = entry?.hasManual ? salesAmounts(entry.manualSales) : null;
+  const items = snapshotItems(
+    entry?.manualSales && typeof entry.manualSales === "object" && !Array.isArray(entry.manualSales)
+      ? (entry.manualSales as { items?: unknown }).items || entry.items
+      : entry?.items,
+  );
+  const ledger = entry
+    ? await db.saleTransaction.findMany({
+        where: { operationId: entry.id },
+        select: { total: true, method: true },
+      })
+    : [];
+  const live = {
+    totalGross: ledger.reduce((n, r) => n + r.total, 0),
+    qris: 0,
+    gofood: 0,
+    grabfood: 0,
+    shopeefood: 0,
+  };
+  for (const row of ledger) {
+    const key = (
+      {
+        QRIS: "qris",
+        GoFood: "gofood",
+        "Grab Food": "grabfood",
+        "Shopee Food": "shopeefood",
+      } as const
+    )[row.method as "QRIS" | "GoFood" | "Grab Food" | "Shopee Food"];
+    if (key) live[key] += row.total;
+  }
+
   return json({
+    liveSales: ledger.length ? live : null,
     dailyRate: outlet.dailyRate,
     outletName: outlet.name,
     entry: entry
       ? {
+          hasManual: entry.hasManual,
+          salesSource: entry.salesSource,
           version: entry.updatedAt.toISOString(),
           crewId: entry.crewId,
           crewLabel:
@@ -77,10 +113,10 @@ export async function GET(request: Request) {
           unitPrices: Object.fromEntries(
             Object.entries(items).map(([key, item]) => [key, item.unitPrice]),
           ),
-          qris: entry.qris,
-          gofood: entry.gofood,
-          grabfood: entry.grabfood,
-          shopeefood: entry.shopeefood,
+          qris: manual?.qris ?? entry.qris,
+          gofood: manual?.gofood ?? entry.gofood,
+          grabfood: manual?.grabfood ?? entry.grabfood,
+          shopeefood: manual?.shopeefood ?? entry.shopeefood,
         }
       : null,
     employees: employees
@@ -128,6 +164,7 @@ export async function POST(request: Request) {
     if (!body || typeof body !== "object" || Array.isArray(body))
       throw new InputError("Data tidak valid.");
     const str = (key: string) => (typeof body[key] === "string" ? body[key].trim() : "");
+    const salesMode = body.salesMode === "POS" ? "POS" : "TOTAL";
     const outletId = str("outletId"),
       crewId = str("crewId"),
       trainingCrewName = str("trainingCrewName") || null;
@@ -196,6 +233,11 @@ export async function POST(request: Request) {
       );
       if (!Number.isSafeInteger(totalGross) || totalGross > 2000000000)
         throw new InputError("Total rekap melebihi batas nominal.");
+      if (
+        salesMode === "TOTAL" &&
+        payments.qris + payments.gofood + payments.grabfood + payments.shopeefood > totalGross
+      )
+        throw new InputError("Pembayaran non-tunai melebihi total penjualan manual.");
       const bonusDailyRate = outletBonusRate(
         outlet.name,
         str("date"),
@@ -211,8 +253,34 @@ export async function POST(request: Request) {
       const bonusAmount = legacyFinancialsUnchanged
         ? null
         : outletBonus(totalGross, bonusDailyRate);
+      const hasLedger = await tx.saleTransaction.count({
+        where: { operationId: existing?.id || "NONE" },
+      });
+      if (salesMode === "POS" && !hasLedger)
+        throw new InputError("Belum ada transaksi POS atau tambahan manual untuk dipakai.");
+      const manualSales = {
+        totalGross,
+        qris: payments.qris,
+        gofood: payments.gofood,
+        grabfood: payments.grabfood,
+        shopeefood: payments.shopeefood,
+        items,
+      };
+      const previousManual = existing?.hasManual
+        ? {
+            ...(salesAmounts(existing.manualSales) || salesAmounts(existing)!),
+            items: snapshotItems(
+              existing.manualSales &&
+                typeof existing.manualSales === "object" &&
+                !Array.isArray(existing.manualSales)
+                ? (existing.manualSales as { items?: unknown }).items || existing.items
+                : existing.items,
+            ),
+          }
+        : null;
+      const manualChanged = JSON.stringify(previousManual) !== JSON.stringify(manualSales);
       const data = {
-        bonusAmount,
+        bonusAmount: hasLedger ? (existing?.bonusAmount ?? null) : bonusAmount,
         bonusDailyRate,
         doughUsed: Object.hasOwn(body, "doughUsed") ? doughUsed : (existing?.doughUsed ?? null),
         outletId,
@@ -232,11 +300,18 @@ export async function POST(request: Request) {
           ? cashReceived
           : (existing?.cashReceived ?? null),
         items,
-        totalGross,
-        qris: payments.qris,
-        gofood: payments.gofood,
-        grabfood: payments.grabfood,
-        shopeefood: payments.shopeefood,
+        totalGross: hasLedger ? existing!.totalGross : totalGross,
+        qris: hasLedger ? existing!.qris : payments.qris,
+        gofood: hasLedger ? existing!.gofood : payments.gofood,
+        grabfood: hasLedger ? existing!.grabfood : payments.grabfood,
+        shopeefood: hasLedger ? existing!.shopeefood : payments.shopeefood,
+        ...(salesMode === "TOTAL"
+          ? {
+              hasManual: true,
+              manualSales: manualSales as Prisma.InputJsonValue,
+              ...(manualChanged ? { salesRevision: { increment: 1 } } : {}),
+            }
+          : {}),
         updatedById: user.id,
       };
       if (existing) {
@@ -254,15 +329,52 @@ export async function POST(request: Request) {
             409,
           );
       }
-      const saved = existing
-        ? await tx.outletOperation.update({ where: { id: existing.id }, data })
-        : await tx.outletOperation.create({ data: { ...data, createdById: user.id } });
-      await syncOutletBonus(tx, saved, user.id);
+      let saved;
+      if (existing) saved = await tx.outletOperation.update({ where: { id: existing.id }, data });
+      else {
+        const { salesRevision, ...created } = data;
+        saved = await tx.outletOperation.create({
+          data: { ...created, salesRevision: 1, createdById: user.id },
+        });
+      }
+      saved = await refreshDailySales(
+        tx,
+        saved.id,
+        user.id,
+        salesMode === "POS"
+          ? {
+              choice: "POS",
+              notes: "Konfirmasi rekap menggunakan transaksi POS / tambahan manual.",
+            }
+          : undefined,
+      );
+      if (!saved.salesPending && !legacyFinancialsUnchanged) {
+        const rate = outletBonusRate(
+          outlet.name,
+          str("date"),
+          saved.bonusDailyRate ?? outlet.dailyRate,
+          saved.totalGross,
+        );
+        saved = await tx.outletOperation.update({
+          where: { id: saved.id },
+          data: { bonusDailyRate: rate, bonusAmount: outletBonus(saved.totalGross, rate) },
+        });
+        await syncOutletBonus(tx, saved, user.id);
+      }
     });
-    for (const path of ["/bonus", "/payroll", "/rekap-saldo", "/selisih-setor"])
+    for (const path of [
+      "/bonus",
+      "/payroll",
+      "/rekap-saldo",
+      "/selisih-setor",
+      "/menu-utama/dashboard",
+      "/admin-malam/monitoring-outlet",
+      "/finance/laporan-akuntansi",
+    ])
       revalidatePath(path);
     return json({ success: "Rekap operasional berhasil disimpan." });
   } catch (error) {
+    if (error instanceof SaleError) return json({ error: error.message }, 409);
     if (error instanceof BonusSyncError) return json({ error: error.message }, 409);
     if (error instanceof InputError) return json({ error: error.message }, error.status);
     return json({ error: "Rekap belum tersimpan. Periksa koneksi dan coba kembali." }, 500);

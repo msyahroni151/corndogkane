@@ -98,8 +98,8 @@ export default async function Page({
     }),
 
     db.inventoryItem.findMany({
-      where: { active: true },
-      select: { name: true, packagingUnit: true },
+      where: { active: true, kind: { in: ["RAW", "SUB", "FINISHED"] } },
+      select: { name: true, packagingUnit: true, baseUnit: true },
 
       orderBy: { name: "asc" },
     }),

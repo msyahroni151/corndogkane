@@ -1,7 +1,8 @@
 "use client";
-import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCloseFormDialog } from "@/components/form-dialog";
+import { EditableCombobox } from "@/components/editable-combobox";
 import { LocalInput } from "@/components/local-input";
 import { createOperationalExpense, payOperationalExpense } from "@/app/operational-expense-actions";
 import { isPaymentAccount, type PaymentMethod } from "@/lib/operational-expenses";
@@ -112,8 +113,7 @@ export function OperationalExpenseForm({
     [amount, setAmount] = useState(""),
     [expenseAccount, setExpenseAccount] = useState(""),
     [postingKey, setPostingKey] = useState("");
-  const { state, action, pending, close } = useExpenseAction(createOperationalExpense, date),
-    listId = useId();
+  const { state, action, pending, close } = useExpenseAction(createOperationalExpense, date);
   useEffect(() => setPostingKey(crypto.randomUUID()), []);
   const ready =
     expenseAccount &&
@@ -163,20 +163,15 @@ export function OperationalExpenseForm({
         </label>
         <label className="field">
           Untuk apa? *
-          <input
+          <EditableCombobox
             name="purpose"
-            list={listId}
+            options={purposes}
             value={purpose}
-            onChange={(e) => setPurpose(e.target.value)}
+            onValueChange={setPurpose}
             maxLength={180}
             required
-            placeholder="Pilih atau ketik (mis. Sabun cuci piring)…"
+            placeholder="Pilih atau ketik (mis. Sabun cuci piring)..."
           />
-          <datalist id={listId}>
-            {purposes.map((p) => (
-              <option key={p} value={p} />
-            ))}
-          </datalist>
         </label>
         <label className="field">
           Nominal (Rp) *

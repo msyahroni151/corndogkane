@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SortableTable } from "@/components/sortable-table";
-import { PosPreviewBanner } from "@/components/pos-preview-banner";
+import { previewProducts, type PosProduct } from "@/lib/pos-preview";
 import { notifySuccess } from "@/components/notification-toasts";
 import {
   readPreviewDrafts,
@@ -13,12 +13,20 @@ import {
 } from "@/lib/pos-preview";
 import { APP_TIME_ZONE } from "@/lib/local-date";
 import { rupiah } from "@/lib/money";
-export function PosOpenTransactions({ userId, canResume }: { userId: string; canResume: boolean }) {
+export function PosOpenTransactions({
+  userId,
+  canResume,
+  catalog = previewProducts,
+}: {
+  userId: string;
+  canResume: boolean;
+  catalog?: readonly PosProduct[];
+}) {
   const [drafts, setDrafts] = useState<PreviewDraft[]>([]);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   useEffect(() => {
-    const refresh = () => setDrafts(readPreviewDrafts(userId));
+    const refresh = () => setDrafts(readPreviewDrafts(userId, catalog));
     queueMicrotask(refresh);
     window.addEventListener(draftEvent, refresh);
     window.addEventListener("storage", refresh);
@@ -26,7 +34,7 @@ export function PosOpenTransactions({ userId, canResume }: { userId: string; can
       window.removeEventListener(draftEvent, refresh);
       window.removeEventListener("storage", refresh);
     };
-  }, [userId]);
+  }, [userId, catalog]);
   const visible = drafts.filter((draft) =>
     draft.id.toLowerCase().includes(query.trim().toLowerCase()),
   );
@@ -34,23 +42,23 @@ export function PosOpenTransactions({ userId, canResume }: { userId: string; can
     try {
       writePreviewDrafts(
         userId,
-        readPreviewDrafts(userId).filter((draft) => draft.id !== id),
+        readPreviewDrafts(userId, catalog).filter((draft) => draft.id !== id),
       );
-      notifySuccess("Draft pratinjau dihapus.");
+      notifySuccess("Draft pesanan dihapus.");
     } catch {
       setError("Penyimpanan browser tidak tersedia.");
     }
   }
   return (
     <div className="space-y-4">
-      <PosPreviewBanner />
+      <p className="text-xs text-slate-500">
+        Draft disimpan di browser ini dan belum menjadi penjualan sampai pembayaran dikonfirmasi.
+      </p>
       <section className="panel overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-5">
           <div>
             <h2 className="text-sm font-semibold">Pesanan tersimpan · {visible.length}</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Draft pratinjau pada browser dan akun ini.
-            </p>
+            <p className="mt-1 text-xs text-slate-500">Draft pesanan pada browser dan akun ini.</p>
           </div>
           <input
             aria-label="Cari draft"
@@ -89,7 +97,7 @@ export function PosOpenTransactions({ userId, canResume }: { userId: string; can
                   <td className="p-4">
                     {draft.items.reduce((sum, item) => sum + item.quantity, 0)}
                   </td>
-                  <td className="p-4">{rupiah(cartTotal(draft.items, draft.method))}</td>
+                  <td className="p-4">{rupiah(cartTotal(draft.items, draft.method, catalog))}</td>
                   <td className="p-4">
                     <div className="flex gap-2">
                       {canResume && (

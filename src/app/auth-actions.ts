@@ -28,7 +28,7 @@ export async function setupAdmin(_: FormState, form: FormData): Promise<FormStat
   });
   if (!id) return { error: "Akun administrator sudah dibuat. Silakan masuk." };
   await createSession(id);
-  redirect("/dashboard");
+  redirect("/menu-utama/dashboard");
 }
 
 export async function login(_: FormState, form: FormData): Promise<FormState> {
