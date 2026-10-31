@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import Link from "next/link";
 
 import { requireAccess } from "@/lib/auth";
@@ -225,7 +226,12 @@ export default async function Page({
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <form className="flex flex-wrap items-end gap-3">
+        <SearchForm
+          action=""
+          prefetch={false}
+          scroll={false}
+          className="flex flex-wrap items-end gap-3"
+        >
           <label className="field">
             Dari tanggal
             <LocalInput type="date" name="from" defaultValue={from} required />
@@ -249,7 +255,7 @@ export default async function Page({
           <input type="hidden" name="method" value={method} />
 
           <button className="button-secondary">Terapkan</button>
-        </form>
+        </SearchForm>
 
         <FormDialog
           title="Catat Barang Masuk"

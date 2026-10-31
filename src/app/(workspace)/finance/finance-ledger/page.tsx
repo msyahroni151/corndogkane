@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { todayWib, parseCivilDate, displayDate } from "@/lib/placements";
@@ -66,7 +67,12 @@ export default async function LedgerPage({
     .filter((r) => !query.account || r.accountId === query.account);
   return (
     <div className="space-y-5">
-      <form className="panel flex flex-wrap items-end gap-3 p-5">
+      <SearchForm
+        action=""
+        prefetch={false}
+        scroll={false}
+        className="panel flex flex-wrap items-end gap-3 p-5"
+      >
         <label className="field">
           Tanggal Mulai
           <LocalInput type="date" name="from" defaultValue={from} required />
@@ -87,7 +93,7 @@ export default async function LedgerPage({
           </select>
         </label>
         <button className="button-secondary">Terapkan</button>
-      </form>
+      </SearchForm>
       {!valid && (
         <p role="alert" className="text-sm text-red-700">
           Pilih rentang tanggal valid maksimal satu tahun.

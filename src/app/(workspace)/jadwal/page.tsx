@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { ShareWarehouseSchedule } from "@/components/share-warehouse-schedule";
 import { ShareSchedule } from "@/components/share-schedule";
 import { SortableTable } from "@/components/sortable-table";
@@ -183,7 +184,12 @@ export default async function Schedules({
         ))}
       </div>
       <section className="panel flex flex-wrap items-center justify-between gap-4 p-4">
-        <form className="flex flex-wrap items-end gap-3 text-xs">
+        <SearchForm
+          action=""
+          prefetch={false}
+          scroll={false}
+          className="flex flex-wrap items-end gap-3 text-xs"
+        >
           <label className="flex flex-col gap-1.5 text-slate-500">
             Bulan
             <input
@@ -225,7 +231,7 @@ export default async function Schedules({
             </select>
           </label>
           <button className="button-secondary !py-2.5">Terapkan</button>
-        </form>
+        </SearchForm>
         <div className="flex flex-wrap gap-2">
           <ShareSchedule from={shareFrom} to={shareTo} area={query.area} />
           <ShareWarehouseSchedule

@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { bonusBalances } from "@/lib/bonus-balance";
@@ -71,7 +72,12 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
       <section className="panel overflow-hidden">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-100 p-5">
           <h3 className="text-sm font-bold">Saldo Bonus per Karyawan</h3>
-          <form className="flex flex-wrap items-end gap-3">
+          <SearchForm
+            action=""
+            prefetch={false}
+            scroll={false}
+            className="flex flex-wrap items-end gap-3"
+          >
             <input type="hidden" name="view" value="saldo" />
             <label className="field">
               Karyawan
@@ -85,7 +91,7 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
               </select>
             </label>
             <button className="button-secondary">Terapkan</button>
-          </form>
+          </SearchForm>
         </div>
         <div className="overflow-x-auto">
           <SortableTable className="w-full min-w-[650px] text-left text-sm">

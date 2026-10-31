@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { BusinessOutletMap, type DashboardLocation } from "@/components/business-outlet-map";
 import { BusinessDashboardDistribution } from "@/components/business-dashboard-distribution";
 import { BusinessOutletPerformance } from "@/components/business-outlet-performance";
@@ -182,7 +183,7 @@ export function BusinessDashboard({
             </Link>
           ))}
         </div>
-        <form>
+        <SearchForm action="" prefetch={false} scroll={false}>
           <input type="hidden" name="period" value={period} />
           <label className="field">
             Dari tanggal
@@ -224,7 +225,7 @@ export function BusinessDashboard({
             </select>
           </label>
           <button className="button-primary">Terapkan</button>
-        </form>
+        </SearchForm>
         <p>
           Periode {dateToDisplay(from)}–{dateToDisplay(to)} WIB · pembanding{" "}
           {dateToDisplay(previousFrom)}–{dateToDisplay(previousTo)} WIB.

@@ -83,11 +83,11 @@ export default async function ReportPage({
   } catch {
     error = "Pilih rentang tanggal yang valid, maksimal 366 hari.";
   }
-  const outlets = await db.outlet.findMany({
+  const [outlets, accounts] = await Promise.all([db.outlet.findMany({
     where: { OR: [{ active: true }, { operations: { some: {} } }] },
     select: { id: true, name: true, active: true, closed: true, area: { select: { name: true } } },
     orderBy: { name: "asc" },
-  });
+  }), db.financialAccount.findMany({ orderBy: { code: "asc" } })]);
   const outletId =
       param("outlet") || outlets.find((o) => o.active && !o.closed)?.id || outlets[0]?.id || "",
     outlet = outlets.find((o) => o.id === outletId);
@@ -103,7 +103,6 @@ export default async function ReportPage({
       ...(param("prevTo") ? { prevTo: param("prevTo") } : {}),
       ...changes,
     }).toString();
-  const accounts = await db.financialAccount.findMany({ orderBy: { code: "asc" } });
   const records =
     tab !== "coa" && !error && outlet
       ? await db.outletOperation.findMany({

@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { todayWib, parseCivilDate, displayDate } from "@/lib/placements";
@@ -143,7 +144,7 @@ export default async function OperationalExpensesPage({
         ))}
       </section>
       <section className="panel">
-        <form className="expense-filter">
+        <SearchForm action="" prefetch={false} scroll={false} className="expense-filter">
           <nav className="expense-tabs" aria-label="Status pengeluaran">
             {[
               ["", `Semua (${count})`],
@@ -176,7 +177,7 @@ export default async function OperationalExpensesPage({
             <LocalInput type="date" name="to" required defaultValue={to} />
           </label>
           <button className="button-secondary">Terapkan</button>
-        </form>
+        </SearchForm>
       </section>
       {!valid && (
         <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">

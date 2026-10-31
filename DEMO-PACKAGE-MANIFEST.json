@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-10-31T09:32:30.523Z",
+  "createdAt": "2026-10-31T10:10:00.633Z",
   "containsRealData": false,
   "files": [
     {
@@ -328,7 +328,7 @@
     },
     {
       "path": "src/app/(workspace)/absensi/page.tsx",
-      "sha256": "74fcd86865b83721bcc083df08e60bbefd5a2967a39b581db270ef14f549ad33"
+      "sha256": "546bda5cc2411e1bee7cb902924f39e22e4362b5e611badedc5bf6e1519876de"
     },
     {
       "path": "src/app/(workspace)/admin-malam/master-akun/page.tsx",
@@ -344,7 +344,7 @@
     },
     {
       "path": "src/app/(workspace)/barang-masuk/page.tsx",
-      "sha256": "faa79fd7bd04d1228f7fba06173314c0e4818fc197cffc743a4eab41d928cd94"
+      "sha256": "f0855681bc24c95704788ee4080756372a7f2e772e6133750a6c50321d3bfa08"
     },
     {
       "path": "src/app/(workspace)/bonus/page.tsx",
@@ -364,7 +364,7 @@
     },
     {
       "path": "src/app/(workspace)/finance/aset-tetap/page.tsx",
-      "sha256": "eff1cf05469027dd9ed1aff07e11b3d721aedd34f522793b2c4245baccc36b40"
+      "sha256": "63fb57a23d31636300c54bdbbcee5a416a76b5909a580d209597436174df58d1"
     },
     {
       "path": "src/app/(workspace)/finance/budgeting-rab/page.tsx",
@@ -372,7 +372,7 @@
     },
     {
       "path": "src/app/(workspace)/finance/finance-ledger/page.tsx",
-      "sha256": "6ec8944f7c304764a48ec81c39b0ef42a48a36b1ef1e7d573533f222d9c7a0d2"
+      "sha256": "7ac6cbdc68f32c79123ef737535efbe5bb6232be2709117c22216490b0b4efa9"
     },
     {
       "path": "src/app/(workspace)/finance/jurnal-umum/page.tsx",
@@ -380,15 +380,15 @@
     },
     {
       "path": "src/app/(workspace)/finance/laporan-akuntansi/page.tsx",
-      "sha256": "73d9ec9ad387ee16337e82685dfb577e646095162418c815a8b8ef9f9a04948c"
+      "sha256": "108bfcd50adf08c82ed598a39081e0910ed422adf7f80fb732d835eacda20901"
     },
     {
       "path": "src/app/(workspace)/finance/pengeluaran-operasional/page.tsx",
-      "sha256": "e4691243273e794b307f065e4d30e817cb0a9321cff3229842900d72736bba40"
+      "sha256": "8e282407d8e897a5306ef8a56b7635d738907121c494da2cb3cf79d02cf29458"
     },
     {
       "path": "src/app/(workspace)/jadwal/page.tsx",
-      "sha256": "ef56965aa7e9ec2a0c55a890e7ebb079e54954ede3e6799520e92c2977982176"
+      "sha256": "cb712032bdc89fb60239287bfe9eef6d6561fb7e38276b59ac04e6fb612ca12a"
     },
     {
       "path": "src/app/(workspace)/karyawan/[id]/page.tsx",
@@ -400,7 +400,7 @@
     },
     {
       "path": "src/app/(workspace)/karyawan/page.tsx",
-      "sha256": "f6516cad518131bb3d8dd3b0e96936224844b57ece7447ed4f21d606e2b22fb8"
+      "sha256": "9673058c73aa136950bbf20368ac31e3132848f64b7281492ca6101eb4a31f47"
     },
     {
       "path": "src/app/(workspace)/kasbon/page.tsx",
@@ -428,7 +428,7 @@
     },
     {
       "path": "src/app/(workspace)/open-transaction/page.tsx",
-      "sha256": "180afa2fede754954fe14233d0f56f05d9d6596c219b95116ec8ae07aecb6bb4"
+      "sha256": "8e2abb33360136d93d1b23b6cb13f69cbe65c7ffae61308a75fb7f911ac871ed"
     },
     {
       "path": "src/app/(workspace)/payroll/page.tsx",
@@ -444,7 +444,7 @@
     },
     {
       "path": "src/app/(workspace)/portal-karyawan/[[...section]]/page.tsx",
-      "sha256": "995564f35ecdb51e351877dc47d21500d56262793799aff506db56397d391bb0"
+      "sha256": "5b81baf3a7f228ad36c242cba0383d22fde63e8f95121d12037d27546af692d4"
     },
     {
       "path": "src/app/(workspace)/pos/draft/page.tsx",
@@ -456,7 +456,7 @@
     },
     {
       "path": "src/app/(workspace)/produksi-gudang/page.tsx",
-      "sha256": "b74ba3d25fd409fa446b249f60c67c3a59f3cbb57d6668a413629272a23d8848"
+      "sha256": "36e287f9ca8a7690df1be4907cf7ea7e74ffb1c8f50e09b67bb017fddecbe2c7"
     },
     {
       "path": "src/app/(workspace)/rekap-saldo/page.tsx",
@@ -468,11 +468,11 @@
     },
     {
       "path": "src/app/(workspace)/role/page.tsx",
-      "sha256": "e2e1aa9f39f1de2713108ab7d18b7e8ec7a2bf6a04bc989edd49e350b6d45915"
+      "sha256": "69b1a8973efcc686adbcbd1fac9bb65e4fae0fca92e0589c581df49def1ebbc9"
     },
     {
       "path": "src/app/(workspace)/selisih-setor/page.tsx",
-      "sha256": "d577c300ab656b49df2485997d1b8dd1e6053935cf8cb79d4ce66356e21248e3"
+      "sha256": "6561d223d0ff14ec334bc8cbcbb6b21f874bccb8503ccfcaea3bc239a1dee0aa"
     },
     {
       "path": "src/app/(workspace)/setting-menu/page.tsx",
@@ -684,7 +684,7 @@
     },
     {
       "path": "src/components/auth-form.tsx",
-      "sha256": "787d8e3105582141184f8279a40b214421c19883765aa9c0a53ef9e6db06e2fd"
+      "sha256": "7d8fb3be5c962566e2f63a59d55552d7de34e5fdf078ceccb07f8d1d7f840b7a"
     },
     {
       "path": "src/components/auth-screen.tsx",
@@ -692,7 +692,7 @@
     },
     {
       "path": "src/components/bonus-page.tsx",
-      "sha256": "d804fbc4a4295322128bdb2006d7f8af58973f7e3bbfff6e6ee076b6b129ebae"
+      "sha256": "7484e8c19f17ddccff7741e4a5ea8a2028b897fad8d356de329f6996b9845dc6"
     },
     {
       "path": "src/components/bonus-view.css",
@@ -728,7 +728,7 @@
     },
     {
       "path": "src/components/business-dashboard.tsx",
-      "sha256": "204f099337dfd53748e22df5930f972a9e2238b545c800664346058d79ab2c1e"
+      "sha256": "4b7aefdd2a4e1b022ccfc1198fd8cc1c7d4977257931ddb72bc66d77c0cdb44b"
     },
     {
       "path": "src/components/business-outlet-map.tsx",
@@ -800,7 +800,7 @@
     },
     {
       "path": "src/components/inventory-workspace.tsx",
-      "sha256": "f9e34e380972b19773dd84a9476458bc0cd08f323db12a5eaec77b5404cf5684"
+      "sha256": "c01212032b995946d59cac3bccbb974bba6a4c9ef6bb11068044078fef07718f"
     },
     {
       "path": "src/components/inventory.css",
@@ -824,11 +824,11 @@
     },
     {
       "path": "src/components/money-page.tsx",
-      "sha256": "a86d5c5847d5d0cc8c97a89fca32bba76ebc7e2081a470a9ad8219368018e79d"
+      "sha256": "fd1210bc932c67787152b5e212809f7842a4c0675afd3663017a04c7e470dbdc"
     },
     {
       "path": "src/components/navigation-link.tsx",
-      "sha256": "3df35ea9e91ee0c131ab25f5d48fa9be12f68dd0966ceb52ce4d8ef5fca82d59"
+      "sha256": "962af6ebd7b179eeffe898e8f38e5ea678b6b8d1e3e9ce05aaa9a7093174b2c2"
     },
     {
       "path": "src/components/navigation.tsx",
@@ -876,7 +876,7 @@
     },
     {
       "path": "src/components/outlet-income-dashboard.tsx",
-      "sha256": "97adcceda30e69071d3325d653bef509bfab03b5ce3c1eca81c73a4ed71395a5"
+      "sha256": "c8144a1ec5b32c39f23bf03121a1bc8567ae939f7e6979c21f680c2424a67476"
     },
     {
       "path": "src/components/outlet-location-fields.tsx",
@@ -928,7 +928,7 @@
     },
     {
       "path": "src/components/partner-page.tsx",
-      "sha256": "7eb393b43866303edb2d13e5f9c5e229872bc6601fac046db4e84b146acd28a1"
+      "sha256": "bf146c69dd049ee5eba7869fecae73107daa2c8f091d5148d0f0392240bf05f9"
     },
     {
       "path": "src/components/password-input.css",
@@ -988,7 +988,7 @@
     },
     {
       "path": "src/components/production-remainders.tsx",
-      "sha256": "0e6af8e9617386630254fca97a10b50cf89e70b8c7b6fb8958af25c73c5f3b6b"
+      "sha256": "9b781ebb531db77173ba00eda70d7e3d9a7333e569299bc46bdb23f6fb88ba12"
     },
     {
       "path": "src/components/receipt-paper.tsx",
@@ -1008,7 +1008,7 @@
     },
     {
       "path": "src/components/recipe-management.tsx",
-      "sha256": "9490cac88aafd89ea8e99957b0d6168f91a28f60eb32ed77652c540a17037f07"
+      "sha256": "6124bebea611140688f48a54af1eb0ec02a3fb73f71a1b5d4f0b208ceb6266b9"
     },
     {
       "path": "src/components/record-form.tsx",
@@ -1076,7 +1076,7 @@
     },
     {
       "path": "src/components/stock-returns-workspace.tsx",
-      "sha256": "5595e298f42a2e9a136ae1055f583f6487ea40d0a1dd65d803902440006f4223"
+      "sha256": "f9ccfa3ec6b8fb1b6f7a7c37f01f7aa4015c5ef18d51fe8766c8163527ea2d95"
     },
     {
       "path": "src/components/stock-unit-input.tsx",
@@ -1128,7 +1128,7 @@
     },
     {
       "path": "src/lib/business-dashboard-data.ts",
-      "sha256": "e103248d9cdd3d490cf1c93d0140d0815ef207ad893e97d2e88621574f45ab11"
+      "sha256": "20cb529029dc34c5df4e9bb5fb89f1c39aaaa3468fdbd44302e5c7afd6988d44"
     },
     {
       "path": "src/lib/business-dashboard.ts",

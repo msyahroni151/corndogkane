@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { positionBadgeClass } from "@/lib/position-badge";
 import { SortableTable } from "@/components/sortable-table";
 import { displayDate } from "@/lib/placements";
@@ -46,7 +47,12 @@ async function Content({
             {count} karyawan{count > 200 ? " · menampilkan 200 pertama" : ""}
           </p>
           <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
-            <form className="flex min-w-0 max-w-full items-center gap-2">
+            <SearchForm
+              action=""
+              prefetch={false}
+              scroll={false}
+              className="flex min-w-0 max-w-full items-center gap-2"
+            >
               <input
                 name="q"
                 aria-label="Cari karyawan"
@@ -55,7 +61,7 @@ async function Content({
                 className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
               />
               <button className="button-secondary">Cari</button>
-            </form>
+            </SearchForm>
             <FormDialog
               key={params.tambah || "closed"}
               title="Tambah Karyawan Baru"

@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import Link from "next/link";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
@@ -96,33 +97,6 @@ export default async function AssetsPage({
     error = "Filter aset tidak valid. Pilih kembali filter yang tersedia.";
   const db = getPrisma(),
     today = todayWib();
-  const [accounts, outlets, employees] = await Promise.all([
-    db.financialAccount.findMany({
-      where: { kind: "ASET", subGroup: "Aset Tetap" },
-      select: { id: true, code: true, name: true, kind: true, subGroup: true, active: true },
-      orderBy: { code: "asc" },
-    }),
-    db.outlet.findMany({
-      where: { active: true, closed: false },
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
-    }),
-    db.employee.findMany({
-      where: { active: true },
-      select: { fullName: true, employeeCode: true },
-      orderBy: { fullName: "asc" },
-      take: 1000,
-    }),
-  ]);
-  const choices: AssetChoices = {
-    accounts: accounts
-      .filter(isFixedAssetAccount)
-      .map((a) => ({ id: a.id, code: a.code, name: a.name })),
-    outlets,
-    people: [
-      ...new Set(employees.map((e) => [e.fullName, e.employeeCode].filter(Boolean).join(" - "))),
-    ],
-  };
   const where: Prisma.FixedAssetWhereInput = {
     ...(location ? { locationType: location } : {}),
     ...(status ? { status } : {}),
@@ -136,26 +110,6 @@ export default async function AssetsPage({
         }
       : {}),
   };
-  const rows =
-    tab === "daftar" && !error
-      ? await db.fixedAsset.findMany({ where, orderBy: { code: "asc" }, take: 500 })
-      : [];
-  const groups =
-    tab === "daftar" && !error
-      ? await db.fixedAsset.groupBy({
-          by: ["locationType"],
-          where,
-          _count: { _all: true, acquisitionCost: true },
-          _sum: { acquisitionCost: true },
-        })
-      : [];
-  const total = groups.reduce((n, g) => n + g._count._all, 0),
-    knownCost = groups.reduce((n, g) => n + g._count.acquisitionCost, 0),
-    cost = groups.reduce((n, g) => n + (g._sum.acquisitionCost ?? BigInt(0)), BigInt(0));
-  const damaged =
-    tab === "daftar" && !error
-      ? await db.fixedAsset.count({ where: { AND: [where, { condition: { not: "BAIK" } }] } })
-      : 0;
   const eventWhere: Prisma.AssetEventWhereInput = {
     ...(assetId ? { assetId } : {}),
     ...(eventType ? { type: eventType } : {}),
@@ -170,10 +124,40 @@ export default async function AssetsPage({
         }
       : {}),
   };
-  const [events, eventCount] =
-    tab === "riwayat" && !error
-      ? await Promise.all([
-          db.assetEvent.findMany({
+  const [accounts, outlets, employees, rows, groups, damaged, events, eventCount, selected] =
+    await Promise.all([
+      db.financialAccount.findMany({
+        where: { kind: "ASET", subGroup: "Aset Tetap" },
+        select: { id: true, code: true, name: true, kind: true, subGroup: true, active: true },
+        orderBy: { code: "asc" },
+      }),
+      db.outlet.findMany({
+        where: { active: true, closed: false },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      }),
+      db.employee.findMany({
+        where: { active: true },
+        select: { fullName: true, employeeCode: true },
+        orderBy: { fullName: "asc" },
+        take: 1000,
+      }),
+      tab === "daftar" && !error
+        ? db.fixedAsset.findMany({ where, orderBy: { code: "asc" }, take: 500 })
+        : Promise.resolve([]),
+      tab === "daftar" && !error
+        ? db.fixedAsset.groupBy({
+            by: ["locationType"],
+            where,
+            _count: { _all: true, acquisitionCost: true },
+            _sum: { acquisitionCost: true },
+          })
+        : Promise.resolve([]),
+      tab === "daftar" && !error
+        ? db.fixedAsset.count({ where: { AND: [where, { condition: { not: "BAIK" } }] } })
+        : Promise.resolve(0),
+      tab === "riwayat" && !error
+        ? db.assetEvent.findMany({
             where: eventWhere,
             include: {
               asset: { select: { code: true, name: true } },
@@ -181,13 +165,25 @@ export default async function AssetsPage({
             },
             orderBy: [{ createdAt: "desc" }, { id: "desc" }],
             take: 500,
-          }),
-          db.assetEvent.count({ where: eventWhere }),
-        ])
-      : [[], 0];
-  const selected = assetId
-    ? await db.fixedAsset.findUnique({ where: { id: assetId }, select: { code: true, name: true } })
-    : null;
+          })
+        : Promise.resolve([]),
+      tab === "riwayat" && !error ? db.assetEvent.count({ where: eventWhere }) : Promise.resolve(0),
+      assetId
+        ? db.fixedAsset.findUnique({ where: { id: assetId }, select: { code: true, name: true } })
+        : Promise.resolve(null),
+    ]);
+  const choices: AssetChoices = {
+    accounts: accounts
+      .filter(isFixedAssetAccount)
+      .map((a) => ({ id: a.id, code: a.code, name: a.name })),
+    outlets,
+    people: [
+      ...new Set(employees.map((e) => [e.fullName, e.employeeCode].filter(Boolean).join(" - "))),
+    ],
+  };
+  const total = groups.reduce((n, g) => n + g._count._all, 0),
+    knownCost = groups.reduce((n, g) => n + g._count.acquisitionCost, 0),
+    cost = groups.reduce((n, g) => n + (g._sum.acquisitionCost ?? BigInt(0)), BigInt(0));
   return (
     <div className="asset-workspace">
       <nav className="asset-tabs" aria-label="Submenu Aset Tetap">
@@ -247,7 +243,7 @@ export default async function AssetsPage({
               </section>
             ))}
           </div>
-          <form className="panel asset-filters">
+          <SearchForm action="" prefetch={false} scroll={false} className="panel asset-filters">
             <input type="hidden" name="tab" value="daftar" />
             <label className="field asset-search">
               Cari aset
@@ -304,7 +300,7 @@ export default async function AssetsPage({
             <Link href="/finance/aset-tetap" className="button-secondary">
               Reset
             </Link>
-          </form>
+          </SearchForm>
           {error && (
             <p className="asset-error" role="alert">
               {error}
@@ -412,7 +408,7 @@ export default async function AssetsPage({
         </>
       ) : (
         <>
-          <form className="panel asset-filters">
+          <SearchForm action="" prefetch={false} scroll={false} className="panel asset-filters">
             <input type="hidden" name="tab" value="riwayat" />
             {assetId && <input type="hidden" name="asset" value={assetId} />}
             <label className="field asset-search">
@@ -440,7 +436,7 @@ export default async function AssetsPage({
             <Link className="button-secondary" href="/finance/aset-tetap?tab=riwayat">
               Semua riwayat
             </Link>
-          </form>
+          </SearchForm>
           {selected && (
             <p className="asset-help">
               Riwayat:{" "}

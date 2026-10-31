@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import Link from "next/link";
 import { getPrisma } from "@/lib/db";
 import { quantityLabel } from "@/lib/goods-receipts";
@@ -90,7 +91,12 @@ export async function ProductionRemainders({ today, q = "" }: { today: string; q
         baru. Sisa tetap tercakup dalam nilai stok gudang. Bahan yang belum dipakai tetap di stok
         bahan asal; bahan rusak dicatat melalui Susut.
       </p>
-      <form className="panel flex flex-wrap items-end gap-3 p-4">
+      <SearchForm
+        action=""
+        prefetch={false}
+        scroll={false}
+        className="panel flex flex-wrap items-end gap-3 p-4"
+      >
         <input type="hidden" name="tab" value="sisa" />
         <label className="field flex-1">
           Cari sisa produksi
@@ -102,7 +108,7 @@ export async function ProductionRemainders({ today, q = "" }: { today: string; q
           />
         </label>
         <button className="button-secondary">Cari</button>
-      </form>
+      </SearchForm>
       <section className="panel overflow-hidden">
         <div className="overflow-x-auto">
           <SortableTable className="w-full min-w-[1050px] text-left text-sm">

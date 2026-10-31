@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { OutletBonusSummary } from "@/components/outlet-bonus-summary";
 import { SortableTable } from "@/components/sortable-table";
 import { APP_TIME_ZONE } from "@/lib/local-date";
@@ -158,7 +159,12 @@ export async function MoneyPage({
               {group.title} · {group.rows.length} catatan
             </h2>
             {index === 0 && (
-              <form className="flex flex-wrap gap-3">
+              <SearchForm
+                action=""
+                prefetch={false}
+                scroll={false}
+                className="flex flex-wrap gap-3"
+              >
                 {historyOnly && <input type="hidden" name="view" value="history" />}
                 <select
                   name="employee"
@@ -187,7 +193,7 @@ export async function MoneyPage({
                   ))}
                 </select>
                 <button className="button-secondary">Tampilkan</button>
-              </form>
+              </SearchForm>
             )}
           </div>
           {group.rows.length ? (

@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import Link from "next/link";
 import { requireAccess } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -78,7 +79,12 @@ export default async function OpenTransactionPage({
           <JournalForm accounts={accounts} today={today} />
         </FormDialog>
       </div>
-      <form className="panel flex flex-wrap items-end gap-3 p-5">
+      <SearchForm
+        action=""
+        prefetch={false}
+        scroll={false}
+        className="panel flex flex-wrap items-end gap-3 p-5"
+      >
         <label className="field min-w-[220px] flex-1">
           Cari transaksi
           <input name="q" defaultValue={q} placeholder="Cari keterangan, akun…" maxLength={200} />
@@ -92,7 +98,7 @@ export default async function OpenTransactionPage({
           <LocalInput name="to" type="date" defaultValue={to} required />
         </label>
         <button className="button-secondary">Terapkan</button>
-      </form>
+      </SearchForm>
       {!valid && (
         <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
           Pilih rentang tanggal yang valid, maksimal satu tahun.

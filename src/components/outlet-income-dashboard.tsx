@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { LocalInput } from "@/components/local-input";
 import { OutletDashboardTable } from "@/components/outlet-dashboard-table";
 import { OwnerCoverage, OwnerInsights, OwnerAttention } from "@/components/outlet-owner-insights";
@@ -25,7 +26,7 @@ export function OutletIncomeDashboard({
   return (
     <div className="outlet-income-dashboard">
       <section className="panel income-filters">
-        <form>
+        <SearchForm action="" prefetch={false} scroll={false}>
           <label className="field">
             Tanggal mulai
             <LocalInput type="date" name="from" defaultValue={from} required />
@@ -46,7 +47,7 @@ export function OutletIncomeDashboard({
             </select>
           </label>
           <button className="button-primary">Terapkan</button>
-        </form>
+        </SearchForm>
         <p>
           Periode {dateToDisplay(from)}–{dateToDisplay(to)} WIB · {totals.reported} dari{" "}
           {rows.length} outlet memiliki rekap.

@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { SortableTable } from "@/components/sortable-table";
 import Link from "next/link";
 import { requireAccess } from "@/lib/auth";
@@ -148,7 +149,7 @@ export async function PartnerPage({
           </section>
         ))}
       </div>
-      <form className="flex flex-wrap gap-2">
+      <SearchForm action="" prefetch={false} scroll={false} className="flex flex-wrap gap-2">
         <input
           name="q"
           aria-label="Cari relasi"
@@ -175,7 +176,7 @@ export async function PartnerPage({
           <option value="city">Kota</option>
         </select>
         <button className="button-secondary">Cari</button>
-      </form>
+      </SearchForm>
       {supplier && (
         <nav aria-label="Filter supplier" className="flex flex-wrap gap-2">
           {[

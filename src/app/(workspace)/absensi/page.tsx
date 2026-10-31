@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { LocalInput } from "@/components/local-input";
 import { AttendanceDateGate } from "@/components/attendance-date-gate";
 import { SortableTable } from "@/components/sortable-table";
@@ -235,7 +236,12 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
             </p>
           </div>
         </div>
-        <form className="flex flex-wrap items-end gap-3 text-xs">
+        <SearchForm
+          action=""
+          prefetch={false}
+          scroll={false}
+          className="flex flex-wrap items-end gap-3 text-xs"
+        >
           <label className="flex flex-col gap-1.5 text-slate-500">
             Tanggal Mulai
             <LocalInput
@@ -299,7 +305,7 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
             </select>
           </label>
           <button className="button-primary !px-4 !py-2.5 !text-xs">Terapkan</button>
-        </form>
+        </SearchForm>
         <AttendanceExport
           headers={attendanceColumns}
           rows={records.map((r) => r.data)}

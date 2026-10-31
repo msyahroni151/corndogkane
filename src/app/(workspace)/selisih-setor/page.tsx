@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { todayWib, parseCivilDate, displayDate } from "@/lib/placements";
@@ -109,7 +110,12 @@ export default async function SettlementDifferencePage({
   ];
   return (
     <div className="space-y-6">
-      <form className="panel flex flex-wrap items-end gap-4 p-5">
+      <SearchForm
+        action=""
+        prefetch={false}
+        scroll={false}
+        className="panel flex flex-wrap items-end gap-4 p-5"
+      >
         <label className="field">
           Tanggal mulai
           <LocalInput type="date" name="from" defaultValue={from} required />
@@ -141,7 +147,7 @@ export default async function SettlementDifferencePage({
           </select>
         </label>
         <button className="button-secondary">Terapkan</button>
-      </form>
+      </SearchForm>
       {error && (
         <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
           {error}

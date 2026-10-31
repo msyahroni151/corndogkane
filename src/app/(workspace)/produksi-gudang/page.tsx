@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { ProductionPlanForm, ProductionPlanStatus } from "@/components/production-plan-forms";
 import { ProductionRemainders } from "@/components/production-remainders";
 import { RecipeManagement } from "@/components/recipe-management";
@@ -188,7 +189,12 @@ export default async function Page({
     );
   const href = (next: string) => "/produksi-gudang?" + new URLSearchParams({ tab: next, from, to });
   const dateFilter = (
-    <form className="flex min-w-0 flex-wrap items-end gap-3">
+    <SearchForm
+      action=""
+      prefetch={false}
+      scroll={false}
+      className="flex min-w-0 flex-wrap items-end gap-3"
+    >
       <input type="hidden" name="tab" value={tab} />
       <label className="field">
         Dari tanggal
@@ -204,7 +210,7 @@ export default async function Page({
           Rentang tanggal tidak valid, maksimal 1 tahun.
         </p>
       )}
-    </form>
+    </SearchForm>
   );
   return (
     <div className="space-y-5">
@@ -300,7 +306,12 @@ export default async function Page({
               <ProductionPlanForm items={options} today={today} />
             </FormDialog>
           </section>
-          <form className="panel flex flex-wrap items-end gap-3 p-4">
+          <SearchForm
+            action=""
+            prefetch={false}
+            scroll={false}
+            className="panel flex flex-wrap items-end gap-3 p-4"
+          >
             <input type="hidden" name="tab" value="rencana" />
             <label className="field">
               Dari tanggal
@@ -311,7 +322,7 @@ export default async function Page({
               <input type="date" name="to" defaultValue={to} required />
             </label>
             <button className="button-secondary">Terapkan</button>
-          </form>
+          </SearchForm>
           {!valid ? (
             <p role="alert" className="text-red-700">
               Periode tidak valid, maksimal 366 hari.
@@ -428,7 +439,12 @@ export default async function Page({
               stok lagi. Maksimal 500 produksi per periode.
             </p>
           </section>
-          <form className="panel flex flex-wrap items-end gap-3 p-4">
+          <SearchForm
+            action=""
+            prefetch={false}
+            scroll={false}
+            className="panel flex flex-wrap items-end gap-3 p-4"
+          >
             <input type="hidden" name="tab" value="pemakaian" />
             <label className="field">
               Dari tanggal
@@ -439,7 +455,7 @@ export default async function Page({
               <input type="date" name="to" defaultValue={to} required />
             </label>
             <button className="button-secondary">Terapkan</button>
-          </form>
+          </SearchForm>
           <section className="panel overflow-x-auto">
             <SortableTable className="w-full min-w-[900px] text-left text-xs">
               <thead>

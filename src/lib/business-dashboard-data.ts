@@ -426,14 +426,16 @@ export async function loadBusinessSnapshot(
   if (can("kasbon"))
     jobs.push(
       (async () => {
-        const rows = await db.moneyEntry.groupBy({
-          by: ["kind"],
-          where: { status: "APPROVED", kind: { in: ["LOAN", "REPAYMENT"] } },
-          _sum: { amount: true },
-        });
+        const [rows, pending] = await Promise.all([
+          db.moneyEntry.groupBy({
+            by: ["kind"],
+            where: { status: "APPROVED", kind: { in: ["LOAN", "REPAYMENT"] } },
+            _sum: { amount: true },
+          }),
+          db.moneyEntry.count({ where: { kind: "LOAN", status: "PENDING" } }),
+        ]);
         const loan = rows.find((r) => r.kind === "LOAN")?._sum.amount ?? 0,
           paid = rows.find((r) => r.kind === "REPAYMENT")?._sum.amount ?? 0;
-        const pending = await db.moneyEntry.count({ where: { kind: "LOAN", status: "PENDING" } });
         result.modules.push({
           id: "loans",
           title: "Kasbon Karyawan",
@@ -480,13 +482,13 @@ export async function loadBusinessSnapshot(
   if (can("setting-menu") || can("pos"))
     jobs.push(
       (async () => {
-        const rows = await db.inventoryItem.findMany({
-          where: { kind: "PRODUCT", active: true },
-          select: { _count: { select: { recipe: true } } },
-        });
-        const transactions = await db.saleTransaction.count({
-          where: { date: period, outletId: { in: outletIds } },
-        });
+        const [rows, transactions] = await Promise.all([
+          db.inventoryItem.findMany({
+            where: { kind: "PRODUCT", active: true },
+            select: { _count: { select: { recipe: true } } },
+          }),
+          db.saleTransaction.count({ where: { date: period, outletId: { in: outletIds } } }),
+        ]);
         result.modules.push({
           id: "sales",
           title: "Penjualan & Kasir",
@@ -520,16 +522,28 @@ export async function loadBusinessSnapshot(
   if (can("supplier") || can("pelanggan"))
     jobs.push(
       (async () => {
+        const counts = await db.partner.groupBy({
+          by: ["kind"],
+          where: {
+            kind: {
+              in: [
+                ...(can("supplier") ? ["SUPPLIER" as const] : []),
+                ...(can("pelanggan") ? ["CUSTOMER" as const] : []),
+              ],
+            },
+          },
+          _count: { _all: true },
+        });
         const values: { label: string; value: string }[] = [];
         if (can("supplier"))
           values.push({
             label: "Supplier terdaftar",
-            value: String(await db.partner.count({ where: { kind: "SUPPLIER" } })),
+            value: String(counts.find((r) => r.kind === "SUPPLIER")?._count._all ?? 0),
           });
         if (can("pelanggan"))
           values.push({
             label: "Pelanggan terdaftar",
-            value: String(await db.partner.count({ where: { kind: "CUSTOMER" } })),
+            value: String(counts.find((r) => r.kind === "CUSTOMER")?._count._all ?? 0),
           });
         result.modules.push({
           id: "relations",

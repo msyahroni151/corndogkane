@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { lifecycleCounts, permanentDeletionReason } from "@/lib/inventory-item-lifecycle";
 import Link from "next/link";
 import { RecipeManagement } from "@/components/recipe-management";
@@ -563,7 +564,10 @@ export default async function InventoryWorkspace({
             className="panel flex flex-wrap items-center gap-3 p-3"
             aria-label="Pencarian dan filter stok gudang"
           >
-            <form
+            <SearchForm
+              action=""
+              prefetch={false}
+              scroll={false}
               aria-label="Pencarian stok gudang"
               className="flex min-w-[200px] flex-[1_1_240px] items-center rounded-lg border border-[#d6e3db] bg-white focus-within:border-[#5c9b58] focus-within:ring-2 focus-within:ring-emerald-100"
             >
@@ -586,7 +590,7 @@ export default async function InventoryWorkspace({
                 placeholder="Cari nama barang..."
                 className="min-w-0 flex-1 rounded-r-lg bg-transparent py-2.5 pr-3 text-xs text-slate-700 outline-none"
               />
-            </form>
+            </SearchForm>
             <nav aria-label="Jenis stok gudang" className="flex flex-wrap items-center gap-1.5">
               {[
                 ["", "Semua Jenis"],
@@ -830,7 +834,12 @@ export default async function InventoryWorkspace({
         </>
       )}
       {(tab === "susut" || tab === "opname") && (
-        <form className="panel flex flex-wrap items-end gap-3 p-4">
+        <SearchForm
+          action=""
+          prefetch={false}
+          scroll={false}
+          className="panel flex flex-wrap items-end gap-3 p-4"
+        >
           <input type="hidden" name="tab" value={tab} />
           {tab === "susut" && <input type="hidden" name="mode" value={mode} />}
           <label className="field">
@@ -847,7 +856,7 @@ export default async function InventoryWorkspace({
               Rentang tanggal tidak valid, maksimal 1 tahun.
             </p>
           )}
-        </form>
+        </SearchForm>
       )}
       {tab === "susut" && (
         <>
@@ -1173,7 +1182,10 @@ export default async function InventoryWorkspace({
           {tab === "produk" ? (
             <>
               <div className="panel flex flex-wrap items-center gap-3 p-3">
-                <form
+                <SearchForm
+                  action=""
+                  prefetch={false}
+                  scroll={false}
                   role="search"
                   aria-label="Pencarian produk"
                   className="flex min-w-[200px] flex-[1_1_280px] items-center rounded-lg border border-[#d6e3db] bg-white focus-within:border-[#5c9b58] focus-within:ring-2 focus-within:ring-emerald-100"
@@ -1197,7 +1209,7 @@ export default async function InventoryWorkspace({
                     placeholder="Cari menu..."
                     className="min-w-0 flex-1 rounded-r-lg bg-transparent py-2.5 pr-3 text-xs text-slate-700 outline-none"
                   />
-                </form>
+                </SearchForm>
                 <nav
                   aria-label="Filter jenis produk"
                   className="flex flex-wrap items-center gap-1.5"
@@ -1240,7 +1252,12 @@ export default async function InventoryWorkspace({
             </>
           ) : (
             <div className="flex flex-wrap items-end justify-between gap-3">
-              <form className="flex flex-wrap items-end gap-2">
+              <SearchForm
+                action=""
+                prefetch={false}
+                scroll={false}
+                className="flex flex-wrap items-end gap-2"
+              >
                 <input type="hidden" name="tab" value={tab} />
                 <input type="hidden" name="status" value={status} />
                 <label className="field">
@@ -1248,7 +1265,7 @@ export default async function InventoryWorkspace({
                   <input name="q" maxLength={150} defaultValue={q} placeholder="Cari nama..." />
                 </label>
                 <button className="button-secondary">Cari</button>
-              </form>
+              </SearchForm>
               <nav aria-label="Filter produk" className="flex flex-wrap gap-2">
                 {[
                   ["", "Semua"],

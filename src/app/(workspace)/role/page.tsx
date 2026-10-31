@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { permissionMenus, rolePermissions } from "@/lib/permissions";
@@ -65,7 +66,7 @@ export default async function RolePage({
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-5">
           <h2 className="text-sm font-semibold">Daftar role · {visibleRoles.length}</h2>
           <div className="flex flex-wrap items-center gap-2">
-            <form className="flex gap-2">
+            <SearchForm action="" prefetch={false} scroll={false} className="flex gap-2">
               <input type="hidden" name="accountq" value={accountq} />
               <input
                 aria-label="Cari role"
@@ -75,7 +76,7 @@ export default async function RolePage({
                 className="min-w-0 rounded-lg border border-slate-200 px-3 py-2 text-sm"
               />
               <button className="button-secondary">Cari</button>
-            </form>
+            </SearchForm>
             <FormDialog title="Tambah role" trigger="+ Tambah role">
               <AccessRoleForm />
             </FormDialog>
@@ -160,7 +161,7 @@ export default async function RolePage({
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 p-5">
           <h2 className="text-sm font-semibold">Akun login · {visibleAccounts.length}</h2>
           <div className="flex flex-wrap items-center gap-2">
-            <form className="flex gap-2">
+            <SearchForm action="" prefetch={false} scroll={false} className="flex gap-2">
               <input type="hidden" name="roleq" value={roleq} />
               <input
                 aria-label="Cari akun login"
@@ -170,7 +171,7 @@ export default async function RolePage({
                 className="min-w-0 rounded-lg border border-slate-200 px-3 py-2 text-sm"
               />
               <button className="button-secondary">Cari</button>
-            </form>
+            </SearchForm>
             <FormDialog title="Tambah akun login" trigger="+ Tambah akun">
               <LoginAccountForm employees={choices} roles={roleChoices} />
             </FormDialog>

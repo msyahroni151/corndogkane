@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import { warehouseKindNames } from "@/lib/inventory";
 import { recipeCost, type RecipeCostItem } from "@/lib/recipe-cost";
 import { FormDialog } from "@/components/form-dialog";
@@ -49,7 +50,12 @@ export function RecipeManagement({
           : "Atur kebutuhan bahan untuk 1 pcs produk jual. Bahan siap pakai memakai HPP hasil produksi gudang. Pengurangan stok outlet dari POS belum aktif."}
       </p>
       <div className="panel flex flex-wrap items-end gap-3 p-4">
-        <form className="flex min-w-0 flex-1 flex-wrap items-end gap-3">
+        <SearchForm
+          action=""
+          prefetch={false}
+          scroll={false}
+          className="flex min-w-0 flex-1 flex-wrap items-end gap-3"
+        >
           <input type="hidden" name="tab" value="resep" />
           <label className="field min-w-[180px] flex-1">
             Cari resep
@@ -71,7 +77,7 @@ export function RecipeManagement({
             </label>
           )}
           <button className="button-secondary">Cari</button>
-        </form>
+        </SearchForm>
         {production && (
           <div className="shrink-0">
             <FormDialog title="Tambah Resep Produksi" trigger="+ Tambah Resep Produksi" wide>

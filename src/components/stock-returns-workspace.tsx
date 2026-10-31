@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import Link from "next/link";
 import { getPrisma } from "@/lib/db";
 import { returnActionNames, returnStatusNames } from "@/lib/stock-returns";
@@ -131,7 +132,12 @@ export async function StockReturnsWorkspace({
         ))}
       </div>
       <section className="panel p-4">
-        <form className="flex flex-wrap items-end gap-3">
+        <SearchForm
+          action=""
+          prefetch={false}
+          scroll={false}
+          className="flex flex-wrap items-end gap-3"
+        >
           <input type="hidden" name="tab" value="returns" />
           <label className="field min-w-48 flex-1">
             Outlet
@@ -156,7 +162,7 @@ export async function StockReturnsWorkspace({
             </select>
           </label>
           <button className="button-primary">Terapkan</button>
-        </form>
+        </SearchForm>
       </section>
       <p className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs leading-6 text-blue-700">
         Alur: Diajukan → Disetujui → Dikirim → Diterima Gudang. Stok outlet berkurang saat dikirim;

@@ -1,3 +1,4 @@
+import SearchForm from "next/form";
 import Link from "next/link";
 import Image from "next/image";
 import { randomUUID } from "node:crypto";
@@ -119,30 +120,31 @@ export default async function Page({
   if (tab === "persetujuan" ? !canReview : !hasPermission(user, "portal-karyawan"))
     return <div className="panel p-6">Anda tidak memiliki akses ke bagian ini.</div>;
   const db = getPrisma(),
-    account = await db.user.findUnique({ where: { id: user.id }, select: { employeeId: true } }),
     today = todayWib();
-  const employeeId = canPreview && query.employee ? query.employee : account?.employeeId;
-  const choices = canPreview
-    ? await db.employee.findMany({
-        where: { active: true },
-        select: { id: true, fullName: true, employeeCode: true },
-        orderBy: { fullName: "asc" },
-      })
-    : [];
-  const employee = employeeId
-    ? await db.employee.findUnique({
-        where: { id: employeeId },
-        select: {
-          id: true,
-          fullName: true,
-          employeeCode: true,
-          department: true,
-          position: true,
-          active: true,
-        },
-      })
-    : null;
-  const preview = !!employee && employee.id !== account?.employeeId;
+  const employeeId = canPreview && query.employee ? query.employee : user.employeeId;
+  const [choices, employee] = await Promise.all([
+    canPreview
+      ? db.employee.findMany({
+          where: { active: true },
+          select: { id: true, fullName: true, employeeCode: true },
+          orderBy: { fullName: "asc" },
+        })
+      : Promise.resolve([]),
+    employeeId
+      ? db.employee.findUnique({
+          where: { id: employeeId },
+          select: {
+            id: true,
+            fullName: true,
+            employeeCode: true,
+            department: true,
+            position: true,
+            active: true,
+          },
+        })
+      : Promise.resolve(null),
+  ]);
+  const preview = !!employee && employee.id !== user.employeeId;
   const selectedQuery = preview ? `?employee=${encodeURIComponent(employee.id)}` : "";
   const link = (key: string) => "/portal-karyawan" + (key ? "/" + key : "") + selectedQuery;
   const header = (
@@ -167,7 +169,12 @@ export default async function Page({
           </Link>
         )}
         {canPreview && (
-          <form className="flex min-w-0 flex-wrap items-end gap-2">
+          <SearchForm
+            action=""
+            prefetch={false}
+            scroll={false}
+            className="flex min-w-0 flex-wrap items-end gap-2"
+          >
             <label className="field min-w-0">
               <span className="text-xs">Pratinjau data karyawan (admin)</span>
               <select
@@ -184,7 +191,7 @@ export default async function Page({
               </select>
             </label>
             <button className="button-secondary">Lihat</button>
-          </form>
+          </SearchForm>
         )}
       </div>
       {preview && (
@@ -479,14 +486,19 @@ export default async function Page({
       (s) => s.attendance && ["HADIR", "SETENGAH_HARI"].includes(s.attendance.status),
     ).length;
   const monthFilter = (
-    <form className="panel flex flex-wrap items-end gap-3 p-4">
+    <SearchForm
+      action=""
+      prefetch={false}
+      scroll={false}
+      className="panel flex flex-wrap items-end gap-3 p-4"
+    >
       {preview && <input type="hidden" name="employee" value={employee.id} />}
       <label className="field">
         <span className="text-xs">Periode jadwal / absensi</span>
         <input type="month" name="month" defaultValue={month} required />
       </label>
       <button className="button-primary">Terapkan</button>
-    </form>
+    </SearchForm>
   );
   const cameraOptions = nearby
     .map((s) => {
