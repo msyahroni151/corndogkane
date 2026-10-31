@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-10-30T13:07:41.987Z",
+  "createdAt": "2026-10-31T08:06:11.724Z",
   "containsRealData": false,
   "files": [
     {
@@ -12,7 +12,7 @@
     },
     {
       "path": "docs/data-retention.md",
-      "sha256": "e152b3c51a6121958b6b2efa9c288673df1a446f92b892c85777142f662b9404"
+      "sha256": "4fbe3b60c8077c6edfb93fddb39327facb6e32a88345681b129a6fdd5d3098e2"
     },
     {
       "path": "docs/employee-portal.md",
@@ -21,6 +21,10 @@
     {
       "path": "docs/integrasi-penjualan-outlet.md",
       "sha256": "25c0239a43a21890801331e4601911a9739781edc2b16c2d14119bd32762e225"
+    },
+    {
+      "path": "docs/jadwal-dan-produksi.md",
+      "sha256": "3da94b0963cfccf2f1b452a8fa0365fe7636a357110cb859c5fbbd2163df751b"
     },
     {
       "path": "docs/resep-produksi.md",
@@ -231,12 +235,16 @@
       "sha256": "72be28d994a08d5e0b150390be23703d7f2baf51f02af71592448e2e13b1642a"
     },
     {
+      "path": "prisma/migrations/20261031090000_schedule_notes_and_production_plans/migration.sql",
+      "sha256": "a9be1a839cbac483c6080c110cca9ce70557dfdf92042976a38fb01e28e030e0"
+    },
+    {
       "path": "prisma/migrations/migration_lock.toml",
       "sha256": "99836963713b4f5b269ad49af0ed3d7b0b2e336115c2f92dc9ac683d139d0900"
     },
     {
       "path": "prisma/schema.prisma",
-      "sha256": "fbba16b951234190e5ff8b967603e7424d544e7e20754b6655a8c7e4d334a643"
+      "sha256": "ef695156e4202608b46acd2820ffabea7ba148aa3120b29826c86def434aeba7"
     },
     {
       "path": "public/corndog-kane-logo.png",
@@ -380,7 +388,7 @@
     },
     {
       "path": "src/app/(workspace)/jadwal/page.tsx",
-      "sha256": "3a1a9a545275ad02b71d74661b8b0fe259703f89e08e5f35825765aacf33ff16"
+      "sha256": "ef56965aa7e9ec2a0c55a890e7ebb079e54954ede3e6799520e92c2977982176"
     },
     {
       "path": "src/app/(workspace)/karyawan/[id]/page.tsx",
@@ -448,7 +456,7 @@
     },
     {
       "path": "src/app/(workspace)/produksi-gudang/page.tsx",
-      "sha256": "4c1bdc96845e546e546ee328f4ee0be5b851916553a3447a4c0111df0a71c11e"
+      "sha256": "167801e3a5ecc8eaaed870df47190c053af1e12bf974b1899b21c06b93051892"
     },
     {
       "path": "src/app/(workspace)/rekap-saldo/page.tsx",
@@ -524,7 +532,7 @@
     },
     {
       "path": "src/app/api/schedules/share/route.ts",
-      "sha256": "ae27bfa566e592d2e81d08c0d3578314ac4367453141d91cdece1e5a83b58ebf"
+      "sha256": "966911a863d802fab50be4bf4212f2204e3dc3414ad3d4de38843c4a9eefa51c"
     },
     {
       "path": "src/app/attendance-actions.ts",
@@ -540,7 +548,7 @@
     },
     {
       "path": "src/app/employee-actions.ts",
-      "sha256": "dd440a877471bb52795ba7f30f1383c92cb567cfdf29071363c6b5c2d7368d62"
+      "sha256": "ccb30ea99e0dc09165e5929eb60f7c1723de924564a1d0d0e99b223287f4a09f"
     },
     {
       "path": "src/app/error.tsx",
@@ -568,7 +576,7 @@
     },
     {
       "path": "src/app/inventory-actions.ts",
-      "sha256": "a6f36e6ccd005f5ed190cba081b4ce30c870d3878b8e9d86afe27aab2992e606"
+      "sha256": "a7caac3d5807971a5d8ea40d90fa800e58f1d41647502ca164d49ef8b878e5d5"
     },
     {
       "path": "src/app/journal-actions.ts",
@@ -584,7 +592,7 @@
     },
     {
       "path": "src/app/master-actions.ts",
-      "sha256": "43238db98b1fbbcfa16654ce6ad5deb63c503ff81c2591fd1c200cf0f5c8b24d"
+      "sha256": "55f184e785512f69e4dc4dcf5631bb9db4776ef1375255d2739b22c0df68a0f5"
     },
     {
       "path": "src/app/money-actions.ts",
@@ -627,6 +635,10 @@
       "sha256": "5e5b976faf78edcbd43dbf23f7507f48a941dc3ef731b7fe278f168dee99e80c"
     },
     {
+      "path": "src/app/production-plan-actions.ts",
+      "sha256": "ee1eccdb1a034de89a862049f657752d6a38e4981956b697ba4e80b7a6ba1408"
+    },
+    {
       "path": "src/app/receipt-template-actions.ts",
       "sha256": "fc8dddf0e0b0ec070ea938b0faab8d58b17e24243954f85b9b4d22887a75f7d4"
     },
@@ -644,7 +656,7 @@
     },
     {
       "path": "src/app/schedule-actions.ts",
-      "sha256": "edacc8a25962ef1f3cd6e9f1684b22508754d306e2cfdde2bda27fb948423a1f"
+      "sha256": "34e41b7c5977085c193c0f4ad57fccdd7ccd25f4a28a7724c2bd7845a9c57520"
     },
     {
       "path": "src/app/settlement-actions.ts",
@@ -668,7 +680,7 @@
     },
     {
       "path": "src/components/attendance-form.tsx",
-      "sha256": "a136f086f755c886e574dacfc628423907dcc0d215c2e0bfb62e4b77aff1a26b"
+      "sha256": "725da574282219f915e8cb46d870b587921a977a434d03dfc5a9895e2a1730a2"
     },
     {
       "path": "src/components/auth-form.tsx",
@@ -739,6 +751,10 @@
       "sha256": "7a91373b7fb6ef396aa6887eef74a9ef0d7cc92b6f2012cbb4d2bb9915d0f146"
     },
     {
+      "path": "src/components/delete-area-form.tsx",
+      "sha256": "25cdf372fa4d3ed952b5600f3d608bca83829f9a8f8df95ed4de2a1a36e5e66f"
+    },
+    {
       "path": "src/components/demo-notice.tsx",
       "sha256": "a16dd402d0a79265a59e68bbdbdc656924474ab1a8f5fddf540f2e932162d2ff"
     },
@@ -756,11 +772,11 @@
     },
     {
       "path": "src/components/employee-form.tsx",
-      "sha256": "65a7d1b653b919c63f5e82010ddff67a0f87a8a978f3543faae3dade6bb80b34"
+      "sha256": "86061497b3d2eed9ccf822eadad795811399d3a23a45a0addf0bd8a8139b1f27"
     },
     {
       "path": "src/components/fixed-asset-forms.tsx",
-      "sha256": "3c7fe8b8904c26f8e9205e03b55624349fc87eddf2938de8087936e865eb8c92"
+      "sha256": "990d50b64d2154390d31584c7dc252b594650efa0322448b5a84e3ced5183efb"
     },
     {
       "path": "src/components/fixed-assets.css",
@@ -772,7 +788,7 @@
     },
     {
       "path": "src/components/goods-receipt-form.tsx",
-      "sha256": "9ce8c17c28317cfca9b74ab63c5c8c25c0c4a35499a60d949fa54d9e40bb8f70"
+      "sha256": "d74a02b0c6e96173ded8147924803f6c07c912b16334c8a3865670baaa8ec7f8"
     },
     {
       "path": "src/components/goods-receipts.css",
@@ -780,7 +796,7 @@
     },
     {
       "path": "src/components/inventory-forms.tsx",
-      "sha256": "6b53e6deb9ed75cc3de257bb115ec6822bb5b43cf3fa7c096eb409202487e9ee"
+      "sha256": "389d5e9d33e68a0da29221302a6b075672646a323ba8b35bd48aaaab9a7eaec9"
     },
     {
       "path": "src/components/inventory-workspace.tsx",
@@ -792,7 +808,7 @@
     },
     {
       "path": "src/components/journal-forms.tsx",
-      "sha256": "d0e2117f2157416436730fca56be0c4792f98f89f783cfaa8784f57652cf6876"
+      "sha256": "3b8ddc2bd07fff023f3d48eae79388bef447dcf5b743c034dcb8748bd1d20c39"
     },
     {
       "path": "src/components/local-input.tsx",
@@ -800,11 +816,11 @@
     },
     {
       "path": "src/components/master-page.tsx",
-      "sha256": "3710a9423fa3c36ad16ecd066b1faee0d85d4bf8788b6f095e582ad89f022707"
+      "sha256": "3f42dd2c0a2d3044535abe4c84d296a51b1975521676b98f59a58085d3749aa4"
     },
     {
       "path": "src/components/money-form.tsx",
-      "sha256": "9d828f38a5f70b26b60c88902d43df157019fc502f881b9157f69631e3e7d5f7"
+      "sha256": "eb5839d0f47306fcd8486f6a4c892c09884f873a7680a4f7afbbf48d110a2c5b"
     },
     {
       "path": "src/components/money-page.tsx",
@@ -812,7 +828,7 @@
     },
     {
       "path": "src/components/navigation-link.tsx",
-      "sha256": "80bc91cfd1e6c7863bca383a827b55f913a95d0400faf4d3d636f8b4a8f49206"
+      "sha256": "3df35ea9e91ee0c131ab25f5d48fa9be12f68dd0966ceb52ce4d8ef5fca82d59"
     },
     {
       "path": "src/components/navigation.tsx",
@@ -824,7 +840,7 @@
     },
     {
       "path": "src/components/operational-expense-form.tsx",
-      "sha256": "fbabfdea2107211bc98f135c463fbd0372dfccab11e1c2cc819cbb9c5d1d7f2a"
+      "sha256": "4a4b01d24f42de3898e7e3494143ff73a2a12e06d4b3e81837c45383877ea5ee"
     },
     {
       "path": "src/components/operational-expenses.css",
@@ -936,7 +952,7 @@
     },
     {
       "path": "src/components/placement-form.tsx",
-      "sha256": "dbd26e9714ca1183ea3b57a1664dc77c75f929270dabdc68b571019c95638a82"
+      "sha256": "4c40b092d81eb295bdc4ba2f70ce053dc049693dc8b43e2474b474515c8b216e"
     },
     {
       "path": "src/components/portal-camera.tsx",
@@ -965,6 +981,10 @@
     {
       "path": "src/components/pos-sales-history.tsx",
       "sha256": "95ff7871025a7d6afbf4187e542ee76d60cc1e2c38cc2f511249a2c1b69e9a91"
+    },
+    {
+      "path": "src/components/production-plan-forms.tsx",
+      "sha256": "d28b1456b42195b7c78b62086b14b734f587cc7442de723c851f20420601f549"
     },
     {
       "path": "src/components/production-remainders.tsx",
@@ -1008,7 +1028,7 @@
     },
     {
       "path": "src/components/schedule-form.tsx",
-      "sha256": "9afc3103578404bb2a6efcf9bf3deed281fce721329a5d599d8a889e1e728ad4"
+      "sha256": "83f934d1595dcab56cc82d0849d72a1ba0591a413f1eb3355f21fbc968566b3d"
     },
     {
       "path": "src/components/section-navigation.tsx",
@@ -1028,11 +1048,11 @@
     },
     {
       "path": "src/components/share-schedule.tsx",
-      "sha256": "3a83ec592673d4228002c9de64174e8367644c20ed33db46b34242ff6cf43988"
+      "sha256": "2f56008be0cda6939ba8b78e19417cddd40f75ad04c7b512b7b2f689d707eaba"
     },
     {
       "path": "src/components/share-warehouse-schedule.tsx",
-      "sha256": "c2b76b1506b52ef351b22d74d6686c0f30f14b8328fa78300d5c33d00825c7d9"
+      "sha256": "8c1e1453aca5ccbde47c9e90fe8b75bf26db7346918eebd03277bdd88ab52922"
     },
     {
       "path": "src/components/sidebar-link.tsx",
@@ -1116,7 +1136,7 @@
     },
     {
       "path": "src/lib/business-id.ts",
-      "sha256": "45955b3f3561cdd24e088b7af01b22fb2b36ab416f6e7dd35c6942830f7a1540"
+      "sha256": "05e6cb7554b4fabb69ea32707ea19b68ca2412e977ec00b2c68b13520742eded"
     },
     {
       "path": "src/lib/coa.ts",
@@ -1128,11 +1148,11 @@
     },
     {
       "path": "src/lib/db.ts",
-      "sha256": "96c30b54efc894f51deed1579dcf3f43665065b995ac5f9af33b3c84fcf6da0c"
+      "sha256": "b83b2bcd7c40ba57f1778e335c79dfb7437de790a27efe5453d8d01ba3e903a6"
     },
     {
       "path": "src/lib/employee-fields.ts",
-      "sha256": "5d2ab7d342e1fed3e532b76d9f268196a07545306e9bcd02d45c71ee4fd12990"
+      "sha256": "83197df929aaa4d069046f0d9088e80c13ec9def3996a8db450582e73d533ef9"
     },
     {
       "path": "src/lib/employee-portal.ts",
@@ -1287,6 +1307,10 @@
       "sha256": "2fa560f1e021b0f3900cdef79f1b209bc6417ca3f8e2e7090ef40d99b0438389"
     },
     {
+      "path": "src/lib/production-plans.ts",
+      "sha256": "a383c9c1ceeb6e042f260c76bc96051dcdefa2f7f3c29f0f1e6da61610c5da63"
+    },
+    {
       "path": "src/lib/production-remainders.ts",
       "sha256": "f42d4bcd1b6d8aceb2b96df903280013eeba6f4265e69922658867f9e5da462d"
     },
@@ -1332,11 +1356,11 @@
     },
     {
       "path": "src/lib/share-schedule-image.ts",
-      "sha256": "dd44c7abc9270e7834f5adeba340f3d90d2c9790935c4d49277a653b1e1e1e6c"
+      "sha256": "aca7688b0612c378990eb69645100e1c4566c5fd7ec1d3ff7255d448ec156682"
     },
     {
       "path": "src/lib/share-schedule.ts",
-      "sha256": "d7a2b7b352da70049a5e691eecbc7f153efcd606474a9bcacff3be4cb4009c59"
+      "sha256": "078b28b7c54b4f2223d228a43746f12684a709043f0796294382d231be09b083"
     },
     {
       "path": "src/lib/stock-return-service.ts",

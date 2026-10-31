@@ -50,7 +50,6 @@ export function MoneyForm({
       if (mode === "bonus") {
         notifySuccess(state.success);
         router.push("/bonus?view=history");
-        router.refresh();
       } else router.push(`/${mode}?tersimpan=1`);
     }
   }, [state.success, pending, close, router, mode]);

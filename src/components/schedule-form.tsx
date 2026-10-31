@@ -48,7 +48,6 @@ function useScheduleAction(save: typeof createSchedules, successRoute: string) {
       handled.current = true;
       close?.();
       router.push(successRoute);
-      router.refresh();
     }
   }, [state.success, pending, close, router, successRoute]);
   return { state, action, pending };
@@ -65,7 +64,7 @@ function CreateScheduleForm({
   const [employeeId, setEmployeeId] = useState("");
   const [period, setPeriod] = useState({ startDate: "", endDate: "" });
   const [status, setStatus] = useState("KERJA");
-  const [holidays, setHolidays] = useState([{ key: 0, date: "" }]);
+  const [holidays, setHolidays] = useState([{ key: 0, date: "", status: "LIBUR" }]);
   const nextHoliday = useRef(1);
   const [backupRows, setBackupRows] = useState([
     { key: 0, outletId: "", date: "", status: "KERJA" },
@@ -84,6 +83,7 @@ function CreateScheduleForm({
       className="panel p-6"
     >
       <fieldset disabled={pending} className="space-y-5">
+        <input type="hidden" name="standbyMode" value="dates" />
         <label className="field">
           Nama Karyawan *
           <select
@@ -93,6 +93,7 @@ function CreateScheduleForm({
             onChange={(e) => {
               setEmployeeId(e.target.value);
               setStatus("KERJA");
+              setHolidays([{ key: nextHoliday.current++, date: "", status: "LIBUR" }]);
               setBackupRows([
                 { key: nextBackupRow.current++, outletId: "", date: "", status: "KERJA" },
               ]);
@@ -237,7 +238,7 @@ function CreateScheduleForm({
             )}
             <fieldset className="space-y-3">
               <legend className="mb-3 text-sm font-semibold">Periode jaga</legend>
-              <div className="grid gap-5 sm:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-3">
                 <label className="field">
                   Tanggal Mulai *
                   <LocalInput
@@ -260,6 +261,27 @@ function CreateScheduleForm({
                     onChange={(e) => setPeriod((p) => ({ ...p, endDate: e.target.value }))}
                   />
                 </label>
+                <label className="field">
+                  Status Kerja *
+                  <select
+                    name="status"
+                    value={status}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setStatus(value);
+                      if (value === "STANBY" && !holidays.some((h) => h.status === "STANBY"))
+                        setHolidays((old) => [
+                          ...old,
+                          { key: nextHoliday.current++, date: "", status: "STANBY" },
+                        ]);
+                    }}
+                  >
+                    <option value="KERJA">Kerja</option>
+                    <option value="STANBY" disabled={warehouse}>
+                      Stanby
+                    </option>
+                  </select>
+                </label>
               </div>
               <p className="text-xs text-slate-500">
                 Maksimal 31 hari per periode. Jadwal yang sudah ada tidak ditimpa.
@@ -268,14 +290,15 @@ function CreateScheduleForm({
           </>
         )}
         <fieldset className="space-y-3">
-          <legend className="mb-3 text-sm font-semibold">Libur khusus (opsional)</legend>
+          <legend className="mb-3 text-sm font-semibold">Tanggal libur / standby (opsional)</legend>
           {holidays.map((holiday, i) => (
             <div key={holiday.key} className="flex items-end gap-2">
               <label className="field min-w-0 flex-1">
-                Tanggal libur {i + 1}
+                {holiday.status === "STANBY" ? "Tanggal standby" : "Tanggal libur"} {i + 1}
                 <LocalInput
                   type="date"
-                  name="holiday"
+                  name={holiday.status === "STANBY" ? "standby" : "holiday"}
+                  required={holiday.status === "STANBY" && status === "STANBY"}
                   value={holiday.date}
                   min={backup ? undefined : period.startDate || undefined}
                   max={backup ? undefined : period.endDate || undefined}
@@ -285,6 +308,23 @@ function CreateScheduleForm({
                     )
                   }
                 />
+              </label>
+              <label className="field min-w-32">
+                Status Kerja
+                <select
+                  aria-label={`Status tanggal ${i + 1}`}
+                  value={holiday.status}
+                  onChange={(e) =>
+                    setHolidays((old) =>
+                      old.map((h) =>
+                        h.key === holiday.key ? { ...h, status: e.target.value } : h,
+                      ),
+                    )
+                  }
+                >
+                  <option value="LIBUR">Libur</option>
+                  {!warehouse && !backup && <option value="STANBY">Stanby</option>}
+                </select>
               </label>
               <button
                 type="button"
@@ -302,7 +342,7 @@ function CreateScheduleForm({
             className="flex w-full items-center gap-3 py-2 text-emerald-700 hover:text-emerald-900"
             onClick={() => {
               const key = nextHoliday.current++;
-              setHolidays((old) => [...old, { key, date: "" }]);
+              setHolidays((old) => [...old, { key, date: "", status: "LIBUR" }]);
             }}
           >
             <span className="h-px flex-1 bg-emerald-100" />
@@ -323,21 +363,11 @@ function CreateScheduleForm({
             tutup menjadi LIBUR untuk jadwal Kerja.
           </div>
         )}
-        {!backup && (
-          <label className="field">
-            Status *
-            <select name="status" value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="KERJA">Kerja</option>
-              <option value="STANBY" disabled={warehouse}>
-                Stanby
-              </option>
-            </select>
-          </label>
-        )}
         {(backup ? backupRows.some((row) => row.status === "STANBY") : status === "STANBY") && (
           <p className="text-xs text-slate-500">
-            Stanby tidak memiliki jam kerja. Libur khusus tetap menjadi LIBUR. Uang standby
-            mengikuti ketentuan payroll crew backup.
+            Pilih tanggal standby pada baris tanggal di atas. Tanggal lainnya tetap Kerja; libur
+            khusus tetap menjadi LIBUR. Standby tidak memiliki jam kerja. Uang standby mengikuti
+            ketentuan payroll crew backup.
           </p>
         )}
       </fieldset>

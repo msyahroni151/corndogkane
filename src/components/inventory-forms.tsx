@@ -38,7 +38,6 @@ function useInventoryForm(serverAction: Action, route: string) {
       handled.current = true;
       close?.();
       router.push(route + "&saved=" + postingKey);
-      router.refresh();
     }
   }, [state.success, pending, close, router, route, postingKey]);
   return { state, action, pending, postingKey, close };
@@ -534,14 +533,16 @@ export function InventoryProductionForm({
   today,
   remainders = [],
   initialReuseId = "",
+  plan,
 }: {
   items: SubProductOption[];
   today: string;
   remainders?: RemainderBatchOption[];
   initialReuseId?: string;
+  plan?: { id: string; itemId: string; quantity: number; version: string; date: string };
 }) {
   const initialRemainder = remainders.find((r) => r.id === initialReuseId);
-  const initialItem = items.find((i) => i.id === initialRemainder?.itemId);
+  const initialItem = items.find((i) => i.id === (plan?.itemId || initialRemainder?.itemId));
   const { state, action, pending, postingKey, close } = useInventoryForm(
       produceInventory,
       "/produksi-gudang?tab=riwayat",
@@ -549,19 +550,34 @@ export function InventoryProductionForm({
     [itemId, setItemId] = useState(initialItem?.id || ""),
     [quantity, setQuantity] = useState(
       String(
-        (initialItem?.productionYield || 1) + (initialItem ? initialRemainder?.quantity || 0 : 0),
+        plan?.quantity ||
+          (initialItem?.productionYield || 1) + (initialItem ? initialRemainder?.quantity || 0 : 0),
       ),
     ),
     [reuseBatchId, setReuseBatchId] = useState(initialItem ? initialRemainder?.id || "" : ""),
     [reuseQuantity, setReuseQuantity] = useState(
       initialItem ? String(initialRemainder?.quantity || 0) : "0",
     ),
-    [batchCount, setBatchCount] = useState("1"),
+    [batchCount, setBatchCount] = useState(
+      plan && initialItem
+        ? String(inventoryRound(plan.quantity / (initialItem.productionYield || 1)))
+        : "1",
+    ),
     item = items.find((i) => i.id === itemId),
     selectedRemainder = remainders.find((r) => r.id === reuseBatchId);
   return (
     <Form action={action} pending={pending}>
       <input type="hidden" name="reuseVersion" value={selectedRemainder?.version ?? ""} />
+      {plan && (
+        <>
+          <input type="hidden" name="planId" value={plan.id} />
+          <input type="hidden" name="planVersion" value={plan.version} />
+          <input type="hidden" name="itemId" value={plan.itemId} />
+          <p className="mb-3 text-xs text-emerald-700">
+            Mencatat hasil aktual dari rencana produksi.
+          </p>
+        </>
+      )}
       <input type="hidden" name="postingKey" value={postingKey} />
       <input type="hidden" name="recipeVersion" value={item?.version || ""} />
       <fieldset disabled={pending} className="grid min-w-0 gap-4 sm:grid-cols-2">
@@ -569,6 +585,7 @@ export function InventoryProductionForm({
           Hasil Produksi *
           <select
             name="itemId"
+            disabled={!!plan}
             required
             value={itemId}
             onChange={(e) => {
@@ -685,7 +702,10 @@ export function InventoryProductionForm({
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
           />
-          <span className="text-xs font-normal text-slate-500">Isi total hasil aktual, termasuk bagian yang akan disimpan sebagai sisa. Pisahkan bagian tersebut melalui submenu Sisa Produksi setelah produksi tersimpan.</span>
+          <span className="text-xs font-normal text-slate-500">
+            Isi total hasil aktual, termasuk bagian yang akan disimpan sebagai sisa. Pisahkan bagian
+            tersebut melalui submenu Sisa Produksi setelah produksi tersimpan.
+          </span>
         </label>
         <label className="field">
           Tanggal *<LocalInput type="date" name="date" defaultValue={today} max={today} required />

@@ -30,7 +30,6 @@ function useAssetAction(save: typeof createFixedAsset, code: string) {
       router.push(
         "/finance/aset-tetap?tab=daftar&q=" + encodeURIComponent((state.assetCode || code).trim()),
       );
-      router.refresh();
     }
   }, [state.success, state.assetCode, pending, close, router, code]);
   return { state, action, pending, key, close };

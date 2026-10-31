@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
-import { departments, usesOutletDailyRate } from "@/lib/employee-fields";
+import { departments, usesOutletDailyRate, outletPositions } from "@/lib/employee-fields";
 import type { FormState } from "@/lib/form-state";
 function read(form: FormData) {
   const get = (key: string) => String(form.get(key) || "").trim();
@@ -24,6 +24,8 @@ function read(form: FormData) {
     position = get("position");
   if (!fullName || !department || !position)
     throw new Error("Nama lengkap, departemen, dan jabatan wajib diisi.");
+  if (department === "OPERASIONAL OUTLET" && !outletPositions.includes(position as never))
+    throw new Error("Jabatan Operasional Outlet hanya Crew Outlet, Crew Backup, atau SPV.");
   for (const [key, value] of form.entries())
     if (typeof value === "string" && value.length > (key === "notes" ? 2000 : 254))
       throw new Error("Isian terlalu panjang.");
@@ -32,7 +34,12 @@ function read(form: FormData) {
   const outletDailyRate = usesOutletDailyRate({
     position,
   });
-  const salaryBasis = outletDailyRate || get("employeeType") === "HARIAN" ? "HARIAN" : get("employeeType") === "TETAP" ? "BULANAN" : optional("salaryBasis"),
+  const salaryBasis =
+      outletDailyRate || get("employeeType") === "HARIAN"
+        ? "HARIAN"
+        : get("employeeType") === "TETAP"
+          ? "BULANAN"
+          : optional("salaryBasis"),
     employmentStatus = optional("employmentStatus");
   if (salaryBasis && !["HARIAN", "BULANAN"].includes(salaryBasis))
     throw new Error("Basis gaji tidak valid.");
@@ -100,14 +107,31 @@ export async function saveEmployee(_: FormState, form: FormData): Promise<FormSt
       await getPrisma().$transaction(async (tx) => {
         if (!data.active) {
           await tx.$executeRaw`SELECT pg_advisory_xact_lock(816031)`;
-          const owner = await tx.user.findFirst({ where: { employeeId: existingId, active: true, role: { systemKey: "OWNER" } }, select: { id: true, roleId: true } });
-          if (owner && !(await tx.user.count({ where: { id: { not: owner.id }, active: true, roleId: owner.roleId, OR: [{ employeeId: null }, { employee: { active: true } }] } }))) {
-            const error = new Error("Minimal satu akun Owner harus tetap aktif. Atur akun pengganti sebelum mengubah status karyawan ini.");
-            error.name = "EmployeeAccessValidation"; throw error;
+          const owner = await tx.user.findFirst({
+            where: { employeeId: existingId, active: true, role: { systemKey: "OWNER" } },
+            select: { id: true, roleId: true },
+          });
+          if (
+            owner &&
+            !(await tx.user.count({
+              where: {
+                id: { not: owner.id },
+                active: true,
+                roleId: owner.roleId,
+                OR: [{ employeeId: null }, { employee: { active: true } }],
+              },
+            }))
+          ) {
+            const error = new Error(
+              "Minimal satu akun Owner harus tetap aktif. Atur akun pengganti sebelum mengubah status karyawan ini.",
+            );
+            error.name = "EmployeeAccessValidation";
+            throw error;
           }
         }
         await tx.employee.update({ where: { id: existingId }, data });
-        if (!data.active) await tx.session.deleteMany({ where: { user: { employeeId: existingId } } });
+        if (!data.active)
+          await tx.session.deleteMany({ where: { user: { employeeId: existingId } } });
       });
     } else {
       await getPrisma().$transaction(async (tx) => {
@@ -116,7 +140,8 @@ export async function saveEmployee(_: FormState, form: FormData): Promise<FormSt
       });
     }
   } catch (error) {
-    if (error instanceof Error && error.name === "EmployeeAccessValidation") return { error: error.message };
+    if (error instanceof Error && error.name === "EmployeeAccessValidation")
+      return { error: error.message };
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")
       return { error: "ID, NIK, atau kode nama sudah digunakan. Periksa data karyawan yang ada." };
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025")

@@ -22,6 +22,7 @@ export default async function Schedules({
   searchParams: Promise<{
     month?: string;
     employee?: string;
+    area?: string;
     from?: string;
     to?: string;
     tersimpan?: string;
@@ -50,11 +51,24 @@ export default async function Schedules({
   } catch {
     valid = false;
   }
+  const areaOutletIds = query.area
+    ? (await db.outlet.findMany({ where: { areaId: query.area }, select: { id: true } })).map(
+        (o) => o.id,
+      )
+    : [];
   const where: Prisma.ScheduleWhereInput = {
     date: { gte: fromDate, lte: toDate },
     ...(query.employee ? { employeeId: query.employee } : {}),
+    ...(query.area
+      ? {
+          OR: [
+            { outletId: { in: areaOutletIds } },
+            { outletId: null, placement: { areaId: query.area } },
+          ],
+        }
+      : {}),
   };
-  const [crew, outlets, rows, groups, employees] = await Promise.all([
+  const [crew, outlets, rows, groups, employees, areas] = await Promise.all([
     db.employee.findMany({ where: { active: true }, orderBy: { fullName: "asc" } }),
     db.outlet.findMany({
       where: { active: true, area: { active: true } },
@@ -78,6 +92,7 @@ export default async function Schedules({
       select: { id: true, employeeCode: true, fullName: true },
       orderBy: { fullName: "asc" },
     }),
+    db.area.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
   const count = groups.reduce((sum, g) => sum + g._count._all, 0);
   const metrics = [
@@ -114,6 +129,7 @@ export default async function Schedules({
       ...(query.from ? { from } : {}),
       ...(query.to ? { to } : {}),
       ...(query.employee ? { employee: query.employee } : {}),
+      ...(query.area ? { area: query.area } : {}),
       tersimpan: "1",
     }).toString();
   const currentWeek = new Date(todayWib() + "T00:00:00Z");
@@ -193,10 +209,25 @@ export default async function Schedules({
               ))}
             </select>
           </label>
+          <label className="flex flex-col gap-1.5 text-slate-500">
+            Area
+            <select
+              name="area"
+              defaultValue={query.area || ""}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2.5"
+            >
+              <option value="">Semua area</option>
+              {areas.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <button className="button-secondary !py-2.5">Terapkan</button>
         </form>
         <div className="flex flex-wrap gap-2">
-          <ShareSchedule from={shareFrom} to={shareTo} />
+          <ShareSchedule from={shareFrom} to={shareTo} area={query.area} />
           <ShareWarehouseSchedule
             from={valid ? from : shareFrom}
             to={valid && toDate.getTime() - fromDate.getTime() <= 30 * 86400000 ? to : shareTo}

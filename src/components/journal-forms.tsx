@@ -16,7 +16,6 @@ function useSave(save: typeof createJournalTransaction, route: string) {
       handled.current = true;
       close?.();
       router.push(route);
-      router.refresh();
     }
   }, [state.success, pending, close, router, route]);
   return { state, action, pending };

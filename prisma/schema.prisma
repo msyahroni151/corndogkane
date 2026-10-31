@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client"
+  previewFeatures = ["relationJoins"]
   output   = "../src/generated/prisma"
 }
 
@@ -50,6 +51,9 @@ model Employee {
 }
 
 model User {
+  scheduleAreaNotes ScheduleAreaNote[]
+  createdProductionPlans ProductionPlan[] @relation("PlanCreator")
+  updatedProductionPlans ProductionPlan[] @relation("PlanEditor")
   sales SaleTransaction[]
   salesDecisions SalesDecision[]
   createdStockReturns StockReturn[]
@@ -129,6 +133,7 @@ enum OperationalRole {
 }
 
 model Area {
+  scheduleNotes ScheduleAreaNote[]
   id         String      @id
   name       String      @unique
   color      String      @default("#deeddd")
@@ -616,6 +621,7 @@ model AssetEvent {
 }
 
 model InventoryItem {
+  productionPlans ProductionPlan[]
   saleLines SaleLine[]
   returnLines StockReturnLine[]
   productionYield Decimal @default(1) @db.Decimal(18,3)
@@ -709,6 +715,7 @@ model InventoryBatch {
  @@map("inventory_batches")
 }
 model InventoryOperation {
+  productionPlan ProductionPlan?
  remainders ProductionRemainder[]
   outletShipment OutletStockOrder?
  id String @id @default(cuid())
@@ -1084,4 +1091,41 @@ model SalesDecision {
  createdAt DateTime @default(now())
  @@index([operationId,createdAt])
  @@map("sales_decisions")
+}
+
+model ScheduleAreaNote {
+  id String @id @default(cuid())
+  areaId String
+  area Area @relation(fields:[areaId],references:[id],onDelete:Restrict)
+  startDate DateTime @db.Date
+  endDate DateTime @db.Date
+  note String @default("") @db.VarChar(500)
+  updatedById String
+  updatedBy User @relation(fields:[updatedById],references:[id],onDelete:Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([areaId,startDate,endDate])
+  @@index([startDate,endDate])
+  @@map("schedule_area_notes")
+}
+model ProductionPlan {
+  id String @id @default(cuid())
+  postingKey String @unique
+  requestHash String
+  itemId String
+  item InventoryItem @relation(fields:[itemId],references:[id],onDelete:Restrict)
+  date DateTime @db.Date
+  quantity Decimal @db.Decimal(18,3)
+  notes String @default("") @db.VarChar(2000)
+  status String @default("PLANNED")
+  operationId String? @unique
+  operation InventoryOperation? @relation(fields:[operationId],references:[id],onDelete:Restrict)
+  createdById String
+  createdBy User @relation("PlanCreator",fields:[createdById],references:[id],onDelete:Restrict)
+  updatedById String
+  updatedBy User @relation("PlanEditor",fields:[updatedById],references:[id],onDelete:Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([date,status])
+  @@map("production_plans")
 }

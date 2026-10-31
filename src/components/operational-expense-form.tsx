@@ -25,7 +25,6 @@ function useExpenseAction(save: typeof createOperationalExpense, date: string) {
       handled.current = true;
       close?.();
       router.push(`/finance/pengeluaran-operasional?from=${date}&to=${date}&tersimpan=1`);
-      router.refresh();
     }
   }, [state.success, pending, close, router, date]);
   return { state, action, pending, close };

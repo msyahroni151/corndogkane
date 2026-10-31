@@ -1,3 +1,4 @@
+import { ProductionPlanForm, ProductionPlanStatus } from "@/components/production-plan-forms";
 import { ProductionRemainders } from "@/components/production-remainders";
 import { RecipeManagement } from "@/components/recipe-management";
 import type { RecipeCostItem } from "@/lib/recipe-cost";
@@ -30,21 +31,22 @@ export default async function Page({
     q?: string;
     recipeKind?: string;
     reuse?: string;
+    plan?: string;
   }>;
 }) {
   await requireAccess("produksi-gudang");
   const query = await searchParams,
     today = todayWib(),
-    tab =
-      query.tab === "sisa"
-        ? "sisa"
-        : query.tab === "resep"
-          ? "resep"
-          : query.tab === "riwayat"
-            ? "riwayat"
-            : "catat",
+    tab = ["catat", "sisa", "resep", "riwayat", "rencana", "pemakaian"].includes(query.tab || "")
+      ? query.tab!
+      : "catat",
     from = typeof query.from === "string" ? query.from : today.slice(0, 8) + "01",
-    to = typeof query.to === "string" ? query.to : today;
+    to =
+      typeof query.to === "string"
+        ? query.to
+        : tab === "rencana"
+          ? new Date(Date.parse(today + "T00:00:00Z") + 60 * 86400000).toISOString().slice(0, 10)
+          : today;
   let start = new Date(0),
     end = new Date(0),
     valid = true;
@@ -56,7 +58,7 @@ export default async function Page({
     valid = false;
   }
   const db = getPrisma(),
-    [items, operations, recipeItems, remainders] = await Promise.all([
+    [items, operations, recipeItems, remainders, plans, selectedPlan] = await Promise.all([
       db.inventoryItem.findMany({
         where: { kind: { in: ["SUB", "FINISHED"] }, active: true },
         include: {
@@ -71,29 +73,58 @@ export default async function Page({
         },
         orderBy: { name: "asc" },
       }),
-      valid
+      valid && ["catat", "riwayat", "pemakaian"].includes(tab)
         ? db.inventoryOperation.findMany({
             where: { kind: "PRODUCTION", date: { gte: start, lte: end } },
             include: {
               createdBy: { select: { name: true } },
-              movements: { include: { batch: { include: { item: { select: { name: true } } } } } },
+              movements: {
+                include: { batch: { include: { item: { select: { name: true, kind: true } } } } },
+              },
             },
             orderBy: [{ date: "desc" }, { createdAt: "desc" }],
             take: 500,
           })
         : [],
-      db.inventoryItem.findMany({
-        include: {
-          recipe: true,
-          batches: { orderBy: [{ receivedAt: "asc" }, { createdAt: "asc" }, { id: "asc" }] },
-        },
-        orderBy: { name: "asc" },
-      }),
-      db.productionRemainder.findMany({
-        where: { stockBatch: { remainingQuantity: { gt: 0 }, item: { active: true } } },
-        include: { stockBatch: { include: { item: true } } },
-        orderBy: [{ date: "asc" }, { createdAt: "asc" }],
-      }),
+      tab === "resep"
+        ? db.inventoryItem.findMany({
+            include: {
+              recipe: true,
+              batches: { orderBy: [{ receivedAt: "asc" }, { createdAt: "asc" }, { id: "asc" }] },
+            },
+            orderBy: { name: "asc" },
+          })
+        : Promise.resolve([]),
+      tab === "catat"
+        ? db.productionRemainder.findMany({
+            where: { stockBatch: { remainingQuantity: { gt: 0 }, item: { active: true } } },
+            include: { stockBatch: { include: { item: true } } },
+            orderBy: [{ date: "asc" }, { createdAt: "asc" }],
+          })
+        : Promise.resolve([]),
+      valid && tab === "rencana"
+        ? db.productionPlan.findMany({
+            where: { date: { gte: start, lte: end } },
+            include: {
+              item: { select: { name: true, baseUnit: true } },
+              createdBy: { select: { name: true } },
+              operation: {
+                select: {
+                  outputBatches: {
+                    select: { itemId: true, initialQuantity: true, baseUnit: true },
+                  },
+                },
+              },
+            },
+            orderBy: [{ date: "asc" }, { createdAt: "asc" }],
+            take: 500,
+          })
+        : Promise.resolve([]),
+      tab === "catat" && typeof query.plan === "string"
+        ? db.productionPlan.findFirst({
+            where: { id: query.plan, status: { in: ["PLANNED", "IN_PROGRESS"] } },
+          })
+        : Promise.resolve(null),
     ]);
   const ready = (item: (typeof items)[number]) =>
     item.recipe.length > 0 &&
@@ -147,7 +178,9 @@ export default async function Page({
       <nav aria-label="Submenu Produksi Gudang" className="min-w-0 border-b border-[#dbe7df]">
         <div className="flex gap-1 overflow-x-auto">
           {[
+            ["rencana", "Rencana Produksi"],
             ["catat", "Catat Produksi"],
+            ["pemakaian", "Pemakaian Bahan"],
             ["sisa", "Sisa Produksi"],
             ["resep", "Resep Produksi"],
             ["riwayat", "Riwayat Produksi"],
@@ -171,11 +204,22 @@ export default async function Page({
             title="Catat Produksi Gudang"
             trigger="+ Catat Produksi"
             wide
-            initiallyOpen={!!query.reuse}
+            initiallyOpen={!!query.reuse || !!selectedPlan}
             cancelRoute="/produksi-gudang?tab=catat"
           >
             <InventoryProductionForm
               items={options}
+              plan={
+                selectedPlan
+                  ? {
+                      id: selectedPlan.id,
+                      itemId: selectedPlan.itemId,
+                      quantity: Number(selectedPlan.quantity),
+                      version: selectedPlan.updatedAt.toISOString(),
+                      date: selectedPlan.date.toISOString().slice(0, 10),
+                    }
+                  : undefined
+              }
               today={today}
               initialReuseId={typeof query.reuse === "string" ? query.reuse : ""}
               remainders={remainders.map((r) => ({
@@ -203,7 +247,224 @@ export default async function Page({
             : "Produksi gudang berhasil disimpan."}
         </p>
       )}
-      {tab === "sisa" ? (
+      {tab === "rencana" ? (
+        <>
+          <section className="panel flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <h2 className="font-bold">Jadwal & Rencana Produksi</h2>
+              <p className="mt-1 text-xs text-slate-500">
+                Rencana tidak mengubah stok. Pemakaian bahan dan hasil dicatat saat produksi selesai
+                dilakukan.
+              </p>
+            </div>
+            <FormDialog title="Rencana Produksi" trigger="+ Rencana Produksi">
+              <ProductionPlanForm items={options} today={today} />
+            </FormDialog>
+          </section>
+          <form className="panel flex flex-wrap items-end gap-3 p-4">
+            <input type="hidden" name="tab" value="rencana" />
+            <label className="field">
+              Dari tanggal
+              <input type="date" name="from" defaultValue={from} required />
+            </label>
+            <label className="field">
+              Sampai tanggal
+              <input type="date" name="to" defaultValue={to} required />
+            </label>
+            <button className="button-secondary">Terapkan</button>
+          </form>
+          {!valid ? (
+            <p role="alert" className="text-red-700">
+              Periode tidak valid, maksimal 366 hari.
+            </p>
+          ) : (
+            <section className="panel overflow-x-auto">
+              <SortableTable className="w-full min-w-[880px] text-left text-xs">
+                <thead>
+                  <tr>
+                    {[
+                      "Tanggal",
+                      "Hasil Produksi",
+                      "Target / Aktual",
+                      "Status",
+                      "Catatan",
+                      "Dibuat oleh",
+                      "Aksi",
+                    ].map((h) => (
+                      <th className="p-4" key={h}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {plans.map((p) => (
+                    <tr key={p.id}>
+                      <td className="p-4">{displayDate(p.date)}</td>
+                      <td className="p-4 font-semibold">{p.item.name}</td>
+                      <td className="p-4">
+                        Target: {quantityLabel(Number(p.quantity), p.item.baseUnit)}
+                        {p.operation && (
+                          <p className="mt-1 text-emerald-700">
+                            Aktual:{" "}
+                            {quantityLabel(
+                              p.operation.outputBatches
+                                .filter((b) => b.itemId === p.itemId)
+                                .reduce((n, b) => n + Number(b.initialQuantity), 0),
+                              p.item.baseUnit,
+                            )}
+                          </p>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {
+                          (
+                            {
+                              PLANNED: "Direncanakan",
+                              IN_PROGRESS: "Dalam proses",
+                              COMPLETED: "Selesai",
+                              CANCELLED: "Dibatalkan",
+                            } as Record<string, string>
+                          )[p.status]
+                        }
+                      </td>
+                      <td className="max-w-56 whitespace-pre-wrap p-4">{p.notes || "—"}</td>
+                      <td className="p-4">{p.createdBy.name}</td>
+                      <td className="p-4">
+                        <div className="flex flex-wrap gap-2">
+                          {p.status === "PLANNED" && (
+                            <FormDialog title="Edit Rencana Produksi" trigger="Edit">
+                              <ProductionPlanForm
+                                items={options}
+                                today={today}
+                                initial={{
+                                  id: p.id,
+                                  version: p.updatedAt.toISOString(),
+                                  itemId: p.itemId,
+                                  date: p.date.toISOString().slice(0, 10),
+                                  quantity: p.quantity.toString(),
+                                  notes: p.notes,
+                                }}
+                              />
+                            </FormDialog>
+                          )}
+                          {["PLANNED", "IN_PROGRESS"].includes(p.status) && (
+                            <Link
+                              className="button-primary"
+                              href={
+                                "/produksi-gudang?" +
+                                new URLSearchParams({ tab: "catat", plan: p.id })
+                              }
+                            >
+                              Catat Hasil
+                            </Link>
+                          )}
+                          <ProductionPlanStatus
+                            id={p.id}
+                            version={p.updatedAt.toISOString()}
+                            status={p.status}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {!plans.length && (
+                    <tr>
+                      <td colSpan={7} className="p-10 text-center text-slate-400">
+                        Belum ada rencana produksi pada periode ini.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </SortableTable>
+            </section>
+          )}
+        </>
+      ) : tab === "pemakaian" ? (
+        <>
+          <section className="panel p-4">
+            <h2 className="font-bold">Riwayat Bahan Dipakai Produksi</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Terisi otomatis dari pengurangan batch gudang saat Catat Produksi. Ini tidak memotong
+              stok lagi. Maksimal 500 produksi per periode.
+            </p>
+          </section>
+          <form className="panel flex flex-wrap items-end gap-3 p-4">
+            <input type="hidden" name="tab" value="pemakaian" />
+            <label className="field">
+              Dari tanggal
+              <input type="date" name="from" defaultValue={from} required />
+            </label>
+            <label className="field">
+              Sampai tanggal
+              <input type="date" name="to" defaultValue={to} required />
+            </label>
+            <button className="button-secondary">Terapkan</button>
+          </form>
+          <section className="panel overflow-x-auto">
+            <SortableTable className="w-full min-w-[900px] text-left text-xs">
+              <thead>
+                <tr>
+                  {[
+                    "Tanggal",
+                    "Hasil Produksi",
+                    "Bahan",
+                    "Jenis",
+                    "Batch Bahan",
+                    "Jumlah Terpakai",
+                    "Nilai Bahan",
+                    "Petugas",
+                  ].map((h) => (
+                    <th className="p-4" key={h}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {operations.flatMap((op) =>
+                  op.movements
+                    .filter((m) => Number(m.quantityAfter) < Number(m.quantityBefore))
+                    .map((m) => (
+                      <tr key={m.id}>
+                        <td className="p-4">{displayDate(op.date)}</td>
+                        <td className="p-4 font-semibold">
+                          {op.movements.find(
+                            (x) => Number(x.quantityAfter) > Number(x.quantityBefore),
+                          )?.batch.item.name || "Produksi gudang"}
+                        </td>
+                        <td className="p-4">{m.batch.item.name}</td>
+                        <td className="p-4">
+                          {warehouseKindNames[m.batch.item.kind] || m.batch.item.kind}
+                        </td>
+                        <td className="p-4 font-mono">{m.batchId.slice(-10)}</td>
+                        <td className="p-4">
+                          {quantityLabel(
+                            Number(m.quantityBefore) - Number(m.quantityAfter),
+                            m.batch.baseUnit,
+                          )}
+                        </td>
+                        <td className="p-4">
+                          {rupiah(Math.round(Number(m.valueBefore) - Number(m.valueAfter)))}
+                        </td>
+                        <td className="p-4">{op.createdBy.name}</td>
+                      </tr>
+                    )),
+                )}
+                {!operations.some((op) =>
+                  op.movements.some((m) => Number(m.quantityAfter) < Number(m.quantityBefore)),
+                ) && (
+                  <tr>
+                    <td colSpan={8} className="p-10 text-center text-slate-400">
+                      Belum ada pemakaian bahan produksi pada periode ini.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </SortableTable>
+          </section>
+        </>
+      ) : tab === "sisa" ? (
         <ProductionRemainders
           today={today}
           q={typeof query.q === "string" ? query.q.slice(0, 150) : ""}

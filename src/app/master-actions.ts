@@ -143,3 +143,32 @@ export async function saveOutlet(_: FormState, form: FormData): Promise<FormStat
   revalidatePath("/menu-utama/dashboard");
   return { success: "Master outlet berhasil disimpan." };
 }
+
+export async function deleteArea(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("master-area");
+  const id = read(form, "id"),
+    version = new Date(read(form, "version"));
+  if (!id || !Number.isFinite(version.getTime()))
+    return { error: "Data area tidak valid. Muat ulang tabel." };
+  try {
+    const result = await getPrisma().area.deleteMany({ where: { id, updatedAt: version } });
+    if (!result.count)
+      return { error: "Area sudah berubah atau dihapus. Muat ulang tabel sebelum mencoba lagi." };
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003")
+      return {
+        error:
+          "Area masih digunakan oleh outlet, penempatan, atau catatan jadwal. Pindahkan relasinya terlebih dahulu, atau ubah status area menjadi tidak aktif.",
+      };
+    return failed(error);
+  }
+  for (const path of [
+    "/master-area",
+    "/master-outlet",
+    "/penempatan",
+    "/jadwal",
+    "/menu-utama/dashboard",
+  ])
+    revalidatePath(path);
+  return { success: "Area berhasil dihapus." };
+}

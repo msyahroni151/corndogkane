@@ -1,3 +1,4 @@
+import { DeleteAreaForm } from "@/components/delete-area-form";
 import { SortableTable } from "@/components/sortable-table";
 import Link from "next/link";
 import { requireAccess } from "@/lib/auth";
@@ -237,6 +238,13 @@ export async function MasterPage({
                           <Link href={editHref(area.id)} className="font-semibold text-[#3b6051]">
                             Edit
                           </Link>
+                          <FormDialog title="Hapus Area" trigger="Delete">
+                            <DeleteAreaForm
+                              id={area.id}
+                              name={area.name}
+                              version={area.updatedAt.toISOString()}
+                            />
+                          </FormDialog>
                         </td>
                       </tr>
                     ))

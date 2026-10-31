@@ -88,7 +88,14 @@ function panelHeight(p: SharePanel, note: string) {
       : 0)
   );
 }
-export function scheduleSvg(data: ShareScheduleData, scope: string, note: string) {
+export function scheduleSvg(
+  data: ShareScheduleData,
+  scope: string,
+  notes: Record<string, string> | string,
+) {
+  const noteFor = (panel: SharePanel) =>
+    typeof notes === "string" ? notes : notes[panel.id] || "";
+  const W = scope ? PW + M * 2 : 1600;
   const weeks = shareWeeks(data, scope);
   let y = 94;
   const parts: string[] = [];
@@ -112,11 +119,23 @@ export function scheduleSvg(data: ShareScheduleData, scope: string, note: string
     );
   };
   rect(M, 12, W - M * 2, 36, C.green);
-  label(["JADWAL OPERASIONAL · SELURUH AREA"], M, 12, W - M * 2, 36, true, 18, "#ffffff");
+  const heading = scope
+    ? "JADWAL OPERASIONAL · " + (data.areas.find((a) => a.id === scope)?.name || "AREA TERPILIH")
+    : "JADWAL OPERASIONAL · SELURUH AREA";
+  label(
+    [heading],
+    M,
+    12,
+    W - M * 2,
+    36,
+    true,
+    Math.min(18, (W - M * 2 - 24) / (heading.length * 0.56)),
+    "#ffffff",
+  );
   rect(M, 48, W - M * 2, 30, C.pale);
   label(
     [
-      `Cakupan: ${scope ? data.areas.find((a) => a.id === scope)?.name || "Area terpilih" : "SEMUA AREA"}     |     Tanggal awal: ${dateToDisplay(data.from)}     |     Tanggal akhir: ${dateToDisplay(data.to)}`,
+      `Tanggal awal: ${dateToDisplay(data.from)}     |     Tanggal akhir: ${dateToDisplay(data.to)}`,
     ],
     M,
     48,
@@ -126,6 +145,7 @@ export function scheduleSvg(data: ShareScheduleData, scope: string, note: string
     12,
   );
   function panel(p: SharePanel, x: number, top: number) {
+    const note = noteFor(p);
     let py = top;
     const dw = (PW - NO - OUTLET) / p.days.length;
     rect(x, py, PW, 28, C.green);
@@ -220,8 +240,8 @@ export function scheduleSvg(data: ShareScheduleData, scope: string, note: string
       if (week.panels[i + 1]) panel(week.panels[i + 1], M + PW + GAP, y);
       y +=
         Math.max(
-          panelHeight(week.panels[i], note),
-          week.panels[i + 1] ? panelHeight(week.panels[i + 1], note) : 0,
+          panelHeight(week.panels[i], noteFor(week.panels[i])),
+          week.panels[i + 1] ? panelHeight(week.panels[i + 1], noteFor(week.panels[i + 1])) : 0,
         ) + GAP;
     }
   }
@@ -278,4 +298,21 @@ export async function schedulePng(image: ReturnType<typeof scheduleSvg>) {
   } finally {
     URL.revokeObjectURL(source);
   }
+}
+
+export async function schedulePdf(image: ReturnType<typeof scheduleSvg>) {
+  const png = await schedulePng(image),
+    bytes = new Uint8Array(await png.arrayBuffer());
+  const { jsPDF } = await import("jspdf");
+  const factor = Math.min(1, 14000 / Math.max(image.width, image.height)),
+    width = image.width * factor,
+    height = image.height * factor;
+  const pdf = new jsPDF({
+    unit: "pt",
+    format: [width, height],
+    orientation: width > height ? "landscape" : "portrait",
+    compress: true,
+  });
+  pdf.addImage(bytes, "PNG", 0, 0, width, height, undefined, "FAST");
+  return pdf.output("blob");
 }

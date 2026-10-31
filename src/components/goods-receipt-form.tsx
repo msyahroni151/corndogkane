@@ -118,8 +118,6 @@ export function GoodsReceiptForm({
         "/barang-masuk?" +
           new URLSearchParams({ from: date || today, to: date || today, saved: "1" }),
       );
-
-      router.refresh();
     }
   }, [state.success, pending, close, router, date, today]);
 

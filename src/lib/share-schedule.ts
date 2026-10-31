@@ -19,9 +19,11 @@ export type ShareScheduleData = {
   areas: { id: string; name: string }[];
   outlets: { id: string; name: string; areaId: string }[];
   rows: ShareRow[];
+  areaNotes?: { areaId: string; note: string; version: string }[];
 };
 export type ShareCell = { name: string; hours: string; backup: boolean };
 export type SharePanel = {
+  id: string;
   name: string;
   days: string[];
   outlets: { name: string; cells: ShareCell[][] }[];
@@ -85,6 +87,7 @@ export function shareWeeks(data: ShareScheduleData, scope: string): ShareWeek[] 
             ),
           ]);
         return {
+          id: area.id,
           name: area.name,
           days,
           leave: names("LIBUR"),

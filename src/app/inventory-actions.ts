@@ -443,6 +443,8 @@ export async function produceInventory(_: FormState, form: FormData): Promise<Fo
         reuseVersion: data.get("reuseVersion"),
         reuseQuantity: data.get("reuseQuantity"),
         recipeVersion: data.get("recipeVersion"),
+        planId: data.get("planId"),
+        planVersion: data.get("planVersion"),
       }),
     )
     .digest("hex");
@@ -450,6 +452,20 @@ export async function produceInventory(_: FormState, form: FormData): Promise<Fo
     await getPrisma().$transaction(
       async (tx) => {
         if (await previous(tx, data.postingKey, requestHash)) return;
+        const planId = data.get("planId");
+        if (planId) {
+          await tx.$executeRaw`SELECT id FROM production_plans WHERE id=${planId} FOR UPDATE`;
+          const plan = await tx.productionPlan.findUnique({ where: { id: planId } });
+          if (
+            !plan ||
+            !["PLANNED", "IN_PROGRESS"].includes(plan.status) ||
+            plan.itemId !== itemId ||
+            plan.updatedAt.toISOString() !== data.get("planVersion")
+          )
+            invalid(
+              "Rencana berubah atau sudah selesai. Buka kembali rencana produksi sebelum mencatat hasil.",
+            );
+        }
         const item = await tx.inventoryItem.findUnique({
           where: { id: itemId },
           include: { recipe: { include: { ingredient: true } } },
@@ -598,6 +614,11 @@ export async function produceInventory(_: FormState, form: FormData): Promise<Fo
             valueAfter: outputValue,
           },
         });
+        if (planId)
+          await tx.productionPlan.update({
+            where: { id: planId },
+            data: { status: "COMPLETED", operationId: operation.id, updatedById: user.id },
+          });
       },
       { timeout: 30000 },
     );

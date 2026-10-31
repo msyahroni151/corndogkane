@@ -59,7 +59,11 @@ export async function createSchedules(_: FormState, form: FormData): Promise<For
   const user = await requireAccess("jadwal");
   const get = (key: string) => String(form.get(key) || "").trim();
   if (get("scheduleMode") === "backup") return createBackupScheduleRows(form, user.id);
-  let start: Date, end: Date, holidays: Date[];
+  let start: Date,
+    end: Date,
+    holidays: Date[],
+    standbyDates: Date[] = [];
+  const explicitStandby = get("standbyMode") === "dates";
   const requestedStatus = get("status");
   if (!["KERJA", "STANBY"].includes(requestedStatus))
     return { error: "Pilih status Kerja atau Stanby." };
@@ -73,6 +77,18 @@ export async function createSchedules(_: FormState, form: FormData): Promise<For
       .map((v) => String(v).trim())
       .filter(Boolean)
       .map((v) => parseCivilDate(v));
+    standbyDates = form
+      .getAll("standby")
+      .map((v) => String(v).trim())
+      .filter(Boolean)
+      .map(parseCivilDate);
+    if (standbyDates.some((d) => d < start || d > end))
+      throw Error("Tanggal standby harus berada di dalam periode jaga.");
+    const allDates = [...holidays, ...standbyDates].map((d) => d.getTime());
+    if (new Set(allDates).size !== allDates.length)
+      throw Error("Tanggal libur dan standby tidak boleh berulang atau sama.");
+    if (explicitStandby && requestedStatus === "STANBY" && !standbyDates.length)
+      throw Error("Pilih minimal satu tanggal standby.");
     if (holidays.some((d) => d < start || d > end))
       throw Error("Tanggal libur khusus harus berada di dalam periode jaga.");
     if (new Set(holidays.map((d) => d.getTime())).size !== holidays.length)
@@ -89,7 +105,7 @@ export async function createSchedules(_: FormState, form: FormData): Promise<For
         const group = employee && employeeGroup(employee);
         if (!employee || !group) invalid("Pilih karyawan outlet atau gudang yang aktif.");
         const warehouse = group === "warehouse";
-        if (warehouse && requestedStatus === "STANBY")
+        if (warehouse && (requestedStatus === "STANBY" || standbyDates.length > 0))
           invalid("Status Stanby berlaku untuk karyawan outlet. Gudang menggunakan status Kerja.");
         if (
           await tx.payroll.findFirst({
@@ -135,6 +151,7 @@ export async function createSchedules(_: FormState, form: FormData): Promise<For
             : ("REGULER" as const);
         const dates = [];
         const holidaySet = new Set(holidays.map((d) => d.getTime()));
+        const standbySet = new Set(standbyDates.map((d) => d.getTime()));
         for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
           const covering = placements.filter((p) => p.startDate <= d && p.endDate >= d);
           if (covering.length > 1)
@@ -177,10 +194,13 @@ export async function createSchedules(_: FormState, form: FormData): Promise<For
             placements.push(placement);
             placements.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
           }
+          const isStandby = explicitStandby
+            ? standbySet.has(d.getTime())
+            : requestedStatus === "STANBY";
           let off = holidaySet.has(d.getTime());
           let startMinutes: number | null = null,
             endMinutes: number | null = null;
-          if (!off && requestedStatus === "KERJA") {
+          if (!off && !isStandby) {
             try {
               const daily = warehouse
                 ? { ...warehouseTimes!, closed: false }
@@ -194,7 +214,7 @@ export async function createSchedules(_: FormState, form: FormData): Promise<For
               invalid((e as Error).message);
             }
           }
-          const working = !off && requestedStatus === "KERJA";
+          const working = !off && !isStandby;
           dates.push({
             employeeId,
             placementId: placement.id,
@@ -207,7 +227,7 @@ export async function createSchedules(_: FormState, form: FormData): Promise<For
             outletId: !off ? (outlet?.id ?? null) : null,
             outletName: !off ? (outlet?.name ?? null) : null,
             outletDailyRate: working ? (outlet?.dailyRate ?? null) : null,
-            status: off ? ("LIBUR" as const) : (requestedStatus as "KERJA" | "STANBY"),
+            status: off ? ("LIBUR" as const) : isStandby ? ("STANBY" as const) : ("KERJA" as const),
             shift: warehouse && working ? (get("shift") as WarehouseShift) : null,
             startMinutes,
             endMinutes,

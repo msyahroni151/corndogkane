@@ -34,7 +34,6 @@ export function AttendanceForm({
     if (result.success) {
       close?.();
       router.push(successRoute);
-      router.refresh();
     }
     return result;
   }, {});

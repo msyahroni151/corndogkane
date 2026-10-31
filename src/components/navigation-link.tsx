@@ -15,21 +15,26 @@ export function NavigationLink({
 }: Props) {
   const router = useRouter(),
     timer = useRef<ReturnType<typeof setTimeout> | null>(null),
-    requested = useRef(false);
+    requested = useRef(0);
   function cancel() {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
   }
-  function prepare(delay = 120) {
-    if (requested.current || props["aria-current"] === "page" || !href.startsWith("/")) return;
+  function prepare(delay = 0) {
+    if (
+      Date.now() - requested.current < 10_000 ||
+      props["aria-current"] === "page" ||
+      !href.startsWith("/")
+    )
+      return;
     cancel();
     timer.current = setTimeout(() => {
-      requested.current = true;
+      requested.current = Date.now();
       router.prefetch(href);
     }, delay);
   }
   useEffect(() => {
-    requested.current = false;
+    requested.current = 0;
     return cancel;
   }, [href]);
   return (

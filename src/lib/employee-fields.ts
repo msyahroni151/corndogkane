@@ -44,3 +44,8 @@ export const employeeFields = [
 export function usesOutletDailyRate(employee: { position?: string | null }) {
   return employee.position?.trim().toUpperCase() === "CREW OUTLET";
 }
+
+export const outletPositions = ["CREW OUTLET", "CREW BACKUP", "AREA SUPERVISOR"] as const;
+export function positionsForDepartment(department: string) {
+  return department === "OPERASIONAL OUTLET" ? outletPositions : positions;
+}

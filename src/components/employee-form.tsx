@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCloseFormDialog } from "@/components/form-dialog";
 import { saveEmployee } from "@/app/employee-actions";
-import { employeeFields, usesOutletDailyRate } from "@/lib/employee-fields";
+import { employeeFields, usesOutletDailyRate, positionsForDepartment } from "@/lib/employee-fields";
 import type { FormState } from "@/lib/form-state";
 
 export function EmployeeForm({
@@ -163,7 +163,12 @@ export function EmployeeForm({
         {employeeFields
           .filter((field) => field.key !== "fullName" && field.key !== "phone")
           .map((field) => {
-            const options = "options" in field ? field.options : undefined;
+            const options =
+              field.key === "position"
+                ? positionsForDepartment(draft.department || "")
+                : "options" in field
+                  ? field.options
+                  : undefined;
             const required = "required" in field && field.required;
             return (
               <label className="field" key={field.key}>
@@ -175,21 +180,42 @@ export function EmployeeForm({
                     value={draft[field.key] || ""}
                     onChange={(e) => {
                       const value = e.target.value;
-                      if (field.key === "position") setDraft((previous) => ({ ...previous, position: value,
-                        ...(value === "CREW OUTLET" ? { department: "OPERASIONAL OUTLET", salaryBasis: "HARIAN" } : { salaryBasis: previous.employeeType === "TETAP" ? "BULANAN" : "HARIAN" })
-                      }));
+                      if (field.key === "position")
+                        setDraft((previous) => ({
+                          ...previous,
+                          position: value,
+                          ...(value === "CREW OUTLET"
+                            ? { department: "OPERASIONAL OUTLET", salaryBasis: "HARIAN" }
+                            : {
+                                salaryBasis:
+                                  previous.employeeType === "TETAP" ? "BULANAN" : "HARIAN",
+                              }),
+                        }));
+                      else if (field.key === "department")
+                        setDraft((previous) => ({
+                          ...previous,
+                          department: value,
+                          position:
+                            value === "OPERASIONAL OUTLET" &&
+                            !positionsForDepartment(value).includes(previous.position as never)
+                              ? ""
+                              : previous.position,
+                        }));
                       else set(field.key, value);
                     }}
                     required={required}
                   >
                     <option value="">Pilih…</option>
-                    {(field.key === "department" || field.key === "position") &&
+                    {(field.key === "department" ||
+                      (field.key === "position" && draft.department !== "OPERASIONAL OUTLET")) &&
                       draft[field.key] &&
                       !options.some((option) => option === draft[field.key]) && (
                         <option value={draft[field.key]}>{draft[field.key]} (data lama)</option>
                       )}
                     {options.map((value) => (
-                      <option key={value}>{value}</option>
+                      <option key={value} value={value}>
+                        {field.key === "position" && value === "AREA SUPERVISOR" ? "SPV" : value}
+                      </option>
                     ))}
                   </select>
                 ) : (

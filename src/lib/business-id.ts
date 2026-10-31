@@ -17,20 +17,22 @@ export async function allocateBusinessId(tx: Prisma.TransactionClient, kind: key
   if (kind === "employee") await tx.$executeRaw`SELECT pg_advisory_xact_lock(714212)`;
   else
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"business-id:" + format.counter}))`;
-  const [latest] = await tx.$queryRaw<{ highest: bigint }[]>(Prisma.sql`
-    SELECT COALESCE(MAX(regexp_replace(id, ${"^" + format.prefix + "-(WEB-)?"}, '')::bigint), 0) AS highest
-    FROM ${Prisma.raw(format.table)} WHERE id ~ ${"^" + format.prefix + "-(WEB-)?[0-9]+$"}
+  const [reserved] = await tx.$queryRaw<{ value: number }[]>(Prisma.sql`
+    WITH highest_id AS (
+      SELECT COALESCE(MAX(regexp_replace(id, ${"^" + format.prefix + "-(WEB-)?"}, '')::bigint),0) AS value
+      FROM ${Prisma.raw(format.table)} WHERE id ~ ${"^" + format.prefix + "-(WEB-)?[0-9]+$"}
+    ), previous_counters AS (
+      SELECT COALESCE(MAX(value),0) AS value FROM sequence_counters
+      WHERE name IN (${Prisma.join([format.counter, ...format.legacy])})
+    )
+    INSERT INTO sequence_counters(name,value)
+    SELECT ${format.counter},GREATEST(highest_id.value,previous_counters.value)+1
+    FROM highest_id,previous_counters
+    ON CONFLICT(name) DO UPDATE SET value=GREATEST(sequence_counters.value,EXCLUDED.value-1)+1
+    RETURNING value
   `);
-  const counters = await tx.sequenceCounter.findMany({
-    where: { name: { in: [format.counter, ...format.legacy] } },
-  });
-  const next = Math.max(Number(latest.highest), 0, ...counters.map((counter) => counter.value)) + 1;
+  const next = reserved?.value;
   if (!Number.isSafeInteger(next) || next > 2147483647)
     throw new Error("Urutan ID sudah mencapai batas.");
-  await tx.sequenceCounter.upsert({
-    where: { name: format.counter },
-    create: { name: format.counter, value: next },
-    update: { value: next },
-  });
   return format.prefix + "-" + String(next).padStart(5, "0");
 }

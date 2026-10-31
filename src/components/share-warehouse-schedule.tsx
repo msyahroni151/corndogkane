@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { FormDialog } from "@/components/form-dialog";
 import { LocalInput } from "@/components/local-input";
 import { warehouseScheduleSvg, type WarehouseScheduleData } from "@/lib/warehouse-schedule-image";
-import { schedulePng } from "@/lib/share-schedule-image";
+import { schedulePng, schedulePdf } from "@/lib/share-schedule-image";
 export function ShareWarehouseSchedule({ from, to }: { from: string; to: string }) {
   return (
     <FormDialog title="Share Jadwal Gudang" trigger="Share Jadwal Gudang" extraWide>
@@ -17,7 +17,8 @@ function Preview({ initialFrom, initialTo }: { initialFrom: string; initialTo: s
     [data, setData] = useState<WarehouseScheduleData | null>(null),
     [busy, setBusy] = useState(true),
     [exporting, setExporting] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [format, setFormat] = useState("png");
   const active = useRef<AbortController | null>(null);
   async function load(start: string, end: string) {
     active.current?.abort();
@@ -47,19 +48,39 @@ function Preview({ initialFrom, initialTo }: { initialFrom: string; initialTo: s
     return () => active.current?.abort();
   }, [initialFrom, initialTo]);
   const image = data?.employees.length ? warehouseScheduleSvg(data) : null;
-  async function download() {
+  async function download(share = false) {
     if (!image || !data) return;
     setExporting(true);
     setError("");
     try {
-      const blob = await schedulePng(image),
-        url = URL.createObjectURL(blob),
+      const blob = format === "pdf" ? await schedulePdf(image) : await schedulePng(image);
+      const file = new File([blob], `Jadwal-Gudang-${data.from}-${data.to}.${format}`, {
+        type: format === "pdf" ? "application/pdf" : "image/png",
+      });
+      if (share && navigator.canShare?.({ files: [file] }) && navigator.share) {
+        try {
+          await navigator.share({ files: [file], title: "Jadwal Gudang Corndog Kane" });
+          return;
+        } catch (e) {
+          if (e instanceof Error && e.name === "AbortError") return;
+        }
+      }
+      const url = URL.createObjectURL(blob),
         link = document.createElement("a");
       link.href = url;
-      link.download = `Jadwal-Gudang-${data.from}-${data.to}.png`;
+      link.download = file.name;
       document.body.appendChild(link);
       link.click();
       link.remove();
+      if (share)
+        window.open(
+          "https://wa.me/?text=" +
+            encodeURIComponent(
+              "Jadwal Gudang Corndog Kane. Lampirkan file jadwal yang telah diunduh.",
+            ),
+          "_blank",
+          "noopener,noreferrer",
+        );
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gambar belum dapat diunduh.");
@@ -113,14 +134,29 @@ function Preview({ initialFrom, initialTo }: { initialFrom: string; initialTo: s
           {error}
         </p>
       )}
-      <div className="my-4 flex justify-end">
+      <div className="my-4 flex flex-wrap justify-end gap-2">
+        <select
+          aria-label="Format jadwal gudang"
+          value={format}
+          onChange={(e) => setFormat(e.target.value)}
+        >
+          <option value="png">Image (PNG)</option>
+          <option value="pdf">PDF</option>
+        </select>
         <button
           type="button"
           className="button-primary"
           disabled={!image || busy || exporting || data?.from !== from || data?.to !== to}
-          onClick={download}
+          onClick={() => void download()}
         >
-          {exporting ? "Menyiapkan gambar…" : "Unduh PNG"}
+          {exporting ? "Menyiapkan file…" : format === "pdf" ? "Unduh PDF" : "Unduh PNG"}
+        </button>
+        <button
+          className="button-primary"
+          disabled={!image || busy || exporting || data?.from !== from || data?.to !== to}
+          onClick={() => void download(true)}
+        >
+          Share WhatsApp
         </button>
       </div>
       <div

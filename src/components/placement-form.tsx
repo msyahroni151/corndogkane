@@ -41,7 +41,6 @@ export function PlacementForm({
       closeDialog?.();
       setDraft(initial);
       router.push("/penempatan?tersimpan=1");
-      router.refresh();
     }
     return result;
   }, {});
