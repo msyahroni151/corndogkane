@@ -2,6 +2,7 @@ import { ProductionPlanForm, ProductionPlanStatus } from "@/components/productio
 import { ProductionRemainders } from "@/components/production-remainders";
 import { RecipeManagement } from "@/components/recipe-management";
 import type { RecipeCostItem } from "@/lib/recipe-cost";
+import { NavigationLink } from "@/components/navigation-link";
 import Link from "next/link";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
@@ -59,20 +60,22 @@ export default async function Page({
   }
   const db = getPrisma(),
     [items, operations, recipeItems, remainders, plans, selectedPlan] = await Promise.all([
-      db.inventoryItem.findMany({
-        where: { kind: { in: ["SUB", "FINISHED"] }, active: true },
-        include: {
-          recipe: {
+      ["catat", "riwayat", "rencana"].includes(tab)
+        ? db.inventoryItem.findMany({
+            where: { kind: { in: ["SUB", "FINISHED"] }, active: true },
             include: {
-              ingredient: {
-                include: { batches: { select: { baseUnit: true, remainingQuantity: true } } },
+              recipe: {
+                include: {
+                  ingredient: {
+                    include: { batches: { select: { baseUnit: true, remainingQuantity: true } } },
+                  },
+                },
               },
+              batches: { select: { remainingQuantity: true, baseUnit: true } },
             },
-          },
-          batches: { select: { remainingQuantity: true, baseUnit: true } },
-        },
-        orderBy: { name: "asc" },
-      }),
+            orderBy: { name: "asc" },
+          })
+        : Promise.resolve([]),
       valid && ["catat", "riwayat", "pemakaian"].includes(tab)
         ? db.inventoryOperation.findMany({
             where: { kind: "PRODUCTION", date: { gte: start, lte: end } },
@@ -88,9 +91,26 @@ export default async function Page({
         : [],
       tab === "resep"
         ? db.inventoryItem.findMany({
-            include: {
-              recipe: true,
-              batches: { orderBy: [{ receivedAt: "asc" }, { createdAt: "asc" }, { id: "asc" }] },
+            select: {
+              id: true,
+              name: true,
+              kind: true,
+              active: true,
+              baseUnit: true,
+              updatedAt: true,
+              sellingPrice: true,
+              productionYield: true,
+              recipe: { select: { ingredientId: true, quantity: true, baseUnit: true } },
+              batches: {
+                select: {
+                  baseUnit: true,
+                  remainingQuantity: true,
+                  remainingValue: true,
+                  initialQuantity: true,
+                  initialValue: true,
+                },
+                orderBy: [{ receivedAt: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+              },
             },
             orderBy: { name: "asc" },
           })
@@ -167,6 +187,25 @@ export default async function Page({
       0,
     );
   const href = (next: string) => "/produksi-gudang?" + new URLSearchParams({ tab: next, from, to });
+  const dateFilter = (
+    <form className="flex min-w-0 flex-wrap items-end gap-3">
+      <input type="hidden" name="tab" value={tab} />
+      <label className="field">
+        Dari tanggal
+        <LocalInput type="date" name="from" defaultValue={from} required />
+      </label>
+      <label className="field">
+        Sampai tanggal
+        <LocalInput type="date" name="to" defaultValue={to} required />
+      </label>
+      <button className="button-secondary">Terapkan</button>
+      {!valid && (
+        <p role="alert" className="text-sm text-red-700">
+          Rentang tanggal tidak valid, maksimal 1 tahun.
+        </p>
+      )}
+    </form>
+  );
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -185,21 +224,21 @@ export default async function Page({
             ["resep", "Resep Produksi"],
             ["riwayat", "Riwayat Produksi"],
           ].map(([key, label]) => (
-            <Link
+            <NavigationLink
               key={key}
               href={href(key)}
-              prefetch={false}
               aria-current={tab === key ? "page" : undefined}
               className={`flex shrink-0 items-center gap-2 rounded-t-xl border-b-2 px-4 py-3 text-xs font-semibold ${tab === key ? "border-[#44785a] bg-[#e4f0e7] text-[#244c3a]" : "border-transparent text-slate-500"}`}
             >
               <UiIcon name={key === "catat" ? "box" : "receipt"} size={17} />
               {label}
-            </Link>
+            </NavigationLink>
           ))}
         </div>
       </nav>
       {tab === "catat" && (
-        <div className="flex justify-end">
+        <div className="panel flex flex-wrap items-end justify-between gap-4 p-4">
+          {dateFilter}
           <FormDialog
             title="Catat Produksi Gudang"
             trigger="+ Catat Produksi"
@@ -513,23 +552,7 @@ export default async function Page({
               </section>
             ))}
           </div>
-          <form className="panel flex flex-wrap items-end gap-3 p-4">
-            <input type="hidden" name="tab" value={tab} />
-            <label className="field">
-              Dari tanggal
-              <LocalInput type="date" name="from" defaultValue={from} required />
-            </label>
-            <label className="field">
-              Sampai tanggal
-              <LocalInput type="date" name="to" defaultValue={to} required />
-            </label>
-            <button className="button-secondary">Terapkan</button>
-            {!valid && (
-              <p role="alert" className="text-sm text-red-700">
-                Rentang tanggal tidak valid, maksimal 1 tahun.
-              </p>
-            )}
-          </form>
+          {tab !== "catat" && <div className="panel p-4">{dateFilter}</div>}
           <p className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
             Produksi mengurangi bahan gudang menggunakan batch FIFO, lalu menambah batch sub produk
             hasil olahan. Ini tidak mengurangi stok outlet. Bahan rusak atau susut dicatat sesuai

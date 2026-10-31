@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-10-31T08:34:28.452Z",
+  "createdAt": "2026-10-31T09:32:30.523Z",
   "containsRealData": false,
   "files": [
     {
@@ -456,7 +456,7 @@
     },
     {
       "path": "src/app/(workspace)/produksi-gudang/page.tsx",
-      "sha256": "167801e3a5ecc8eaaed870df47190c053af1e12bf974b1899b21c06b93051892"
+      "sha256": "b74ba3d25fd409fa446b249f60c67c3a59f3cbb57d6668a413629272a23d8848"
     },
     {
       "path": "src/app/(workspace)/rekap-saldo/page.tsx",
@@ -644,7 +644,7 @@
     },
     {
       "path": "src/app/recipe-actions.ts",
-      "sha256": "2646070524740fb1b04c03799e507637ff4418eebb80f270e598bc0a89d32643"
+      "sha256": "bb7c0fe590d7ae8cd74ffe4f698ae0c280bb1e5fa66872840db3ef980db330ff"
     },
     {
       "path": "src/app/robots.ts",
@@ -1004,11 +1004,11 @@
     },
     {
       "path": "src/components/recipe-form.tsx",
-      "sha256": "f6e0a7481e465add043a7b6c6629c7b40afc96173b9e4cf0fab053887d59987e"
+      "sha256": "d192f5599e35393425da39eb6a256911953450c2c10fa9e9c0916662c2504a7a"
     },
     {
       "path": "src/components/recipe-management.tsx",
-      "sha256": "a6a6634f68f56ff01dbdc67d3b1beb2a24834633e21765d1fbcc47f9786aad28"
+      "sha256": "9490cac88aafd89ea8e99957b0d6168f91a28f60eb32ed77652c540a17037f07"
     },
     {
       "path": "src/components/record-form.tsx",
@@ -1325,6 +1325,10 @@
     {
       "path": "src/lib/recipe-cost.ts",
       "sha256": "8effef002cbdf0f3fa9500e54acd88c2dfd4e4681bba0c41dba9167e6abbb0f3"
+    },
+    {
+      "path": "src/lib/recipe-settings.ts",
+      "sha256": "a718eddd05521cf37aa789510e8ecf7fe9b7897cc9cb627e43285d1e4c577227"
     },
     {
       "path": "src/lib/record-fields.ts",

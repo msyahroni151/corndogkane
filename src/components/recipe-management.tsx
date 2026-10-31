@@ -48,29 +48,38 @@ export function RecipeManagement({
           ? "Atur komposisi bahan dan hasil standar untuk satu batch produksi gudang. Pencatatan produksi mengurangi bahan gudang dan menambah stok hasil olahan; stok outlet tetap terpisah."
           : "Atur kebutuhan bahan untuk 1 pcs produk jual. Bahan siap pakai memakai HPP hasil produksi gudang. Pengurangan stok outlet dari POS belum aktif."}
       </p>
-      <form className="panel flex flex-wrap items-end gap-3 p-4">
-        <input type="hidden" name="tab" value="resep" />
-        <label className="field flex-1">
-          Cari resep
-          <input
-            name="q"
-            defaultValue={q}
-            maxLength={150}
-            placeholder={production ? "Nama hasil produksi..." : "Nama menu jual..."}
-          />
-        </label>
-        {production && (
-          <label className="field">
-            Jenis hasil
-            <select name="recipeKind" defaultValue={kind}>
-              <option value="">Semua jenis</option>
-              <option value="SUB">Bahan Setengah Jadi</option>
-              <option value="FINISHED">Bahan Jadi</option>
-            </select>
+      <div className="panel flex flex-wrap items-end gap-3 p-4">
+        <form className="flex min-w-0 flex-1 flex-wrap items-end gap-3">
+          <input type="hidden" name="tab" value="resep" />
+          <label className="field min-w-[180px] flex-1">
+            Cari resep
+            <input
+              name="q"
+              defaultValue={q}
+              maxLength={150}
+              placeholder={production ? "Nama hasil produksi..." : "Nama menu jual..."}
+            />
           </label>
+          {production && (
+            <label className="field">
+              Jenis hasil
+              <select name="recipeKind" defaultValue={kind}>
+                <option value="">Semua jenis</option>
+                <option value="SUB">Bahan Setengah Jadi</option>
+                <option value="FINISHED">Bahan Jadi</option>
+              </select>
+            </label>
+          )}
+          <button className="button-secondary">Cari</button>
+        </form>
+        {production && (
+          <div className="shrink-0">
+            <FormDialog title="Tambah Resep Produksi" trigger="+ Tambah Resep Produksi" wide>
+              <RecipeForm items={items} production />
+            </FormDialog>
+          </div>
         )}
-        <button className="button-secondary">Cari</button>
-      </form>
+      </div>
       <section className="panel overflow-hidden">
         <div className="overflow-x-auto">
           <SortableTable className="w-full min-w-[940px] text-left text-sm">
@@ -168,7 +177,7 @@ export function RecipeManagement({
                 <tr>
                   <td colSpan={8} className="p-10 text-center text-slate-400">
                     {production
-                      ? "Belum ada hasil produksi yang sesuai. Tambahkan Bahan Setengah Jadi atau Bahan Jadi melalui Stok & Inventori."
+                      ? "Belum ada resep yang sesuai. Klik + Tambah Resep Produksi untuk mengisi hasil dan bahan langsung, tanpa Barang Masuk."
                       : "Belum ada menu jual yang sesuai. Tambahkan Produk terlebih dahulu."}
                   </td>
                 </tr>
