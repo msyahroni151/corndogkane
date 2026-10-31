@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-10-31T10:10:00.633Z",
+  "createdAt": "2026-10-31T10:24:18.280Z",
   "containsRealData": false,
   "files": [
     {
@@ -828,7 +828,7 @@
     },
     {
       "path": "src/components/navigation-link.tsx",
-      "sha256": "962af6ebd7b179eeffe898e8f38e5ea678b6b8d1e3e9ce05aaa9a7093174b2c2"
+      "sha256": "2db72d5d2609d3a4a5d7f64f83a8e4c3f24578704f1aa904c5d520cb0de84cf8"
     },
     {
       "path": "src/components/navigation.tsx",
