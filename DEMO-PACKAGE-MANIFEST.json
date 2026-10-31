@@ -1,10 +1,10 @@
 {
-  "createdAt": "2026-10-31T08:06:11.724Z",
+  "createdAt": "2026-10-31T08:34:28.452Z",
   "containsRealData": false,
   "files": [
     {
       "path": "DEMO-DEPLOYMENT.md",
-      "sha256": "9c530d7b66600f0d71249722c7abf54c1161b90817652b32a0828c0fc07e4dc3"
+      "sha256": "ec37b522aa6470c78589b4b5204308803637b23d2078a136596ea57714e8437f"
     },
     {
       "path": "docs/control-stok.md",
@@ -424,7 +424,7 @@
     },
     {
       "path": "src/app/(workspace)/menu-utama/dashboard/page.tsx",
-      "sha256": "a314fca5d3a89c508a06941246e32361292caf06802c79a0dce0adfa111724a9"
+      "sha256": "d3594723fdf83bebb8f73e34e3384e411aba38d4737ab25de55a2b0d8554b843"
     },
     {
       "path": "src/app/(workspace)/open-transaction/page.tsx",
@@ -452,7 +452,7 @@
     },
     {
       "path": "src/app/(workspace)/pos/page.tsx",
-      "sha256": "dda10fd094dd6f7f52deb3568cd5ad001d3d2a470892071526eabfc219534589"
+      "sha256": "f5ef5afd39c4363be3e3f6c5f20f20b48d367aa2bb90a920cacd2a0a70155088"
     },
     {
       "path": "src/app/(workspace)/produksi-gudang/page.tsx",
@@ -1116,7 +1116,7 @@
     },
     {
       "path": "src/lib/auth.ts",
-      "sha256": "5a0fa3e32bbc3461c414698b06974f7987b434f565e6d793624582526ac1a269"
+      "sha256": "c41e905599c022636b2bd964490ff718739d5d4a6d3d8251d48825a70e64857b"
     },
     {
       "path": "src/lib/backup-schedules.ts",
@@ -1148,7 +1148,7 @@
     },
     {
       "path": "src/lib/db.ts",
-      "sha256": "b83b2bcd7c40ba57f1778e335c79dfb7437de790a27efe5453d8d01ba3e903a6"
+      "sha256": "86631cc4f8e1f445fca53f3ca72e63160c30f0c639f581afcad99a836887d565"
     },
     {
       "path": "src/lib/employee-fields.ts",

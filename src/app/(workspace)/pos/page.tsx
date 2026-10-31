@@ -13,44 +13,56 @@ export default async function PosPage({
 }) {
   const user = await requireAccess("pos");
   const query = await searchParams;
-  const receiptTemplates = await loadReceiptTemplates();
   const db = getPrisma(),
     today = todayWib(),
-    canManage = hasPermission(user, "monitoring-outlet"),
-    account = await db.user.findUnique({ where: { id: user.id }, select: { employeeId: true } });
-  const assignments = await db.schedule.findMany({
-    where: {
-      date: parseCivilDate(today),
-      status: "KERJA",
-      ...(!canManage ? { employeeId: account?.employeeId || "NONE" } : {}),
-    },
-    select: { outletId: true, employeeId: true },
-  });
-  const masters = await db.outlet.findMany({
-    where: {
-      active: true,
-      closed: false,
-      area: { active: true },
-      ...(!canManage
-        ? { id: { in: assignments.map((a) => a.outletId).filter((id): id is string => !!id) } }
-        : {}),
-    },
+    canManage = hasPermission(user, "monitoring-outlet");
+  const masterQuery = {
+    where: { active: true, closed: false, area: { active: true } },
     select: { id: true, name: true, area: { select: { name: true } } },
-    orderBy: { name: "asc" },
-  });
-  const outlets = masters.map((o) => ({ id: o.id, name: o.name, areaName: o.area.name }));
-  const employees = await db.employee.findMany({
-      where: { active: true, ...(!canManage ? { id: account?.employeeId || "NONE" } : {}) },
+    orderBy: { name: "asc" as const },
+  };
+  const [receiptTemplates, catalog, assignments, allMasters, employees] = await Promise.all([
+    loadReceiptTemplates(),
+    loadPosCatalog(db),
+    db.schedule.findMany({
+      where: {
+        date: parseCivilDate(today),
+        status: "KERJA",
+        ...(!canManage ? { employeeId: user.employeeId || "NONE" } : {}),
+      },
+      select: { outletId: true, employeeId: true },
     }),
-    crews = employees.filter(canRecordOutletCrew).map((e) => ({
-      id: e.id,
-      name: e.fullName + (e.employeeCode ? " · " + e.employeeCode : ""),
-      outletIds: assignments
-        .filter((a) => a.employeeId === e.id)
-        .map((a) => a.outletId)
-        .filter((id): id is string => !!id),
-    }));
-  const catalog = await loadPosCatalog(db);
+    canManage ? db.outlet.findMany(masterQuery) : Promise.resolve([]),
+    db.employee.findMany({
+      where: { active: true, ...(!canManage ? { id: user.employeeId || "NONE" } : {}) },
+      select: {
+        id: true,
+        fullName: true,
+        employeeCode: true,
+        active: true,
+        department: true,
+        position: true,
+      },
+    }),
+  ]);
+  const masters = canManage
+    ? allMasters
+    : await db.outlet.findMany({
+        ...masterQuery,
+        where: {
+          ...masterQuery.where,
+          id: { in: assignments.map((a) => a.outletId).filter((id): id is string => !!id) },
+        },
+      });
+  const outlets = masters.map((o) => ({ id: o.id, name: o.name, areaName: o.area.name }));
+  const crews = employees.filter(canRecordOutletCrew).map((e) => ({
+    id: e.id,
+    name: e.fullName + (e.employeeCode ? " · " + e.employeeCode : ""),
+    outletIds: assignments
+      .filter((a) => a.employeeId === e.id)
+      .map((a) => a.outletId)
+      .filter((id): id is string => !!id),
+  }));
   const draftId =
     hasPermission(user, "open-transaction") &&
     typeof query.draft === "string" &&
@@ -63,7 +75,7 @@ export default async function PosPage({
         catalog={catalog}
         crews={crews}
         today={today}
-        employeeId={account?.employeeId || undefined}
+        employeeId={user.employeeId || undefined}
         receiptTemplates={receiptTemplates}
         userId={user.id}
         userName={user.name}

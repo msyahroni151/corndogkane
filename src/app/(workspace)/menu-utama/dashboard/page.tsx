@@ -73,31 +73,39 @@ export default async function NightOperationsDashboard({
     ),
     ids = filtered.map((o) => o.id),
     earliest = [from, previous.from, historyFrom].sort()[0];
-  const records = error
-    ? []
-    : await db.outletOperation.findMany({
-        where: {
-          date: { gte: parseCivilDate(earliest), lte: parseCivilDate(to) },
-          outletId: { in: ids },
-        },
-        select: {
-          outletId: true,
-          date: true,
-          totalGross: true,
-          bonusAmount: true,
-          expenseAmount: true,
-          qris: true,
-          gofood: true,
-          grabfood: true,
-          shopeefood: true,
-          cashReceived: true,
-          doughUsed: true,
-          crewName: true,
-          trainingCrewName: true,
-          crew: { select: { employeeCode: true } },
-        },
-        orderBy: [{ date: "asc" }, { id: "asc" }],
-      });
+  const [records, snapshot, schedules] = error
+    ? ([
+        [],
+        { modules: [], alerts: [], losses: {}, canSeeLoss: false } as BusinessSnapshot,
+        {} as Record<string, OutletSchedulePeriod>,
+      ] as const)
+    : await Promise.all([
+        db.outletOperation.findMany({
+          where: {
+            date: { gte: parseCivilDate(earliest), lte: parseCivilDate(to) },
+            outletId: { in: ids },
+          },
+          select: {
+            outletId: true,
+            date: true,
+            totalGross: true,
+            bonusAmount: true,
+            expenseAmount: true,
+            qris: true,
+            gofood: true,
+            grabfood: true,
+            shopeefood: true,
+            cashReceived: true,
+            doughUsed: true,
+            crewName: true,
+            trainingCrewName: true,
+            crew: { select: { employeeCode: true } },
+          },
+          orderBy: [{ date: "asc" }, { id: "asc" }],
+        }),
+        loadBusinessSnapshot(db, user.permissions, from, to, ids),
+        readOutletSchedulePeriods(ids, from, to),
+      ]);
   const allEntries = records.map((e) => ({
       ...e,
       date: e.date.toISOString().slice(0, 10),
@@ -111,19 +119,6 @@ export default async function NightOperationsDashboard({
         entries.some((e) => e.outletId === o.id) ||
         previousEntries.some((e) => e.outletId === o.id),
     );
-  const [schedules, snapshot] = error
-    ? [
-        {} as Record<string, OutletSchedulePeriod>,
-        { modules: [], alerts: [], losses: {}, canSeeLoss: false } as BusinessSnapshot,
-      ]
-    : await Promise.all([
-        readOutletSchedulePeriods(
-          visible.map((o) => o.id),
-          from,
-          to,
-        ),
-        loadBusinessSnapshot(db, user.permissions, from, to, ids),
-      ]);
   const rows = buildOutletDashboard(
     visible.map((o) => ({
       id: o.id,

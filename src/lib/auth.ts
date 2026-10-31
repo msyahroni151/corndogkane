@@ -18,6 +18,7 @@ export const currentUser = cache(async function currentUser() {
       user: {
         select: {
           id: true,
+          employeeId: true,
           name: true,
           email: true,
           active: true,
@@ -37,6 +38,7 @@ export const currentUser = cache(async function currentUser() {
     return null;
   return {
     id: session.user.id,
+    employeeId: session.user.employeeId,
     name: session.user.name,
     email: session.user.email,
     expiresAt: session.expiresAt.toISOString(),

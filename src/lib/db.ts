@@ -4,7 +4,7 @@ import { Prisma, PrismaClient } from "@/generated/prisma/client";
 
 const modelNames = Object.values(Prisma.ModelName).sort();
 // Include pool settings in the cache key so hot reload replaces old connections.
-const modelKey = ["pool-v3-joins", ...modelNames].join("|");
+const modelKey = ["pool-v4-joins", ...modelNames].join("|");
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
   prismaModelKey?: string;
@@ -27,7 +27,8 @@ export function getPrisma() {
 
   const adapter = new PrismaPg({
     connectionString,
-    max: 5,
+    // Bound concurrency for independent dashboard reads; avoid serial queueing across regions.
+    max: 10,
     // Local cold starts and memory pressure can delay connection establishment.
     connectionTimeoutMillis: 30_000,
     idleTimeoutMillis: 120_000,
