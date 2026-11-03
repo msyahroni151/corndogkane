@@ -149,3 +149,27 @@ export async function saveRecipeDefinition(db: PrismaClient, form: FormData, pro
     { timeout: 20000 },
   );
 }
+
+/** Remove only the current composition; warehouse items and historical stock stay intact. */
+export async function deleteRecipeDefinition(
+  db: PrismaClient,
+  id: string,
+  version: string,
+  production: boolean,
+) {
+  if (!id || !version) invalid("Muat ulang halaman sebelum menghapus resep.");
+  return db.$transaction(
+    async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"inventory-write"}))`;
+      const output = await tx.inventoryItem.findUnique({ where: { id } });
+      if (!output || !(production ? ["SUB", "FINISHED"] : ["PRODUCT"]).includes(output.kind))
+        invalid("Pilih resep sesuai menu yang sedang dibuka.");
+      if (output.updatedAt.toISOString() !== version)
+        invalid("Resep sudah berubah. Tutup popup dan muat ulang sebelum menghapus.");
+      const removed = await tx.inventoryRecipe.deleteMany({ where: { outputId: id } });
+      if (!removed.count) invalid("Resep ini belum diatur atau sudah dihapus.");
+      await tx.inventoryItem.update({ where: { id }, data: { updatedAt: new Date() } });
+    },
+    { timeout: 15000 },
+  );
+}

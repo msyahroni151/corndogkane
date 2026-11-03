@@ -2,6 +2,7 @@ import SearchForm from "next/form";
 import { warehouseKindNames } from "@/lib/inventory";
 import { recipeCost, type RecipeCostItem } from "@/lib/recipe-cost";
 import { FormDialog } from "@/components/form-dialog";
+import { DeleteRecipeForm } from "@/components/delete-recipe-form";
 import { RecipeForm } from "@/components/recipe-form";
 import { SortableTable } from "@/components/sortable-table";
 const money = (n: number) => "Rp " + n.toLocaleString("id-ID", { maximumFractionDigits: 2 });
@@ -172,9 +173,21 @@ export function RecipeManagement({
                       </span>
                     </td>
                     <td className="p-4">
-                      <FormDialog title={"Atur Resep · " + output.name} trigger="Atur Resep" wide>
-                        <RecipeForm output={output} items={items} production={production} />
-                      </FormDialog>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <FormDialog title={"Atur Resep · " + output.name} trigger="Atur Resep" wide>
+                          <RecipeForm output={output} items={items} production={production} />
+                        </FormDialog>
+                        {output.recipe.length > 0 && (
+                          <FormDialog title="Hapus Resep" trigger="Delete" danger>
+                            <DeleteRecipeForm
+                              id={output.id}
+                              name={output.name}
+                              version={output.version}
+                              production={production}
+                            />
+                          </FormDialog>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

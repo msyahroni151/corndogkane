@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-10-31T10:24:18.280Z",
+  "createdAt": "2026-11-03T11:27:28.230Z",
   "containsRealData": false,
   "files": [
     {
@@ -644,7 +644,7 @@
     },
     {
       "path": "src/app/recipe-actions.ts",
-      "sha256": "bb7c0fe590d7ae8cd74ffe4f698ae0c280bb1e5fa66872840db3ef980db330ff"
+      "sha256": "5ba3b34102499dddce72d047fe247466c54174d81820364fb87e0bb80f8f007f"
     },
     {
       "path": "src/app/robots.ts",
@@ -656,7 +656,7 @@
     },
     {
       "path": "src/app/schedule-actions.ts",
-      "sha256": "34e41b7c5977085c193c0f4ad57fccdd7ccd25f4a28a7724c2bd7845a9c57520"
+      "sha256": "2530f6000bc7955f03db3bc3689381e05c92a2a24368eeae1c1747e59d8d5af2"
     },
     {
       "path": "src/app/settlement-actions.ts",
@@ -753,6 +753,10 @@
     {
       "path": "src/components/delete-area-form.tsx",
       "sha256": "25cdf372fa4d3ed952b5600f3d608bca83829f9a8f8df95ed4de2a1a36e5e66f"
+    },
+    {
+      "path": "src/components/delete-recipe-form.tsx",
+      "sha256": "205f3f986e701f9e073ea8b9de53498d197c73ac3277a9d07536bcfdcf7f9e8b"
     },
     {
       "path": "src/components/demo-notice.tsx",
@@ -1008,7 +1012,7 @@
     },
     {
       "path": "src/components/recipe-management.tsx",
-      "sha256": "6124bebea611140688f48a54af1eb0ec02a3fb73f71a1b5d4f0b208ceb6266b9"
+      "sha256": "051e0005b60be02343bca6c1267061b47a960a65e9b4740aba05ed737d62cf71"
     },
     {
       "path": "src/components/record-form.tsx",
@@ -1028,7 +1032,7 @@
     },
     {
       "path": "src/components/schedule-form.tsx",
-      "sha256": "83f934d1595dcab56cc82d0849d72a1ba0591a413f1eb3355f21fbc968566b3d"
+      "sha256": "0d2bba8c84d87d2cba5315aca95f31e74e483f871ad489e53f94b0f36b7cc05b"
     },
     {
       "path": "src/components/section-navigation.tsx",
@@ -1328,11 +1332,15 @@
     },
     {
       "path": "src/lib/recipe-settings.ts",
-      "sha256": "a718eddd05521cf37aa789510e8ecf7fe9b7897cc9cb627e43285d1e4c577227"
+      "sha256": "4ef41c1a89508b1c7948398573ccae91f8fb154cf423588fe6fade4bd32455ee"
     },
     {
       "path": "src/lib/record-fields.ts",
       "sha256": "9c94461d214930b79d6922d76b9a7d04a692a9000920375d93a45f2e16d8c2e8"
+    },
+    {
+      "path": "src/lib/regular-schedules.ts",
+      "sha256": "6d13e44a976ecfb208b71c11961dae584ee9e288d45d6ff50725320d96b82165"
     },
     {
       "path": "src/lib/request-origin.ts",

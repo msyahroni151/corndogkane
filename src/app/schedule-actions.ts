@@ -1,4 +1,5 @@
 "use server";
+import { parseRegularSchedule } from "@/lib/regular-schedules";
 import { parseBackupSchedule } from "@/lib/backup-schedules";
 import type { Prisma } from "@/generated/prisma/client";
 import { outletHoursForDate } from "@/lib/outlet-settings";
@@ -58,7 +59,9 @@ async function checkPortalLeave(
 export async function createSchedules(_: FormState, form: FormData): Promise<FormState> {
   const user = await requireAccess("jadwal");
   const get = (key: string) => String(form.get(key) || "").trim();
-  if (get("scheduleMode") === "backup") return createBackupScheduleRows(form, user.id);
+  if (get("scheduleMode") === "backup") return createOutletScheduleRows(form, user.id, false);
+  if (get("scheduleMode") === "regular-periods")
+    return createOutletScheduleRows(form, user.id, true);
   let start: Date,
     end: Date,
     holidays: Date[],
@@ -248,11 +251,21 @@ export async function createSchedules(_: FormState, form: FormData): Promise<For
   revalidatePath("/dashboard");
   return { success: "Jadwal harian berhasil dibuat." };
 }
-async function createBackupScheduleRows(form: FormData, userId: string): Promise<FormState> {
+async function createOutletScheduleRows(
+  form: FormData,
+  userId: string,
+  regular: boolean,
+): Promise<FormState> {
   const employeeId = String(form.get("employeeId") || "").trim();
-  let assignments: ReturnType<typeof parseBackupSchedule>;
+  let assignments: {
+    outletId: string;
+    date: Date;
+    status: string;
+    holiday: boolean;
+    periodEnd?: Date;
+  }[];
   try {
-    assignments = parseBackupSchedule(form);
+    assignments = regular ? parseRegularSchedule(form) : parseBackupSchedule(form);
   } catch (e) {
     return { error: (e as Error).message };
   }
@@ -261,10 +274,17 @@ async function createBackupScheduleRows(form: FormData, userId: string): Promise
       async (tx) => {
         await tx.$executeRaw`SELECT id FROM employees WHERE id=${employeeId} FOR UPDATE`;
         const employee = await tx.employee.findUnique({ where: { id: employeeId } });
-        if (!employee || employeeGroup(employee) !== "outlet" || !isBackupEmployee(employee))
+        if (
+          !employee ||
+          employeeGroup(employee) !== "outlet" ||
+          (regular ? isBackupEmployee(employee) : !isBackupEmployee(employee))
+        )
           invalid(
-            "Jadwal per outlet dan tanggal hanya berlaku untuk Crew Backup atau Area Supervisor yang aktif.",
+            regular
+              ? "Jadwal periode reguler hanya berlaku untuk crew outlet reguler yang aktif."
+              : "Jadwal per outlet dan tanggal hanya berlaku untuk Crew Backup atau Area Supervisor yang aktif.",
           );
+        const role = regular ? ("REGULER" as const) : ("BACKUP" as const);
         const dates = assignments.map((row) => row.date),
           first = dates[0],
           last = dates[dates.length - 1];
@@ -310,18 +330,28 @@ async function createBackupScheduleRows(form: FormData, userId: string): Promise
               "Ada penempatan bertumpang tindih pada tanggal jaga. Periksa riwayat penempatan terlebih dahulu.",
             );
           let placement = covering[0];
-          if (placement && placement.role !== "BACKUP")
+          if (placement && placement.role !== role)
             invalid(
-              "Penempatan pada tanggal jaga belum berstatus Crew Backup. Periksa riwayat penempatan karyawan terlebih dahulu.",
+              "Jenis penempatan pada tanggal jaga berbeda. Periksa riwayat penempatan karyawan terlebih dahulu.",
+            );
+          if (regular && placement && placement.outletId !== outlet.id)
+            invalid(
+              "Outlet pada periode reguler berbeda dari penempatan yang sudah tersimpan. Sesuaikan riwayat penempatan terlebih dahulu; data lama tidak ditimpa.",
             );
           if (!placement) {
+            const placementEnd = new Date(regular ? assignment.periodEnd! : assignment.date);
+            const next = placements.find((p) => p.startDate > assignment.date);
+            if (next && next.startDate <= placementEnd)
+              placementEnd.setTime(next.startDate.getTime() - 86400000);
             placement = await tx.placement.create({
               data: {
                 employeeId,
                 employeeName: employee.employeeCode || employee.fullName,
-                role: "BACKUP",
+                role,
                 startDate: assignment.date,
-                endDate: assignment.date,
+                endDate: placementEnd,
+                outletId: regular ? outlet.id : null,
+                outletName: regular ? outlet.name : null,
                 areaId: outlet.areaId,
                 areaName: outlet.area.name,
                 areaColor: outlet.area.color,
@@ -329,6 +359,7 @@ async function createBackupScheduleRows(form: FormData, userId: string): Promise
               },
             });
             placements.push(placement);
+            placements.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
           }
           let off = assignment.holiday,
             startMinutes: number | null = null,
@@ -351,7 +382,7 @@ async function createBackupScheduleRows(form: FormData, userId: string): Promise
             employeeName: employee.employeeCode || employee.fullName,
             placementId: placement.id,
             date: assignment.date,
-            role: "BACKUP",
+            role,
             areaName: placement.areaName,
             areaColor: placement.areaColor,
             location: placement.location,
@@ -373,8 +404,21 @@ async function createBackupScheduleRows(form: FormData, userId: string): Promise
   } catch (e) {
     return failure(e);
   }
-  for (const path of ["/jadwal", "/absensi", "/penempatan", "/dashboard"]) revalidatePath(path);
-  return { success: "Jadwal crew backup berhasil dibuat sesuai outlet dan tanggal jaga." };
+  for (const path of [
+    "/jadwal",
+    "/absensi",
+    "/penempatan",
+    "/dashboard",
+    "/menu-utama/dashboard",
+    "/portal-karyawan",
+    "/pos",
+  ])
+    revalidatePath(path);
+  return {
+    success: regular
+      ? "Jadwal reguler berhasil dibuat sesuai outlet dan periode jaga."
+      : "Jadwal crew backup berhasil dibuat sesuai outlet dan tanggal jaga.",
+  };
 }
 export async function updateSchedule(_: FormState, form: FormData): Promise<FormState> {
   await requireAccess("jadwal");

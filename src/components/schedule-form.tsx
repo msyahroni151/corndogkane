@@ -70,6 +70,20 @@ function CreateScheduleForm({
     { key: 0, outletId: "", date: "", status: "KERJA" },
   ]);
   const nextBackupRow = useRef(1);
+  const [regularRows, setRegularRows] = useState([
+    { key: 0, outletId: "", startDate: "", endDate: "", status: "KERJA" },
+  ]);
+  const nextRegularRow = useRef(1);
+  const regularStart = regularRows
+    .map((r) => r.startDate)
+    .filter(Boolean)
+    .sort()[0];
+  const regularEnd = regularRows
+    .map((r) => r.endDate)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+
   const employee = employees.find((e) => e.id === employeeId),
     warehouse = employee?.group === "warehouse",
     backup = employee?.backup && !warehouse;
@@ -93,6 +107,15 @@ function CreateScheduleForm({
             onChange={(e) => {
               setEmployeeId(e.target.value);
               setStatus("KERJA");
+              setRegularRows([
+                {
+                  key: nextRegularRow.current++,
+                  outletId: "",
+                  startDate: "",
+                  endDate: "",
+                  status: "KERJA",
+                },
+              ]);
               setHolidays([{ key: nextHoliday.current++, date: "", status: "LIBUR" }]);
               setBackupRows([
                 { key: nextBackupRow.current++, outletId: "", date: "", status: "KERJA" },
@@ -204,6 +227,129 @@ function CreateScheduleForm({
               crew yang sama tidak boleh berulang.
             </p>
           </fieldset>
+        ) : !warehouse ? (
+          <fieldset className="space-y-3">
+            <legend className="mb-3 text-sm font-semibold">Jadwal Crew Reguler</legend>
+            <input type="hidden" name="scheduleMode" value="regular-periods" />
+            {regularRows.map((row, index) => (
+              <div key={row.key} className="flex items-end gap-2">
+                <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <label className="field min-w-0">
+                    Pilih Outlet *
+                    <select
+                      name="regularOutletId"
+                      aria-label={`Pilih Outlet Reguler ${index + 1}`}
+                      required
+                      value={row.outletId}
+                      onChange={(e) =>
+                        setRegularRows((old) =>
+                          old.map((r) =>
+                            r.key === row.key ? { ...r, outletId: e.target.value } : r,
+                          ),
+                        )
+                      }
+                    >
+                      <option value="">Pilih outlet…</option>
+                      {outlets.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="field min-w-0">
+                    Tanggal Mulai *
+                    <LocalInput
+                      type="date"
+                      name="regularStartDate"
+                      aria-label={`Tanggal Mulai Reguler ${index + 1}`}
+                      required
+                      value={row.startDate}
+                      max={row.endDate || undefined}
+                      onChange={(e) =>
+                        setRegularRows((old) =>
+                          old.map((r) =>
+                            r.key === row.key ? { ...r, startDate: e.target.value } : r,
+                          ),
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="field min-w-0">
+                    Tanggal Selesai *
+                    <LocalInput
+                      type="date"
+                      name="regularEndDate"
+                      aria-label={`Tanggal Selesai Reguler ${index + 1}`}
+                      required
+                      value={row.endDate}
+                      min={row.startDate || undefined}
+                      onChange={(e) =>
+                        setRegularRows((old) =>
+                          old.map((r) =>
+                            r.key === row.key ? { ...r, endDate: e.target.value } : r,
+                          ),
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="field min-w-0">
+                    Status Kerja *
+                    <select
+                      name="regularStatus"
+                      aria-label={`Status Reguler ${index + 1}`}
+                      required
+                      value={row.status}
+                      onChange={(e) =>
+                        setRegularRows((old) =>
+                          old.map((r) =>
+                            r.key === row.key ? { ...r, status: e.target.value } : r,
+                          ),
+                        )
+                      }
+                    >
+                      <option value="KERJA">Kerja</option>
+                      <option value="STANBY">Stanby</option>
+                    </select>
+                  </label>
+                </div>
+                {regularRows.length > 1 && (
+                  <button
+                    type="button"
+                    className="button-secondary mb-0.5"
+                    aria-label={`Hapus periode reguler ${index + 1}`}
+                    onClick={() => setRegularRows((old) => old.filter((r) => r.key !== row.key))}
+                  >
+                    Hapus
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              aria-label="Tambah periode reguler"
+              disabled={regularRows.length >= 31}
+              className="flex w-full items-center gap-3 py-2 text-emerald-700 hover:text-emerald-900"
+              onClick={() => {
+                const key = nextRegularRow.current++;
+                setRegularRows((old) => [
+                  ...old,
+                  { key, outletId: "", startDate: "", endDate: "", status: "KERJA" },
+                ]);
+              }}
+            >
+              <span className="h-px flex-1 bg-emerald-100" />
+              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 text-xl">
+                +
+              </span>
+              <span className="h-px flex-1 bg-emerald-100" />
+            </button>
+            <p className="text-xs text-slate-500">
+              Satu outlet dan satu periode mulai–selesai per baris, maksimal 31 hari per periode.
+              Status berlaku sepanjang periode; tanggal libur / standby khusus dapat ditambahkan di
+              bawah. Periode tidak boleh bertumpang tindih dan jadwal lama tidak ditimpa.
+            </p>
+          </fieldset>
         ) : (
           <>
             {warehouse ? (
@@ -300,8 +446,10 @@ function CreateScheduleForm({
                   name={holiday.status === "STANBY" ? "standby" : "holiday"}
                   required={holiday.status === "STANBY" && status === "STANBY"}
                   value={holiday.date}
-                  min={backup ? undefined : period.startDate || undefined}
-                  max={backup ? undefined : period.endDate || undefined}
+                  min={
+                    backup ? undefined : warehouse ? period.startDate || undefined : regularStart
+                  }
+                  max={backup ? undefined : warehouse ? period.endDate || undefined : regularEnd}
                   onChange={(e) =>
                     setHolidays((old) =>
                       old.map((h) => (h.key === holiday.key ? { ...h, date: e.target.value } : h)),
@@ -362,6 +510,12 @@ function CreateScheduleForm({
             Jam kerja otomatis mengikuti jam operasional Senin–Minggu di Master Outlet. Hari outlet
             tutup menjadi LIBUR untuk jadwal Kerja.
           </div>
+        )}
+        {!warehouse && !backup && regularRows.some((r) => r.status === "STANBY") && (
+          <p className="text-xs text-slate-500">
+            Status Stanby berlaku untuk seluruh periode pada baris tersebut dan tidak memiliki jam
+            kerja. Tanggal libur khusus tetap disimpan sebagai LIBUR.
+          </p>
         )}
         {(backup ? backupRows.some((row) => row.status === "STANBY") : status === "STANBY") && (
           <p className="text-xs text-slate-500">
