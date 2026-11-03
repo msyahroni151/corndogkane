@@ -56,7 +56,7 @@ export async function postSale(
             employeeId: user?.employeeId || "NONE",
             outletId: outlet.id,
             date: parseCivilDate(input.date),
-            status: "KERJA",
+            status: { in: ["KERJA", "OPENINGAN"] },
           },
         });
         if (user?.employeeId !== crew.id || !schedule)

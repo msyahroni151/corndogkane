@@ -8,7 +8,7 @@ export async function readOutletSchedulePeriods(ids: string[], from: string, to:
         where: {
           outletId: { in: ids },
           date: { gte: parseCivilDate(from), lte: parseCivilDate(to) },
-          status: "KERJA",
+          status: { in: ["KERJA", "OPENINGAN"] },
           role: { not: "CREW_GUDANG" },
         },
         select: {

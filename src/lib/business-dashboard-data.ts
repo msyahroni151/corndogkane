@@ -351,7 +351,11 @@ export async function loadBusinessSnapshot(
     jobs.push(
       (async () => {
         const schedules = await db.schedule.findMany({
-          where: { date: period, status: "KERJA", outletId: { in: outletIds } },
+          where: {
+            date: period,
+            status: { in: ["KERJA", "OPENINGAN"] },
+            outletId: { in: outletIds },
+          },
           select: { attendance: { select: { status: true } } },
         });
         const missing = schedules.filter((s) => !s.attendance).length;
@@ -379,7 +383,11 @@ export async function loadBusinessSnapshot(
     jobs.push(
       (async () => {
         const count = await db.schedule.count({
-          where: { date: period, status: "KERJA", outletId: { in: outletIds } },
+          where: {
+            date: period,
+            status: { in: ["KERJA", "OPENINGAN"] },
+            outletId: { in: outletIds },
+          },
         });
         result.modules.push({
           id: "attendance",

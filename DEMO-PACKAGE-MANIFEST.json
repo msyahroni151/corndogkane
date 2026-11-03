@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-11-03T11:27:28.230Z",
+  "createdAt": "2026-11-03T12:44:46.241Z",
   "containsRealData": false,
   "files": [
     {
@@ -24,7 +24,7 @@
     },
     {
       "path": "docs/jadwal-dan-produksi.md",
-      "sha256": "3da94b0963cfccf2f1b452a8fa0365fe7636a357110cb859c5fbbd2163df751b"
+      "sha256": "027f7098f51b18d56933e534908f81e244c77e0debd36eded153fc620cec0c45"
     },
     {
       "path": "docs/resep-produksi.md",
@@ -239,12 +239,16 @@
       "sha256": "a9be1a839cbac483c6080c110cca9ce70557dfdf92042976a38fb01e28e030e0"
     },
     {
+      "path": "prisma/migrations/20261103130000_schedule_openingan/migration.sql",
+      "sha256": "3083d43aed1a1c290231e5190e93675e649fd3d6382a1706eef109d43b318c25"
+    },
+    {
       "path": "prisma/migrations/migration_lock.toml",
       "sha256": "99836963713b4f5b269ad49af0ed3d7b0b2e336115c2f92dc9ac683d139d0900"
     },
     {
       "path": "prisma/schema.prisma",
-      "sha256": "ef695156e4202608b46acd2820ffabea7ba148aa3120b29826c86def434aeba7"
+      "sha256": "f7db434143c139118bbf311f2fc781c82242ebbde36090d3c139a01c6fc7d57c"
     },
     {
       "path": "public/corndog-kane-logo.png",
@@ -316,7 +320,7 @@
     },
     {
       "path": "scripts/package-demo.cjs",
-      "sha256": "688732838e4e4fa8fb8b19d8fcb83436f93474264af9ebf9a41589d63164d998"
+      "sha256": "6fbbbebe8b0ff7690ad6651be50e8dc1512b703b729da18fe94dcccb8dec7d1c"
     },
     {
       "path": "scripts/seed-demo.ts",
@@ -327,8 +331,12 @@
       "sha256": "4f297cb0f52e3090f5ec4cb56d03852f50c79740dd7cb4769144a8928ccf134c"
     },
     {
+      "path": "scripts/verify-schedule-payroll.ts",
+      "sha256": "e8ff31ac02b3eb296dc3a627b641a4baed26b3b68a0ef8d6efffea04deb819d1"
+    },
+    {
       "path": "src/app/(workspace)/absensi/page.tsx",
-      "sha256": "546bda5cc2411e1bee7cb902924f39e22e4362b5e611badedc5bf6e1519876de"
+      "sha256": "3125748cf6fae6e29fb77309ebf9a996a1a85aed808f6865c3e82572d51e38a2"
     },
     {
       "path": "src/app/(workspace)/admin-malam/master-akun/page.tsx",
@@ -388,7 +396,7 @@
     },
     {
       "path": "src/app/(workspace)/jadwal/page.tsx",
-      "sha256": "cb712032bdc89fb60239287bfe9eef6d6561fb7e38276b59ac04e6fb612ca12a"
+      "sha256": "edbdf131de632d84ad035697f9be4f699ce81941cfbd838ddad6d2f4a063a38a"
     },
     {
       "path": "src/app/(workspace)/karyawan/[id]/page.tsx",
@@ -444,7 +452,7 @@
     },
     {
       "path": "src/app/(workspace)/portal-karyawan/[[...section]]/page.tsx",
-      "sha256": "5b81baf3a7f228ad36c242cba0383d22fde63e8f95121d12037d27546af692d4"
+      "sha256": "eb906524efc3d0b672fd2448d8b4417293e4365c19618d0f3483dea51d11bda6"
     },
     {
       "path": "src/app/(workspace)/pos/draft/page.tsx",
@@ -452,7 +460,7 @@
     },
     {
       "path": "src/app/(workspace)/pos/page.tsx",
-      "sha256": "f5ef5afd39c4363be3e3f6c5f20f20b48d367aa2bb90a920cacd2a0a70155088"
+      "sha256": "0fd16a85efad538b3573d1978feb72cf173e0cd038c76df65448d44a10852ba2"
     },
     {
       "path": "src/app/(workspace)/produksi-gudang/page.tsx",
@@ -536,7 +544,7 @@
     },
     {
       "path": "src/app/attendance-actions.ts",
-      "sha256": "901792a375b29dbaa7288422ef106bc61ddc4c7b83af024c6c2f900e65953048"
+      "sha256": "232e29c741fd38dca10c728c767902d4439c191d494786f46946a84fb8675d94"
     },
     {
       "path": "src/app/auth-actions.ts",
@@ -632,7 +640,7 @@
     },
     {
       "path": "src/app/portal-review-actions.ts",
-      "sha256": "5e5b976faf78edcbd43dbf23f7507f48a941dc3ef731b7fe278f168dee99e80c"
+      "sha256": "fa0605fe33150d29e93bc04be10a00ee84c4f76f0e4dd24de9f93bb1d4ea0f18"
     },
     {
       "path": "src/app/production-plan-actions.ts",
@@ -656,7 +664,7 @@
     },
     {
       "path": "src/app/schedule-actions.ts",
-      "sha256": "2530f6000bc7955f03db3bc3689381e05c92a2a24368eeae1c1747e59d8d5af2"
+      "sha256": "464c093bd45591c136ad838def3c764164bb7a1afc2dd019899e7d70ad1d69bd"
     },
     {
       "path": "src/app/settlement-actions.ts",
@@ -757,6 +765,10 @@
     {
       "path": "src/components/delete-recipe-form.tsx",
       "sha256": "205f3f986e701f9e073ea8b9de53498d197c73ac3277a9d07536bcfdcf7f9e8b"
+    },
+    {
+      "path": "src/components/delete-schedule-form.tsx",
+      "sha256": "64550b1f9b12ccd8890c81f5b3f0032cf57d18e6d6a2d70b2ab814ff5c4deccd"
     },
     {
       "path": "src/components/demo-notice.tsx",
@@ -1032,7 +1044,7 @@
     },
     {
       "path": "src/components/schedule-form.tsx",
-      "sha256": "0d2bba8c84d87d2cba5315aca95f31e74e483f871ad489e53f94b0f36b7cc05b"
+      "sha256": "4f1f26a044006436ab569c7a955ef707ddd704f00a8a3413f2c46c81be88384b"
     },
     {
       "path": "src/components/section-navigation.tsx",
@@ -1112,7 +1124,7 @@
     },
     {
       "path": "src/lib/attendance.ts",
-      "sha256": "bc7c817951eca88b62214a8f11f153ca7751e69af068d020c716de825d7274d8"
+      "sha256": "d8d2893dd6164f2a3f675a465614302c0f4a1b74b29b09d4ec20fb2ef90a5533"
     },
     {
       "path": "src/lib/auth-notice.ts",
@@ -1124,7 +1136,7 @@
     },
     {
       "path": "src/lib/backup-schedules.ts",
-      "sha256": "f07c0e7022ea1cc860be0b0e9e987db4b2b43463c7f4e144cd602fb402348247"
+      "sha256": "a9b0e3c1b9e81ddd793561b524569379966fe9ea2f5f4f9634e2765dc934d59b"
     },
     {
       "path": "src/lib/bonus-balance.ts",
@@ -1132,7 +1144,7 @@
     },
     {
       "path": "src/lib/business-dashboard-data.ts",
-      "sha256": "20cb529029dc34c5df4e9bb5fb89f1c39aaaa3468fdbd44302e5c7afd6988d44"
+      "sha256": "91815d331ed28cb87cc06e6435d7132d6c71e0da3ef20a38b0a91b0412e341e4"
     },
     {
       "path": "src/lib/business-dashboard.ts",
@@ -1160,7 +1172,7 @@
     },
     {
       "path": "src/lib/employee-portal.ts",
-      "sha256": "1788d38941ec7145d6f4ab1541ee658e077fa719b5833a623450465e63de94c6"
+      "sha256": "2d7fe5ba1c044b3865156ab7285efe5af64f48f9046aa32074fa25624f4fb963"
     },
     {
       "path": "src/lib/financial-report-excel.ts",
@@ -1260,11 +1272,11 @@
     },
     {
       "path": "src/lib/outlet-schedule-data.ts",
-      "sha256": "7137b6c2805d09418ad0dbf48eb78fd7d89dba49cf407f2c26d633f0c8b9716e"
+      "sha256": "c4684b8269fae35b2849c1f209a98c9b4155eda3274b29a5da6c3cb396aae638"
     },
     {
       "path": "src/lib/outlet-schedule-status.ts",
-      "sha256": "e379613e8d90056a61b160ffcd9a4232b40c951f914beb1d3be5cddf6ef1d751"
+      "sha256": "db657c05ee426b27a65e1d8baf464ae753d3f3a443bb317b1eb7e94c0ffe700b"
     },
     {
       "path": "src/lib/outlet-settings.ts",
@@ -1284,7 +1296,7 @@
     },
     {
       "path": "src/lib/payroll.ts",
-      "sha256": "f92173e1d8c51c3684af272a8dac00929133caa61667c8b80797f58c78165f1e"
+      "sha256": "db3ea98a0fdcd1dbaceb460bb0bdec00f86d5b8eca654a074aa160680a7c86f0"
     },
     {
       "path": "src/lib/permissions.ts",
@@ -1340,7 +1352,7 @@
     },
     {
       "path": "src/lib/regular-schedules.ts",
-      "sha256": "6d13e44a976ecfb208b71c11961dae584ee9e288d45d6ff50725320d96b82165"
+      "sha256": "daaf2cdb4b86583db1d9ce16043565ea2ce16901dac4fd7d8cd6997d1c9e6cac"
     },
     {
       "path": "src/lib/request-origin.ts",
@@ -1352,11 +1364,11 @@
     },
     {
       "path": "src/lib/sale-service.ts",
-      "sha256": "c7e61f5b2ce7b22dda500642e92bb5ca1d7571e54485bb56de7c4edd70b319ca"
+      "sha256": "93c812355dc48c94147c5bb904b0674e2e45a8773ed7761846e6cacde92b933f"
     },
     {
       "path": "src/lib/schedules.ts",
-      "sha256": "a472d9d3d80e0e34945b4df36421df6ac6067e3c0b51b8188b1d8c0c9c31f67a"
+      "sha256": "b2330bd776991b813ed56ad8caad8ccaefa991dea05c20ba098577dd6bf04202"
     },
     {
       "path": "src/lib/security.ts",
@@ -1372,7 +1384,7 @@
     },
     {
       "path": "src/lib/share-schedule.ts",
-      "sha256": "078b28b7c54b4f2223d228a43746f12684a709043f0796294382d231be09b083"
+      "sha256": "fa81fe7fed772ebd6893d2202a159c085d3795c83ddf9d7f4197b1e1f62e4e6b"
     },
     {
       "path": "src/lib/stock-return-service.ts",

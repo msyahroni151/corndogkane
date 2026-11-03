@@ -14,6 +14,7 @@ import {
 } from "@/lib/placements";
 import { timeLabel } from "@/lib/schedules";
 import { FormDialog } from "@/components/form-dialog";
+import { DeleteScheduleForm } from "@/components/delete-schedule-form";
 import { ScheduleForm } from "@/components/schedule-form";
 import { UiIcon } from "@/components/ui-icon";
 import type { Prisma } from "@/generated/prisma/client";
@@ -294,7 +295,7 @@ export default async function Schedules({
                       <span
                         className={`rounded-full px-2 py-1 font-semibold ${row.status === "LIBUR" ? "bg-rose-50 text-rose-700" : row.status === "STANBY" ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}
                       >
-                        {row.status}
+                        {row.status === "STANBY" ? "STANDBY" : row.status}
                       </span>
                     </td>
                     <td className="px-4 py-4">
@@ -322,23 +323,34 @@ export default async function Schedules({
                     </td>
                     <td className="px-4 py-4">{row.notes || "—"}</td>
                     <td className="px-4 py-4">
-                      <FormDialog title={`Ubah jadwal · ${displayDate(row.date)}`} trigger="Edit">
-                        <ScheduleForm
-                          edit={{
-                            id: row.id,
-                            name: row.employeeName,
-                            role: row.role,
-                            status: row.status,
-                            shift: row.shift || "S1",
-                            outletId: row.outletId || "",
-                            startTime: timeLabel(row.startMinutes),
-                            endTime: timeLabel(row.endMinutes),
-                            notes: row.notes || "",
-                          }}
-                          successRoute={successRoute}
-                          outlets={outlets.map((o) => ({ id: o.id, name: o.name }))}
-                        />
-                      </FormDialog>
+                      <div className="flex items-center gap-2">
+                        <FormDialog title={`Ubah jadwal · ${displayDate(row.date)}`} trigger="Edit">
+                          <ScheduleForm
+                            edit={{
+                              id: row.id,
+                              version: row.updatedAt.toISOString(),
+                              name: row.employeeName,
+                              role: row.role,
+                              status: row.status,
+                              shift: row.shift || "S1",
+                              outletId: row.outletId || "",
+                              startTime: timeLabel(row.startMinutes),
+                              endTime: timeLabel(row.endMinutes),
+                              notes: row.notes || "",
+                            }}
+                            successRoute={successRoute}
+                            outlets={outlets.map((o) => ({ id: o.id, name: o.name }))}
+                          />
+                        </FormDialog>
+                        <FormDialog title="Hapus jadwal" trigger="Hapus" danger>
+                          <DeleteScheduleForm
+                            id={row.id}
+                            version={row.updatedAt.toISOString()}
+                            name={row.employeeName}
+                            date={displayDate(row.date)}
+                          />
+                        </FormDialog>
+                      </div>
                     </td>
                   </tr>
                 ))}

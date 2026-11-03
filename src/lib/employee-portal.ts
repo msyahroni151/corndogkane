@@ -1,3 +1,4 @@
+import { isWorkingSchedule } from "@/lib/schedules";
 import { parseCivilDate, todayWib } from "@/lib/placements";
 export const portalTabs = [
   { key: "", label: "Beranda", icon: "dashboard" },
@@ -53,7 +54,7 @@ export function portalWindow(
   kind: string,
   now = new Date(),
 ) {
-  if (s.status !== "KERJA" || s.startMinutes === null || s.endMinutes === null)
+  if (!isWorkingSchedule(s.status) || s.startMinutes === null || s.endMinutes === null)
     throw Error("Absensi memerlukan jadwal kerja dengan jam masuk dan pulang yang lengkap.");
   const midnight = s.date.getTime() - 7 * 3600000,
     start = midnight + s.startMinutes * 60000,

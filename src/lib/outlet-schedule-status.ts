@@ -1,3 +1,4 @@
+import { isWorkingSchedule } from "@/lib/schedules";
 export type OutletSchedulePeriod = {
   openDays: number;
   totalDays: number;
@@ -38,7 +39,7 @@ export function outletSchedulePeriods(
     if (
       !row.outletId ||
       !result[row.outletId] ||
-      row.status !== "KERJA" ||
+      !isWorkingSchedule(row.status) ||
       row.role === "CREW_GUDANG" ||
       row.date < from ||
       row.date > to

@@ -1,3 +1,4 @@
+import { isWorkingSchedule } from "@/lib/schedules";
 import SearchForm from "next/form";
 import Link from "next/link";
 import Image from "next/image";
@@ -568,7 +569,7 @@ export default async function Page({
               }
               note={
                 todaySchedule
-                  ? todaySchedule.status === "KERJA"
+                  ? isWorkingSchedule(todaySchedule.status)
                     ? clock(todaySchedule.startMinutes) + " - " + clock(todaySchedule.endMinutes)
                     : "Status sesuai jadwal hari ini"
                   : "Periksa Jadwal Saya atau hubungi admin"
@@ -607,14 +608,14 @@ export default async function Page({
               {todaySchedule ? (
                 <>
                   <p className="font-semibold">
-                    {todaySchedule.status === "KERJA"
+                    {isWorkingSchedule(todaySchedule.status)
                       ? todaySchedule.outletName || todaySchedule.location
                       : todaySchedule.status === "LIBUR"
                         ? "Libur"
                         : "Standby"}
                   </p>
                   <p className="text-sm">
-                    {todaySchedule.status === "KERJA" ? (
+                    {isWorkingSchedule(todaySchedule.status) ? (
                       <>
                         {clock(todaySchedule.startMinutes)} - {clock(todaySchedule.endMinutes)} |{" "}
                         {todaySchedule.attendance
@@ -811,7 +812,7 @@ export default async function Page({
           <div className="grid gap-4 sm:grid-cols-3">
             <Stat
               label="Jadwal kerja"
-              value={schedules.filter((s) => s.status === "KERJA").length + " hari"}
+              value={schedules.filter((s) => isWorkingSchedule(s.status)).length + " hari"}
               note="Pada periode terpilih"
               icon="calendar"
             />
@@ -861,7 +862,7 @@ export default async function Page({
                 clock(s.attendance?.checkInMinutes, s.attendance?.checkInNextDay),
                 clock(s.attendance?.checkOutMinutes, s.attendance?.checkOutNextDay),
                 s.attendance?.checkInMinutes != null ? summary.lateMinutes + " menit" : "-",
-                s.status !== "KERJA"
+                !isWorkingSchedule(s.status)
                   ? s.status
                   : s.attendance
                     ? attendanceLabels[s.attendance.status]

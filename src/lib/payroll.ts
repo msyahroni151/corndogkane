@@ -80,7 +80,7 @@ export function payrollLines(
       rate,
       base: Math.round(summary.paidUnits * rate),
       backup: day.role === "BACKUP" && summary.paidUnits > 0 ? backupRate : 0,
-      standby: day.role === "BACKUP" && day.status === "STANBY" && date >= "2026-10-02" ? 50000 : 0,
+      standby: !isWarehouse(day.role) && day.status === "STANBY" ? 50000 : 0,
       solo,
       fine: summary.lateFine,
       validation: summary.validation,

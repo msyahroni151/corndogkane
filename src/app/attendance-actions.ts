@@ -1,4 +1,5 @@
 "use server";
+import { isWorkingSchedule } from "@/lib/schedules";
 import { attendanceDateError } from "@/lib/attendance-date";
 import { todayWib } from "@/lib/placements";
 import { requireAccess } from "@/lib/auth";
@@ -80,7 +81,7 @@ export async function saveAttendance(_: FormState, form: FormData): Promise<Form
           invalid(
             "Absensi periode ini sudah menjadi arsip payroll dibayar dan tidak dapat diubah.",
           );
-        if (schedule.status !== "KERJA")
+        if (!isWorkingSchedule(schedule.status))
           invalid("Absensi jam hanya untuk jadwal KERJA. Libur/standby mengikuti jadwal.");
         if (schedule.role === "BACKUP" && status === "HADIR" && !schedule.outletId)
           invalid("Atur outlet backup di Jadwal harian sebelum mencatat kehadiran.");

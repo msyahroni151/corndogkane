@@ -27,7 +27,7 @@ export default async function PosPage({
     db.schedule.findMany({
       where: {
         date: parseCivilDate(today),
-        status: "KERJA",
+        status: { in: ["KERJA", "OPENINGAN"] },
         ...(!canManage ? { employeeId: user.employeeId || "NONE" } : {}),
       },
       select: { outletId: true, employeeId: true },

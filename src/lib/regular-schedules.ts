@@ -18,13 +18,13 @@ export function parseRegularSchedule(form: FormData) {
   const assignments: {
     outletId: string;
     date: Date;
-    status: "KERJA" | "STANBY";
+    status: "KERJA" | "STANBY" | "OPENINGAN";
     holiday: boolean;
     periodEnd: Date;
   }[] = [];
   const occupied = new Set<number>();
   outlets.forEach((outlet, index) => {
-    if (typeof outlet !== "string" || !outlet.trim())
+    if (typeof outlet !== "string" || (!outlet.trim() && statuses[index] !== "STANBY"))
       throw Error(`Pilih outlet pada periode ${index + 1}.`);
     const start = parseCivilDate(String(starts[index]).trim()),
       end = parseCivilDate(String(ends[index]).trim()),
@@ -33,8 +33,8 @@ export function parseRegularSchedule(form: FormData) {
       throw Error(
         `Periode ${index + 1} maksimal 31 hari dan tanggal selesai tidak boleh sebelum mulai.`,
       );
-    if (status !== "KERJA" && status !== "STANBY")
-      throw Error(`Pilih status Kerja atau Stanby pada periode ${index + 1}.`);
+    if (status !== "KERJA" && status !== "STANBY" && status !== "OPENINGAN")
+      throw Error(`Pilih status Kerja, Standby, atau Openingan pada periode ${index + 1}.`);
     for (let date = new Date(start); date <= end; date.setUTCDate(date.getUTCDate() + 1)) {
       if (occupied.has(date.getTime()))
         throw Error("Periode reguler tidak boleh bertumpang tindih untuk karyawan yang sama.");

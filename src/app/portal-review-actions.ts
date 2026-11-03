@@ -1,4 +1,5 @@
 "use server";
+import { isWorkingSchedule } from "@/lib/schedules";
 import { revalidatePath } from "next/cache";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
@@ -90,7 +91,7 @@ export async function reviewPortalRequest(_: FormState, f: FormData): Promise<Fo
                 },
               });
             else
-              for (const s of working.filter((s) => s.status === "KERJA"))
+              for (const s of working.filter((s) => isWorkingSchedule(s.status)))
                 await tx.attendance.create({
                   data: {
                     scheduleId: s.id,
@@ -112,7 +113,7 @@ export async function reviewPortalRequest(_: FormState, f: FormData): Promise<Fo
             });
             if (
               s.employeeId !== capture.employeeId ||
-              s.status !== "KERJA" ||
+              !isWorkingSchedule(s.status) ||
               s.updatedAt.toISOString() !== capture.scheduleVersion ||
               (s.attendance?.updatedAt.toISOString() || "") !== capture.attendanceVersion
             )

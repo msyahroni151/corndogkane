@@ -1,3 +1,4 @@
+import { isWorkingSchedule } from "@/lib/schedules";
 import SearchForm from "next/form";
 import { LocalInput } from "@/components/local-input";
 import { AttendanceDateGate } from "@/components/attendance-date-gate";
@@ -175,14 +176,13 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
           a.checkInMinutes -
           (a.checkInNextDay ? 1440 : 0)
         : null;
-    const attendanceValidation =
-      row.status !== "KERJA"
-        ? row.status
-        : summary.paidUnits > 0
-          ? summary.lateMinutes > 0
-            ? "HADIR TERLAMBAT"
-            : "HADIR"
-          : summary.validation;
+    const attendanceValidation = !isWorkingSchedule(row.status)
+      ? row.status
+      : summary.paidUnits > 0
+        ? summary.lateMinutes > 0
+          ? "HADIR TERLAMBAT"
+          : "HADIR"
+        : summary.validation;
     const weekday = new Intl.DateTimeFormat("id-ID", { weekday: "long", timeZone: "UTC" })
       .format(row.date)
       .toUpperCase();
@@ -391,7 +391,7 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                       </td>
                     ))}
                     <td className="attendance-actions px-4 py-4">
-                      {row.status === "KERJA" ? (
+                      {isWorkingSchedule(row.status) ? (
                         <AttendanceDateGate
                           date={row.date.toISOString().slice(0, 10)}
                           today={today}

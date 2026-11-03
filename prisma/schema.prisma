@@ -206,6 +206,7 @@ enum ScheduleStatus {
   KERJA
   LIBUR
   STANBY
+  OPENINGAN
 }
 
 enum WarehouseShift {

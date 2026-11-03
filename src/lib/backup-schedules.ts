@@ -6,12 +6,12 @@ export function parseBackupAssignments(form: FormData) {
   if (!outlets.length || outlets.length !== dates.length)
     throw Error("Tambahkan minimal satu pasangan outlet dan tanggal jaga.");
   if (statuses.length !== dates.length)
-    throw Error("Pilih status Kerja atau Stanby pada setiap tanggal jaga.");
+    throw Error("Pilih status Kerja, Standby, atau Openingan pada setiap tanggal jaga.");
   const assignments = outlets.map((outlet, index) => {
     if (
       typeof outlet !== "string" ||
       typeof dates[index] !== "string" ||
-      !outlet.trim() ||
+      (!outlet.trim() && statuses[index] !== "STANBY") ||
       !String(dates[index]).trim()
     )
       throw Error("Lengkapi outlet dan tanggal jaga pada setiap baris.");
@@ -22,7 +22,7 @@ export function parseBackupAssignments(form: FormData) {
       throw Error(`Tanggal jaga pada baris ${index + 1} tidak valid.`);
     }
     const status = statuses[index];
-    if (status !== "KERJA" && status !== "STANBY")
+    if (status !== "KERJA" && status !== "STANBY" && status !== "OPENINGAN")
       throw Error(`Status jaga pada baris ${index + 1} tidak valid.`);
     return { outletId: outlet.trim(), date, status };
   });

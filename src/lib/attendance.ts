@@ -1,3 +1,4 @@
+import { isWorkingSchedule } from "@/lib/schedules";
 import { isWarehouse } from "@/lib/schedules";
 export const attendanceLabels = {
   HADIR: "Hadir",
@@ -16,7 +17,7 @@ export function attendanceSummary(
   schedule: { status: string; role: string; shift: string | null; startMinutes: number | null },
   attendance: AttendanceLike | null,
 ) {
-  if (schedule.status !== "KERJA")
+  if (!isWorkingSchedule(schedule.status))
     return { validation: schedule.status, paidUnits: 0, lateMinutes: 0, lateFine: 0 };
   if (!attendance) return { validation: "BELUM DIISI", paidUnits: 0, lateMinutes: 0, lateFine: 0 };
   if (["IZIN", "SAKIT", "ALPA"].includes(attendance.status))

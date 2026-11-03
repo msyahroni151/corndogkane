@@ -59,6 +59,7 @@ async function packageDemo() {
     "scripts/start-demo.cjs",
     "scripts/package-demo.cjs",
     "scripts/seed-demo.ts",
+    "scripts/verify-schedule-payroll.ts",
   ])
     await copy(relative);
   await fs.copyFile(path.join(root, ".gitignore"), path.join(destination, ".gitignore"));

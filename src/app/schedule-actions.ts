@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { employeeGroup, isBackupEmployee, parseCivilDate } from "@/lib/placements";
-import { isWarehouse, parseTime, shiftTimes } from "@/lib/schedules";
+import { isWarehouse, isWorkingSchedule, parseTime, shiftTimes } from "@/lib/schedules";
 import type { FormState } from "@/lib/form-state";
 import type { WarehouseShift, ScheduleStatus } from "@/generated/prisma/client";
 function invalid(message: string): never {
@@ -109,7 +109,9 @@ export async function createSchedules(_: FormState, form: FormData): Promise<For
         if (!employee || !group) invalid("Pilih karyawan outlet atau gudang yang aktif.");
         const warehouse = group === "warehouse";
         if (warehouse && (requestedStatus === "STANBY" || standbyDates.length > 0))
-          invalid("Status Stanby berlaku untuk karyawan outlet. Gudang menggunakan status Kerja.");
+          invalid(
+            "Status Standby dan Openingan berlaku untuk karyawan outlet. Gudang menggunakan status Kerja.",
+          );
         if (
           await tx.payroll.findFirst({
             where: { employeeId, status: "PAID", startDate: { lte: end }, endDate: { gte: start } },
@@ -300,7 +302,9 @@ async function createOutletScheduleRows(
           invalid(
             "Sudah ada jadwal pada salah satu tanggal yang dipilih. Ubah melalui tombol Edit; jadwal lama tidak ditimpa.",
           );
-        const outletIds = [...new Set(assignments.map((row) => row.outletId))].sort();
+        const outletIds = [
+          ...new Set(assignments.map((row) => row.outletId).filter(Boolean)),
+        ].sort();
         for (const id of outletIds)
           await tx.$executeRaw`SELECT id FROM outlets WHERE id=${id} FOR SHARE`;
         const outlets = await tx.outlet.findMany({
@@ -321,7 +325,7 @@ async function createOutletScheduleRows(
         const schedules: Prisma.ScheduleCreateManyInput[] = [];
         for (const assignment of assignments) {
           const status = assignment.status;
-          const outlet = outlets.find((o) => o.id === assignment.outletId)!;
+          const outlet = outlets.find((o) => o.id === assignment.outletId);
           const covering = placements.filter(
             (p) => p.startDate <= assignment.date && p.endDate >= assignment.date,
           );
@@ -334,7 +338,7 @@ async function createOutletScheduleRows(
             invalid(
               "Jenis penempatan pada tanggal jaga berbeda. Periksa riwayat penempatan karyawan terlebih dahulu.",
             );
-          if (regular && placement && placement.outletId !== outlet.id)
+          if (regular && outlet && placement?.outletId && placement.outletId !== outlet.id)
             invalid(
               "Outlet pada periode reguler berbeda dari penempatan yang sudah tersimpan. Sesuaikan riwayat penempatan terlebih dahulu; data lama tidak ditimpa.",
             );
@@ -350,11 +354,11 @@ async function createOutletScheduleRows(
                 role,
                 startDate: assignment.date,
                 endDate: placementEnd,
-                outletId: regular ? outlet.id : null,
-                outletName: regular ? outlet.name : null,
-                areaId: outlet.areaId,
-                areaName: outlet.area.name,
-                areaColor: outlet.area.color,
+                outletId: regular ? (outlet?.id ?? null) : null,
+                outletName: regular ? (outlet?.name ?? null) : null,
+                areaId: outlet?.areaId ?? null,
+                areaName: outlet?.area.name ?? null,
+                areaColor: outlet?.area.color ?? null,
                 createdById: userId,
               },
             });
@@ -364,9 +368,9 @@ async function createOutletScheduleRows(
           let off = assignment.holiday,
             startMinutes: number | null = null,
             endMinutes: number | null = null;
-          if (!off && status === "KERJA") {
+          if (!off && isWorkingSchedule(status)) {
             try {
-              const daily = outletHoursForDate(outlet.operatingHours, assignment.date);
+              const daily = outletHoursForDate(outlet!.operatingHours, assignment.date);
               off = daily.closed;
               if (!off) {
                 startMinutes = daily.startMinutes;
@@ -376,7 +380,7 @@ async function createOutletScheduleRows(
               invalid((e as Error).message);
             }
           }
-          const working = !off && status === "KERJA";
+          const working = !off && isWorkingSchedule(status);
           schedules.push({
             employeeId,
             employeeName: employee.employeeCode || employee.fullName,
@@ -386,10 +390,10 @@ async function createOutletScheduleRows(
             areaName: placement.areaName,
             areaColor: placement.areaColor,
             location: placement.location,
-            outletId: off ? null : outlet.id,
-            outletName: off ? null : outlet.name,
-            outletDailyRate: working ? outlet.dailyRate : null,
-            status: off ? "LIBUR" : (status as "KERJA" | "STANBY"),
+            outletId: off ? null : (outlet?.id ?? null),
+            outletName: off ? null : (outlet?.name ?? null),
+            outletDailyRate: working ? outlet!.dailyRate : null,
+            status: off ? "LIBUR" : (status as "KERJA" | "STANBY" | "OPENINGAN"),
             shift: null,
             startMinutes,
             endMinutes,
@@ -446,16 +450,21 @@ export async function updateSchedule(_: FormState, form: FormData): Promise<Form
           })
         )
           invalid("Jadwal periode ini sudah menjadi arsip payroll dibayar.");
+        if (record.updatedAt.toISOString() !== get("version"))
+          invalid("Jadwal sudah berubah. Tutup popup dan muat ulang sebelum mengubahnya.");
+        if (await tx.portalCapture.findFirst({ where: { scheduleId: record.id } }))
+          invalid("Jadwal sudah memiliki bukti absensi portal dan tidak dapat diubah.");
         if (record.attendance)
           invalid(
             "Jadwal sudah memiliki absensi. Perubahan jadwal ditahan agar rekapan kehadiran tetap konsisten.",
           );
         const status = get("status");
-        if (!["KERJA", "LIBUR", "STANBY"].includes(status)) invalid("Status jadwal tidak valid.");
-        if (status === "STANBY" && isWarehouse(record.role))
-          invalid("Status Stanby berlaku untuk karyawan outlet.");
+        if (!["KERJA", "LIBUR", "STANBY", "OPENINGAN"].includes(status))
+          invalid("Status jadwal tidak valid.");
+        if (["STANBY", "OPENINGAN"].includes(status) && isWarehouse(record.role))
+          invalid("Status Standby dan Openingan berlaku untuk karyawan outlet.");
         if (get("notes").length > 2000) invalid("Catatan maksimal 2000 karakter.");
-        const working = status === "KERJA",
+        const working = isWorkingSchedule(status),
           warehouse = isWarehouse(record.role);
         let startMinutes: number | null = null,
           endMinutes: number | null = null,
@@ -473,7 +482,8 @@ export async function updateSchedule(_: FormState, form: FormData): Promise<Form
                 where: { id: get("outletId") },
                 include: { area: true },
               });
-              if (!outlet?.active || !outlet.area.active) invalid("Pilih outlet kerja yang aktif.");
+              if (!outlet?.active || outlet.closed || !outlet.area.active)
+                invalid("Pilih outlet kerja yang aktif.");
               outletId = outlet.id;
               outletName = outlet.name;
               outletDailyRate =
@@ -498,7 +508,7 @@ export async function updateSchedule(_: FormState, form: FormData): Promise<Form
             invalid((e as Error).message);
           }
         }
-        if (status === "STANBY") {
+        if (status === "STANBY" && get("outletId")) {
           const outlet = await tx.outlet.findUnique({
             where: { id: get("outletId") },
             include: { area: true },
@@ -528,7 +538,68 @@ export async function updateSchedule(_: FormState, form: FormData): Promise<Form
   } catch (e) {
     return failure(e);
   }
-  revalidatePath("/jadwal");
-  revalidatePath("/absensi");
+  refreshSchedulePages();
   return { success: "Jadwal diperbarui." };
+}
+
+function refreshSchedulePages() {
+  for (const path of [
+    "/jadwal",
+    "/absensi",
+    "/payroll",
+    "/penempatan",
+    "/menu-utama/dashboard",
+    "/portal-karyawan",
+    "/pos",
+  ])
+    revalidatePath(path);
+}
+export async function deleteSchedule(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("jadwal");
+  const id = String(form.get("id") || ""),
+    version = String(form.get("version") || "");
+  try {
+    await getPrisma().$transaction(
+      async (tx) => {
+        const initial = await tx.schedule.findUnique({ where: { id } });
+        if (!initial) invalid("Jadwal tidak ditemukan atau sudah dihapus.");
+        await tx.$executeRaw`SELECT id FROM employees WHERE id=${initial.employeeId} FOR UPDATE`;
+        await tx.$executeRaw`SELECT id FROM schedules WHERE id=${id} FOR UPDATE`;
+        const record = await tx.schedule.findUnique({
+          where: { id },
+          include: { attendance: true },
+        });
+        if (!record) invalid("Jadwal tidak ditemukan atau sudah dihapus.");
+        if (record.updatedAt.toISOString() !== version)
+          invalid("Jadwal sudah berubah. Tutup popup dan muat ulang sebelum menghapusnya.");
+        if (
+          await tx.payroll.findFirst({
+            where: {
+              employeeId: record.employeeId,
+              status: "PAID",
+              startDate: { lte: record.date },
+              endDate: { gte: record.date },
+            },
+          })
+        )
+          invalid("Jadwal sudah masuk payroll dibayar dan tidak dapat dihapus.");
+        if (record.attendance || (await tx.portalCapture.findFirst({ where: { scheduleId: id } })))
+          invalid(
+            "Jadwal sudah memiliki absensi atau bukti absensi portal dan tidak dapat dihapus.",
+          );
+        if (
+          await tx.saleTransaction.findFirst({
+            where: { crewId: record.employeeId, date: record.date },
+          })
+        )
+          invalid("Jadwal sudah memiliki transaksi penjualan dan tidak dapat dihapus.");
+        await tx.schedule.delete({ where: { id } });
+      },
+      { timeout: 10000 },
+    );
+  } catch (e) {
+    return failure(e);
+  }
+  refreshSchedulePages();
+  return { success: "Jadwal berhasil dihapus." };
 }

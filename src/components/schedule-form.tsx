@@ -4,13 +4,14 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSchedules, updateSchedule } from "@/app/schedule-actions";
 import { useCloseFormDialog } from "@/components/form-dialog";
-import { isWarehouse, shiftLabels } from "@/lib/schedules";
+import { isWarehouse, isWorkingSchedule, shiftLabels } from "@/lib/schedules";
 import type { FormState } from "@/lib/form-state";
 
 type EmployeeChoice = { id: string; name: string; group: "outlet" | "warehouse"; backup: boolean };
 type OutletChoice = { id: string; name: string };
 type Edit = {
   id: string;
+  version: string;
   name: string;
   role: string;
   status: string;
@@ -138,12 +139,12 @@ function CreateScheduleForm({
               <div key={row.key} className="flex items-end gap-2">
                 <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.7fr)]">
                   <label className="field">
-                    Pilih Outlet *
+                    Pilih Outlet {row.status === "STANBY" ? "(opsional)" : "*"}
                     <select
                       name="backupOutletId"
                       aria-label={`Pilih Outlet ${index + 1}`}
                       value={row.outletId}
-                      required
+                      required={row.status !== "STANBY"}
                       onChange={(e) =>
                         setBackupRows((old) =>
                           old.map((r) =>
@@ -191,7 +192,8 @@ function CreateScheduleForm({
                       }
                     >
                       <option value="KERJA">Kerja</option>
-                      <option value="STANBY">Stanby</option>
+                      <option value="STANBY">Standby</option>
+                      <option value="OPENINGAN">Openingan</option>
                     </select>
                   </label>
                 </div>
@@ -235,11 +237,11 @@ function CreateScheduleForm({
               <div key={row.key} className="flex items-end gap-2">
                 <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   <label className="field min-w-0">
-                    Pilih Outlet *
+                    Pilih Outlet {row.status === "STANBY" ? "(opsional)" : "*"}
                     <select
                       name="regularOutletId"
                       aria-label={`Pilih Outlet Reguler ${index + 1}`}
-                      required
+                      required={row.status !== "STANBY"}
                       value={row.outletId}
                       onChange={(e) =>
                         setRegularRows((old) =>
@@ -309,7 +311,8 @@ function CreateScheduleForm({
                       }
                     >
                       <option value="KERJA">Kerja</option>
-                      <option value="STANBY">Stanby</option>
+                      <option value="STANBY">Standby</option>
+                      <option value="OPENINGAN">Openingan</option>
                     </select>
                   </label>
                 </div>
@@ -471,7 +474,7 @@ function CreateScheduleForm({
                   }
                 >
                   <option value="LIBUR">Libur</option>
-                  {!warehouse && !backup && <option value="STANBY">Stanby</option>}
+                  {!warehouse && !backup && <option value="STANBY">Standby</option>}
                 </select>
               </label>
               <button
@@ -511,17 +514,11 @@ function CreateScheduleForm({
             tutup menjadi LIBUR untuk jadwal Kerja.
           </div>
         )}
-        {!warehouse && !backup && regularRows.some((r) => r.status === "STANBY") && (
+        {!warehouse && (
           <p className="text-xs text-slate-500">
-            Status Stanby berlaku untuk seluruh periode pada baris tersebut dan tidak memiliki jam
-            kerja. Tanggal libur khusus tetap disimpan sebagai LIBUR.
-          </p>
-        )}
-        {(backup ? backupRows.some((row) => row.status === "STANBY") : status === "STANBY") && (
-          <p className="text-xs text-slate-500">
-            Pilih tanggal standby pada baris tanggal di atas. Tanggal lainnya tetap Kerja; libur
-            khusus tetap menjadi LIBUR. Standby tidak memiliki jam kerja. Uang standby mengikuti
-            ketentuan payroll crew backup.
+            Standby boleh tanpa outlet dan dibayar Rp50.000 per hari. Jika jadi bertugas, ubah
+            jadwal hari tersebut ke Kerja dan pilih outlet; payroll mengikuti tarif outlet tanpa
+            uang standby. Openingan mengikuti jam dan tarif outlet seperti Kerja.
           </p>
         )}
       </fieldset>
@@ -551,7 +548,7 @@ function DailyScheduleForm({
     status: edit.status,
     shift: edit.shift || "S1",
     outletId: edit.outletId,
-    timeMode: "manual",
+    timeMode: edit.startTime && edit.endTime ? "manual" : "outlet",
     startTime: edit.startTime,
     endTime: edit.endTime,
     notes: edit.notes,
@@ -569,26 +566,42 @@ function DailyScheduleForm({
       className="panel p-6"
     >
       <input name="id" type="hidden" value={edit.id} />
+      <input name="version" type="hidden" value={edit.version} />
       <p className="mb-5 text-sm font-semibold">{edit.name}</p>
+      {!warehouse && (
+        <p className="mb-5 text-xs text-slate-500">
+          Standby: Rp50.000 per hari, outlet opsional. Jika jadi masuk, pilih Kerja dan outlet yang
+          dijaga agar payroll memakai tarif outlet tanpa uang standby.
+        </p>
+      )}
       <fieldset disabled={pending} className="grid gap-5 sm:grid-cols-2">
         <label className="field">
           Status jadwal
           <select
             name="status"
             value={draft.status}
-            onChange={(e) => change("status", e.target.value)}
+            onChange={(e) => {
+              change("status", e.target.value);
+              if (!isWorkingSchedule(edit.status) && isWorkingSchedule(e.target.value))
+                change("timeMode", "outlet");
+            }}
           >
             <option value="KERJA">Kerja</option>
             <option value="LIBUR">Libur</option>
-            {!warehouse && <option value="STANBY">Stanby</option>}
+            {!warehouse && (
+              <>
+                <option value="STANBY">Standby</option>
+                <option value="OPENINGAN">Openingan</option>
+              </>
+            )}
           </select>
         </label>
-        {!warehouse && (draft.status === "KERJA" || draft.status === "STANBY") && (
+        {!warehouse && (isWorkingSchedule(draft.status) || draft.status === "STANBY") && (
           <label className="field">
-            Outlet kerja *
+            Outlet kerja {draft.status === "STANBY" ? "(opsional)" : "*"}
             <select
               name="outletId"
-              required
+              required={draft.status !== "STANBY"}
               value={draft.outletId}
               onChange={(e) => change("outletId", e.target.value)}
             >
@@ -601,7 +614,7 @@ function DailyScheduleForm({
             </select>
           </label>
         )}
-        {draft.status === "KERJA" &&
+        {isWorkingSchedule(draft.status) &&
           (warehouse ? (
             <label className="field">
               Shift gudang *

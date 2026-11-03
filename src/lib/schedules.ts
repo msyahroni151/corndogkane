@@ -23,3 +23,8 @@ export function shiftTimes(shift: string) {
   if (shift === "FULL") return { startMinutes: 480, endMinutes: 0 };
   throw new Error("Pilih shift gudang yang valid.");
 }
+
+/** Outlet opening shifts use the same attendance and pay rules as work shifts. */
+export function isWorkingSchedule(status: string) {
+  return status === "KERJA" || status === "OPENINGAN";
+}

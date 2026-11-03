@@ -1,3 +1,4 @@
+import { isWorkingSchedule } from "@/lib/schedules";
 import { timeLabel } from "@/lib/schedules";
 export type ShareRow = {
   id: string;
@@ -49,7 +50,11 @@ export function shareWeeks(data: ShareScheduleData, scope: string): ShareWeek[] 
   for (const row of data.rows) {
     if (row.homeAreaId && !areas.some((a) => a.id === row.homeAreaId))
       areas.push({ id: row.homeAreaId, name: row.homeAreaName || "Area sebelumnya" });
-    if (row.status === "KERJA" && row.outletId && !outlets.some((o) => o.id === row.outletId))
+    if (
+      isWorkingSchedule(row.status) &&
+      row.outletId &&
+      !outlets.some((o) => o.id === row.outletId)
+    )
       outlets.push({
         id: row.outletId,
         name: row.outletName || "Outlet sebelumnya",
@@ -94,7 +99,9 @@ export function shareWeeks(data: ShareScheduleData, scope: string): ShareWeek[] 
           standby: names("STANBY"),
           unassigned: days.map((date) =>
             entries
-              .filter((r) => r.date === date && r.status === "KERJA" && !r.outletId && home(r))
+              .filter(
+                (r) => r.date === date && isWorkingSchedule(r.status) && !r.outletId && home(r),
+              )
               .map((r) => r.name),
           ),
           outlets: outlets
@@ -105,10 +112,11 @@ export function shareWeeks(data: ShareScheduleData, scope: string): ShareWeek[] 
               cells: days.map((date) =>
                 entries
                   .filter(
-                    (r) => r.date === date && r.status === "KERJA" && r.outletId === outlet.id,
+                    (r) =>
+                      r.date === date && isWorkingSchedule(r.status) && r.outletId === outlet.id,
                   )
                   .map((r) => ({
-                    name: r.name,
+                    name: r.name + (r.status === "OPENINGAN" ? " (Openingan)" : ""),
                     hours:
                       r.startMinutes === null || r.endMinutes === null
                         ? "Jam belum diatur"
