@@ -1,7 +1,7 @@
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { parseSalesCsv, type SalesCsvRow } from "@/lib/outlet-sales-csv";
 import { getPrisma } from "@/lib/db";
-import { canRecordOutletCrew } from "@/lib/outlet-operations";
+import { canImportOutletCrew } from "@/lib/outlet-operations";
 import { InputError, saveOutletOperation } from "@/lib/outlet-operation-write";
 import { BonusSyncError } from "@/lib/outlet-bonus-ledger";
 import { SaleError } from "@/lib/sale-input";
@@ -28,7 +28,7 @@ function match<T extends { id: string }>(
     throw Error(
       found.length
         ? label + " ambigu. Gunakan ID atau kode dari Referensi Outlet & Crew."
-        : label + " tidak ditemukan atau tidak aktif: " + value + ".",
+        : label + " tidak ditemukan atau tidak memenuhi syarat: " + value + ".",
     );
   return found[0];
 }
@@ -41,7 +41,6 @@ export async function prepareSalesImport(db: LookupDb, csv: string) {
       select: { id: true, name: true, nameCode: true },
     }),
     db.employee.findMany({
-      where: { active: true },
       select: {
         id: true,
         employeeCode: true,
@@ -52,7 +51,7 @@ export async function prepareSalesImport(db: LookupDb, csv: string) {
       },
     }),
   ]);
-  const crew = employees.filter(canRecordOutletCrew),
+  const crew = employees.filter(canImportOutletCrew),
     rows: Resolved[] = [],
     seen = new Set<string>();
   for (const row of parsed.rows)
@@ -79,7 +78,8 @@ export async function prepareSalesImport(db: LookupDb, csv: string) {
         outletId: outlet.id,
         crewId: employee.id,
         outletName: outlet.name,
-        crewName: employee.employeeCode || employee.fullName,
+        crewName:
+          (employee.employeeCode || employee.fullName) + (employee.active ? "" : " (nonaktif)"),
       });
     } catch (error) {
       errors.push({
@@ -140,7 +140,7 @@ export async function importSalesCsv(csv: string, userId: string) {
             { ...row, date: row.date, version: null, salesMode: "TOTAL" },
             userId,
             tx,
-            true,
+            { createOnly: true, allowInactiveCrew: true },
           );
         } catch (error) {
           if (

@@ -3,7 +3,7 @@ import { hasPermission } from "@/lib/permissions";
 import { getPrisma } from "@/lib/db";
 import { parseCivilDate } from "@/lib/placements";
 import { csvHeaders, encodeCsv, salesCsvTemplate, salesCsvValues } from "@/lib/outlet-sales-csv";
-import { canRecordOutletCrew, operationalProducts, snapshotItems } from "@/lib/outlet-operations";
+import { canImportOutletCrew, operationalProducts, snapshotItems } from "@/lib/outlet-operations";
 import { prepareSalesImport, importSalesCsv } from "@/lib/outlet-sales-csv-service";
 import { InputError } from "@/lib/outlet-operation-write";
 import { revalidatePath } from "next/cache";
@@ -40,7 +40,6 @@ export async function GET(request: Request) {
         select: { id: true, name: true, nameCode: true },
       }),
       db.employee.findMany({
-        where: { active: true },
         orderBy: { fullName: "asc" },
         select: {
           id: true,
@@ -54,9 +53,11 @@ export async function GET(request: Request) {
     ]);
     return download(
       encodeCsv([
-        ["jenis", "id", "kode", "nama"],
-        ...outlets.map((o) => ["OUTLET", o.id, o.nameCode, o.name]),
-        ...crew.filter(canRecordOutletCrew).map((e) => ["CREW", e.id, e.employeeCode, e.fullName]),
+        ["jenis", "id", "kode", "nama", "status"],
+        ...outlets.map((o) => ["OUTLET", o.id, o.nameCode, o.name, "Aktif"]),
+        ...crew
+          .filter(canImportOutletCrew)
+          .map((e) => ["CREW", e.id, e.employeeCode, e.fullName, e.active ? "Aktif" : "Nonaktif"]),
       ]),
       "referensi-outlet-crew.csv",
     );

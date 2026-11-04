@@ -112,6 +112,10 @@ function ImportSalesCsv({ onSaved }: { onSaved: () => void }) {
         Satu baris per outlet per tanggal. Gunakan ID, kode, atau nama outlet dan crew yang
         terdaftar. Maksimal {csvImportLimit} baris per file.
       </p>
+      <p className="text-xs leading-5 text-slate-500">
+        Impor historis menerima crew aktif maupun nonaktif yang sudah terdaftar. Status karyawan
+        tetap dipertahankan; crew nonaktif ditandai pada pratinjau dan referensi.
+      </p>
       <div className="flex flex-wrap gap-2">
         <a href={endpoint + "?mode=template"} className="button-secondary" download>
           Unduh Template CSV

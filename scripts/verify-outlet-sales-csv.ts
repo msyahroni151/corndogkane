@@ -6,7 +6,7 @@ import {
   parseSalesCsv,
   salesCsvValues,
 } from "../src/lib/outlet-sales-csv";
-import { operationalProducts } from "../src/lib/outlet-operations";
+import { operationalProducts, canRecordOutletCrew, canImportOutletCrew } from "../src/lib/outlet-operations";
 const raw: Record<string, string | number> = {
   tanggal: "2026-11-01",
   outlet: "OUTLET A",
@@ -96,3 +96,20 @@ assert.deepEqual(parseSalesCsv(commaLegacy).errors, []);
 console.log(
   "PASS: Excel delimiter hint and semicolon columns, legacy comma files, and both explicit separator declarations supported.",
 );
+
+const formerCrew = {
+  active: false,
+  employeeCode: "FORMER",
+  fullName: "Former Crew",
+  department: "OPERASIONAL OUTLET",
+  position: "CREW OUTLET",
+};
+assert.equal(canImportOutletCrew(formerCrew), true);
+assert.equal(canRecordOutletCrew(formerCrew), false);
+assert.equal(canRecordOutletCrew({ ...formerCrew, active: true }), true);
+for (const position of ["CREW OUTLET", "CREW BACKUP", "AREA SUPERVISOR"])
+  assert.equal(canImportOutletCrew({ ...formerCrew, position }), true);
+assert.equal(canImportOutletCrew({ ...formerCrew, employeeCode: " " }), false);
+assert.equal(canImportOutletCrew({ ...formerCrew, position: "ADMIN" }), false);
+assert.equal(canImportOutletCrew({ ...formerCrew, department: "OPERASIONAL GUDANG" }), false);
+console.log("PASS: historical crew eligibility accepts inactive outlet crew without relaxing manual input or role/code requirements.");

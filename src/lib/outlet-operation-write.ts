@@ -10,6 +10,7 @@ import {
   operationalPayments,
   snapshotItems,
   canRecordOutletCrew,
+  canImportOutletCrew,
 } from "@/lib/outlet-operations";
 export class InputError extends Error {
   constructor(
@@ -24,8 +25,11 @@ export async function saveOutletOperation(
   body: Record<string, unknown>,
   userId: string,
   transaction?: Prisma.TransactionClient,
-  createOnly = false,
+  options: { createOnly?: boolean; allowInactiveCrew?: boolean } = {},
 ) {
+  const createOnly = options.createOnly === true;
+  // This exception is supplied by the CSV service, never from request body fields.
+  const allowInactiveCrew = createOnly && options.allowInactiveCrew === true;
   const str = (key: string) => (typeof body[key] === "string" ? body[key].trim() : "");
   const salesMode = body.salesMode === "POS" ? "POS" : "TOTAL";
   const outletId = str("outletId"),
@@ -81,11 +85,15 @@ export async function saveOutletOperation(
     if (!outlet || !outlet.active || outlet.closed)
       throw new InputError("Outlet tidak aktif atau tidak ditemukan.");
     const crew = await tx.employee.findUnique({ where: { id: crewId } });
-    if (!crew || (!crew.active && crew.id !== existing?.crewId))
+    if (!crew || (!crew.active && !allowInactiveCrew && crew.id !== existing?.crewId))
       throw new InputError("Pilih crew aktif yang terdaftar.");
-    if (!canRecordOutletCrew(crew) && crew.id !== existing?.crewId)
+    if (
+      !(allowInactiveCrew ? canImportOutletCrew(crew) : canRecordOutletCrew(crew)) &&
+      crew.id !== existing?.crewId
+    )
       throw new InputError(
-        "Pilih CREW OUTLET, CREW BACKUP, atau AREA SUPERVISOR yang aktif dan memiliki kode nama.",
+        "Pilih CREW OUTLET, CREW BACKUP, atau AREA SUPERVISOR yang memiliki kode nama" +
+          (allowInactiveCrew ? "." : " dan masih aktif."),
       );
     const old = snapshotItems(existing?.items);
     const items = Object.fromEntries(

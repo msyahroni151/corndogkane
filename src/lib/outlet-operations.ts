@@ -82,14 +82,19 @@ export function operationalCash(row: {
   );
 }
 
-export function canRecordOutletCrew(employee: {
+type OutletCrew = {
   active: boolean;
   employeeCode: string | null;
   position: string;
   department: string;
-}) {
+};
+export function canRecordOutletCrew(employee: OutletCrew) {
+  return employee.active && canImportOutletCrew(employee);
+}
+/** Historical CSV imports retain employees who have since left the company. */
+export function canImportOutletCrew(employee: OutletCrew) {
   const code = employee.employeeCode?.trim().toUpperCase();
-  if (!employee.active || !code) return false;
+  if (!code) return false;
   if (employee.position.trim().toUpperCase() === "AREA SUPERVISOR") return true;
   return (
     employee.department.trim().toUpperCase() === "OPERASIONAL OUTLET" &&
