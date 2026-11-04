@@ -1,4 +1,6 @@
 "use server";
+import { saveScheduleOutlet, ScheduleOutletError } from "@/lib/schedule-outlet";
+import { refreshScheduleViews } from "@/lib/schedule-revalidation";
 import { parseRegularSchedule } from "@/lib/regular-schedules";
 import { parseBackupSchedule } from "@/lib/backup-schedules";
 import type { Prisma } from "@/generated/prisma/client";
@@ -602,4 +604,20 @@ export async function deleteSchedule(_: FormState, form: FormData): Promise<Form
   }
   refreshSchedulePages();
   return { success: "Jadwal berhasil dihapus." };
+}
+
+export async function updateScheduleOutlet(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("jadwal");
+  try {
+    await saveScheduleOutlet(getPrisma(), form);
+  } catch (error) {
+    return {
+      error:
+        error instanceof ScheduleOutletError
+          ? error.message
+          : "Outlet belum tersimpan. Periksa koneksi lalu coba kembali.",
+    };
+  }
+  refreshScheduleViews();
+  return { success: "Outlet diperbarui di jadwal dan rekap absensi." };
 }

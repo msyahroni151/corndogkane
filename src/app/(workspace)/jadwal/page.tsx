@@ -79,6 +79,7 @@ export default async function Schedules({
     valid
       ? db.schedule.findMany({
           where,
+          include: { attendance: { select: { id: true } } },
           orderBy: [{ date: "asc" }, { areaName: "asc" }, { employeeName: "asc" }],
           take: 500,
         })
@@ -329,6 +330,9 @@ export default async function Schedules({
                             edit={{
                               id: row.id,
                               version: row.updatedAt.toISOString(),
+                              hasAttendance: !!row.attendance,
+                              outletName: row.outletName || "",
+                              date: displayDate(row.date),
                               name: row.employeeName,
                               role: row.role,
                               status: row.status,

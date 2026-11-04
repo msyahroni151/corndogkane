@@ -1,4 +1,5 @@
 "use client";
+import { ScheduleOutletForm } from "@/components/schedule-outlet-form";
 import { LocalInput } from "@/components/local-input";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,9 @@ type OutletChoice = { id: string; name: string };
 type Edit = {
   id: string;
   version: string;
+  hasAttendance: boolean;
+  outletName: string;
+  date: string;
   name: string;
   role: string;
   status: string;
@@ -33,6 +37,21 @@ export function ScheduleForm({
   edit,
   successRoute = "/jadwal?tersimpan=1",
 }: Props) {
+  if (edit?.hasAttendance && !isWarehouse(edit.role) && isWorkingSchedule(edit.status))
+    return (
+      <ScheduleOutletForm
+        scope="schedule"
+        outlets={outlets}
+        record={{
+          scheduleId: edit.id,
+          scheduleVersion: edit.version,
+          name: edit.name,
+          date: edit.date,
+          outletId: edit.outletId,
+          outletName: edit.outletName,
+        }}
+      />
+    );
   return edit ? (
     <DailyScheduleForm edit={edit} outlets={outlets} successRoute={successRoute} />
   ) : (

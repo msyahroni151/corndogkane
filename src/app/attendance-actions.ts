@@ -4,7 +4,13 @@ import { attendanceDateError } from "@/lib/attendance-date";
 import { todayWib } from "@/lib/placements";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
-import { revalidatePath } from "next/cache";
+import { refreshScheduleViews } from "@/lib/schedule-revalidation";
+import {
+  changeLockedScheduleOutlet,
+  lockSchedule,
+  saveScheduleOutlet,
+  ScheduleOutletError,
+} from "@/lib/schedule-outlet";
 import { isWarehouse, parseTime } from "@/lib/schedules";
 import { attendanceLabels } from "@/lib/attendance";
 import type { FormState } from "@/lib/form-state";
@@ -53,15 +59,9 @@ export async function saveAttendance(_: FormState, form: FormData): Promise<Form
   try {
     await getPrisma().$transaction(
       async (tx) => {
-        const initial = await tx.schedule.findUnique({ where: { id: get("scheduleId") } });
-        if (!initial) invalid("Jadwal tidak ditemukan.");
-        await tx.$executeRaw`SELECT id FROM employees WHERE id=${initial.employeeId} FOR UPDATE`;
-        await tx.$executeRaw`SELECT id FROM schedules WHERE id=${get("scheduleId")} FOR UPDATE`;
-        const schedule = await tx.schedule.findUnique({
-          where: { id: get("scheduleId") },
-          include: { attendance: true },
-        });
-        if (!schedule) invalid("Jadwal tidak ditemukan.");
+        const schedule = await lockSchedule(tx, get("scheduleId"));
+        if (schedule.updatedAt.toISOString() !== get("scheduleVersion"))
+          invalid("Jadwal sudah berubah. Tutup popup dan muat ulang sebelum menyimpan absensi.");
         const dateError = attendanceDateError(
           schedule.date,
           todayWib(),
@@ -83,8 +83,7 @@ export async function saveAttendance(_: FormState, form: FormData): Promise<Form
           );
         if (!isWorkingSchedule(schedule.status))
           invalid("Absensi jam hanya untuk jadwal KERJA. Libur/standby mengikuti jadwal.");
-        if (schedule.role === "BACKUP" && status === "HADIR" && !schedule.outletId)
-          invalid("Atur outlet backup di Jadwal harian sebelum mencatat kehadiran.");
+
         if (status === "SETENGAH_HARI" && !isWarehouse(schedule.role))
           invalid("Setengah hari hanya untuk karyawan gudang.");
         if (status === "SETENGAH_HARI" && checkInMinutes === null)
@@ -93,6 +92,13 @@ export async function saveAttendance(_: FormState, form: FormData): Promise<Form
           invalid(
             "Absensi sudah diperbarui dari halaman lain. Tutup popup dan muat ulang untuk melihat data terbaru.",
           );
+        const warehouse = isWarehouse(schedule.role);
+        const outletId = form.has("outletId") ? get("outletId") : schedule.outletId || "";
+        if (warehouse && get("outletId")) invalid("Absensi gudang tidak menggunakan outlet.");
+        if (!warehouse && status === "HADIR" && !outletId)
+          invalid("Pilih outlet bertugas sebelum mencatat kehadiran.");
+        if (!warehouse && outletId !== (schedule.outletId || ""))
+          await changeLockedScheduleOutlet(tx, schedule, outletId, get("scheduleVersion"));
         const data = {
           status: status as AttendanceStatus,
           checkInMinutes,
@@ -113,12 +119,28 @@ export async function saveAttendance(_: FormState, form: FormData): Promise<Form
   } catch (e) {
     return {
       error:
-        e instanceof Error && e.name === "AttendanceValidation"
+        e instanceof Error &&
+        (e.name === "AttendanceValidation" || e instanceof ScheduleOutletError)
           ? e.message
           : "Absensi belum tersimpan. Periksa koneksi database lalu coba lagi.",
     };
   }
-  revalidatePath("/absensi");
-  revalidatePath("/jadwal");
+  refreshScheduleViews();
   return { success: "Absensi tersimpan." };
+}
+
+export async function updateAttendanceOutlet(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("absensi");
+  try {
+    await saveScheduleOutlet(getPrisma(), form);
+  } catch (error) {
+    return {
+      error:
+        error instanceof ScheduleOutletError
+          ? error.message
+          : "Outlet belum tersimpan. Periksa koneksi lalu coba kembali.",
+    };
+  }
+  refreshScheduleViews();
+  return { success: "Outlet diperbarui di jadwal dan rekap absensi." };
 }

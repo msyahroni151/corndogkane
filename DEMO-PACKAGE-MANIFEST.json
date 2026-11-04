@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-11-04T09:23:28.804Z",
+  "createdAt": "2026-11-04T10:35:00.105Z",
   "containsRealData": false,
   "files": [
     {
@@ -28,7 +28,7 @@
     },
     {
       "path": "docs/jadwal-dan-produksi.md",
-      "sha256": "027f7098f51b18d56933e534908f81e244c77e0debd36eded153fc620cec0c45"
+      "sha256": "fa88599fec1138f11a54f59be751b07d5d12c6874e292ea4fb6274d4b7784876"
     },
     {
       "path": "docs/resep-produksi.md",
@@ -344,7 +344,7 @@
     },
     {
       "path": "src/app/(workspace)/absensi/page.tsx",
-      "sha256": "3125748cf6fae6e29fb77309ebf9a996a1a85aed808f6865c3e82572d51e38a2"
+      "sha256": "088d2b4e0e955597998aed83106e17a2ac6716aab4b06be3de079ca48eec5fe4"
     },
     {
       "path": "src/app/(workspace)/admin-malam/master-akun/page.tsx",
@@ -404,7 +404,7 @@
     },
     {
       "path": "src/app/(workspace)/jadwal/page.tsx",
-      "sha256": "edbdf131de632d84ad035697f9be4f699ce81941cfbd838ddad6d2f4a063a38a"
+      "sha256": "8df6024e164aebc1d3365d2313028a76086fbe9a8e35d0b463d44d4eee8a7fb9"
     },
     {
       "path": "src/app/(workspace)/karyawan/[id]/page.tsx",
@@ -556,7 +556,7 @@
     },
     {
       "path": "src/app/attendance-actions.ts",
-      "sha256": "232e29c741fd38dca10c728c767902d4439c191d494786f46946a84fb8675d94"
+      "sha256": "e5d51be65077ad6ab73ad6beafb8d38f3ce410f6cc79c94ea646c3e46d86fad5"
     },
     {
       "path": "src/app/auth-actions.ts",
@@ -676,7 +676,7 @@
     },
     {
       "path": "src/app/schedule-actions.ts",
-      "sha256": "464c093bd45591c136ad838def3c764164bb7a1afc2dd019899e7d70ad1d69bd"
+      "sha256": "f9033556a91df012904b312448b7edf0953b3978043f5837a858f449888f0d8e"
     },
     {
       "path": "src/app/settlement-actions.ts",
@@ -700,7 +700,7 @@
     },
     {
       "path": "src/components/attendance-form.tsx",
-      "sha256": "725da574282219f915e8cb46d870b587921a977a434d03dfc5a9895e2a1730a2"
+      "sha256": "b9f5356826565bd31a9a76d0c421e2a9050dc956309afead2e6a319a3cd7fa9c"
     },
     {
       "path": "src/components/auth-form.tsx",
@@ -1060,7 +1060,11 @@
     },
     {
       "path": "src/components/schedule-form.tsx",
-      "sha256": "4f1f26a044006436ab569c7a955ef707ddd704f00a8a3413f2c46c81be88384b"
+      "sha256": "7fe658537789404baeea0cc6b841ad9f1e5b2fe9c1fd4bbb637c222f1330a475"
+    },
+    {
+      "path": "src/components/schedule-outlet-form.tsx",
+      "sha256": "d14e4760dedcf92b82a07d71e0a409746bc609b3c9fa019d00e322cdc0bd7f24"
     },
     {
       "path": "src/components/section-navigation.tsx",
@@ -1393,6 +1397,14 @@
     {
       "path": "src/lib/sale-service.ts",
       "sha256": "93c812355dc48c94147c5bb904b0674e2e45a8773ed7761846e6cacde92b933f"
+    },
+    {
+      "path": "src/lib/schedule-outlet.ts",
+      "sha256": "50a912acfb2a1c980584d63f76df41dc2f0c946e8234e22ba5652e4fde31bcaf"
+    },
+    {
+      "path": "src/lib/schedule-revalidation.ts",
+      "sha256": "04a2eb512628a7ab6445e3bff942aa37b57e2f3942a2d1ad99b6a46e26f57750"
     },
     {
       "path": "src/lib/schedules.ts",

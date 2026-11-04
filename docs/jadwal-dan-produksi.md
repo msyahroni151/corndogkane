@@ -10,3 +10,7 @@
 - Delete Area hanya berhasil untuk area tanpa relasi. Area yang masih dipakai tetap dipertahankan.
 
 Data lokal dan online, termasuk seluruh data dummy uji coba, harus dipertahankan. Pengujian mutasi memakai database sementara terpisah. Backup dan sidik jari baris lama disimpan privat di luar paket deploy.
+
+- Popup check-in/check-out menampilkan outlet pada jadwal dan pilihan Outlet bertugas. Jika outlet diganti saat menyimpan absensi, jadwal harian dan absensi tersimpan dalam transaksi yang sama.
+- Kolom Outlet di Rekap Absensi menyediakan Ubah outlet tanpa harus mengisi jam absen. Edit di Jadwal setelah absensi terisi membuka koreksi khusus outlet. Kedua halaman memakai record jadwal yang sama.
+- Koreksi khusus outlet mempertahankan jam jadwal, check-in/check-out, dan riwayat penempatan. Tarif harian untuk perhitungan payroll mengikuti outlet baru. Payroll dibayar, perubahan dari popup lama, outlet tidak aktif, dan bukti portal yang masih menunggu pemeriksaan dilindungi.

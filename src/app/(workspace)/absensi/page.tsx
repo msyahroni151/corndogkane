@@ -10,6 +10,7 @@ import { timeLabel, isWarehouse } from "@/lib/schedules";
 import { attendanceLabels, attendanceSummary } from "@/lib/attendance";
 import { attendanceColumns } from "@/lib/attendance-columns";
 import { FormDialog } from "@/components/form-dialog";
+import { ScheduleOutletForm } from "@/components/schedule-outlet-form";
 import { AttendanceForm } from "@/components/attendance-form";
 import { AttendanceExport } from "@/components/attendance-export";
 import { UiIcon, type IconName } from "@/components/ui-icon";
@@ -58,7 +59,7 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
         ? { role: { in: ["REGULER", "BACKUP"] } }
         : {}),
   };
-  const [rows, count, areas, employees, summaryRows] = await Promise.all([
+  const [rows, count, areas, employees, summaryRows, outlets] = await Promise.all([
     valid
       ? db.schedule.findMany({
           where,
@@ -100,6 +101,11 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
           },
         })
       : [],
+    db.outlet.findMany({
+      where: { active: true, closed: false, area: { active: true } },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
   const present = summaryRows.filter((r) => attendanceSummary(r, r.attendance).paidUnits > 0);
   const actualEnd = (r: (typeof summaryRows)[number]) =>
@@ -361,6 +367,30 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                           >
                             {value}
                           </span>
+                        ) : i === 4 ? (
+                          <div className="flex flex-col items-start gap-2">
+                            <span>{value}</span>
+                            {!isWarehouse(row.role) && isWorkingSchedule(row.status) && (
+                              <FormDialog
+                                title="Ubah outlet bertugas"
+                                trigger="Ubah outlet"
+                                compact
+                              >
+                                <ScheduleOutletForm
+                                  scope="attendance"
+                                  outlets={outlets}
+                                  record={{
+                                    scheduleId: row.id,
+                                    scheduleVersion: row.updatedAt.toISOString(),
+                                    name: row.employeeName,
+                                    date: displayDate(row.date),
+                                    outletId: row.outletId || "",
+                                    outletName: row.outletName || "",
+                                  }}
+                                />
+                              </FormDialog>
+                            )}
+                          </div>
                         ) : i === 12 ? (
                           <div className="flex flex-col items-start gap-1.5">
                             <span
@@ -402,9 +432,14 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                           >
                             <AttendanceForm
                               warehouse={isWarehouse(row.role)}
+                              outlets={outlets}
                               successRoute={"/absensi?" + filter.toString()}
                               record={{
                                 scheduleId: row.id,
+                                scheduleVersion: row.updatedAt.toISOString(),
+                                outletId: row.outletId || "",
+                                outletName: row.outletName || "",
+                                location: row.location || "",
                                 name: row.employeeName,
                                 date: displayDate(row.date),
                                 status: a?.status || "HADIR",

@@ -1,4 +1,5 @@
 "use client";
+import { OutletSelect, type ScheduleOutletChoice } from "@/components/schedule-outlet-form";
 import { LocalInput } from "@/components/local-input";
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -9,10 +10,15 @@ import type { FormState } from "@/lib/form-state";
 export function AttendanceForm({
   record,
   warehouse,
+  outlets,
   successRoute,
 }: {
   record: {
     scheduleId: string;
+    scheduleVersion: string;
+    outletId: string;
+    outletName: string;
+    location: string;
     name: string;
     date: string;
     status: string;
@@ -24,6 +30,7 @@ export function AttendanceForm({
     version: string;
   };
   warehouse: boolean;
+  outlets: ScheduleOutletChoice[];
   successRoute: string;
 }) {
   const [draft, setDraft] = useState(record);
@@ -47,9 +54,34 @@ export function AttendanceForm({
     >
       <input type="hidden" name="scheduleId" value={record.scheduleId} />
       <input type="hidden" name="version" value={record.version} />
+      <input type="hidden" name="scheduleVersion" value={record.scheduleVersion} />
       <p className="font-semibold">{record.name}</p>
       <p className="mt-1 text-xs text-slate-500">{record.date}</p>
+      <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">
+        {warehouse ? "Lokasi bertugas" : "Outlet pada jadwal"}:{" "}
+        <strong>
+          {warehouse ? record.location || "Gudang" : record.outletName || "Belum diatur"}
+        </strong>
+      </p>
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
+        {!warehouse && (
+          <div className="sm:col-span-2">
+            <OutletSelect
+              outlets={outlets}
+              currentId={record.outletId}
+              currentName={record.outletName}
+              value={draft.outletId}
+              required={draft.status === "HADIR"}
+              disabled={pending}
+              onChange={(outletId) => setDraft((old) => ({ ...old, outletId }))}
+            />
+            <p className="mt-2 text-xs text-slate-500">
+              Outlet yang dipilih ikut tersimpan di jadwal. Jam jadwal tetap; tarif harian mengikuti
+              outlet jika diubah.
+            </p>
+          </div>
+        )}
+
         <label className="field sm:col-span-2">
           Status kehadiran
           <select
