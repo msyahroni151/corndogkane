@@ -1,5 +1,7 @@
 # CSV Penjualan Monitoring Outlet
 
+Unduhan CSV memakai titik koma dan petunjuk pemisah Excel agar kolom langsung terpisah ketika dibuka. File koma maupun titik koma tetap dapat diimpor.
+
 Buka MENU UTAMA → Monitoring Outlet. Tombol Ekspor CSV mengikuti periode, area, dan pencarian yang sedang diterapkan. Ekspor memuat rekap harian, bukan daftar struk per transaksi.
 
 Untuk data lama, pilih Impor CSV → Unduh Template CSV. Buka template di Excel, isi data, lalu simpan sebagai CSV UTF-8. Referensi Outlet & Crew menyediakan ID/kode/nama yang terdaftar. Kolom outlet dan crew wajib diisi; nama_outlet dan nama_crew hanya keterangan opsional.

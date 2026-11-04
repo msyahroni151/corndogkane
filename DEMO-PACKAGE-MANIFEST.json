@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-11-04T09:03:26.583Z",
+  "createdAt": "2026-11-04T09:23:28.804Z",
   "containsRealData": false,
   "files": [
     {
@@ -20,7 +20,7 @@
     },
     {
       "path": "docs/impor-ekspor-penjualan.csv.md",
-      "sha256": "01c43884eb8c05abec51b3a85dbc9e15240784553f81c73374bf432d2279c510"
+      "sha256": "227f9d6f68921e6965bd25b436b2f167fe14001929e8c825c8d061120805434d"
     },
     {
       "path": "docs/integrasi-penjualan-outlet.md",
@@ -336,7 +336,7 @@
     },
     {
       "path": "scripts/verify-outlet-sales-csv.ts",
-      "sha256": "dff159c009a7713ade3fb3a7d7c8291030fe5ec433ab843f5a55e5e2d9322256"
+      "sha256": "2ba8c936175db000b636254680ad86c28b513175aee071c6427007e98e95eab4"
     },
     {
       "path": "scripts/verify-schedule-payroll.ts",
@@ -1292,7 +1292,7 @@
     },
     {
       "path": "src/lib/outlet-sales-csv.ts",
-      "sha256": "062206167850d358ffdac3fc7d46466c57a3b695fb690510a8464e9183c26d57"
+      "sha256": "6efd74688c5b4f17be126c0bd18435851b6bc1d3550a2143c1ead2da3c92539b"
     },
     {
       "path": "src/lib/outlet-sales.ts",

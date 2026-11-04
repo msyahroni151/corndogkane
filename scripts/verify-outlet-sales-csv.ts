@@ -78,3 +78,21 @@ assert.equal(operationalProducts.length, 10);
 console.log(
   "PASS: Indonesian dates and money, historical/zero prices, quantity/payment/total validation, manual-only import, BOM/CRLF/semicolon/quoted multiline CSV, formula-safe exports, malformed/oversized imports rejected.",
 );
+
+assert.ok(make().startsWith("\uFEFFsep=;\r\ntanggal;outlet;"));
+assert.deepEqual(readCsv("\uFEFFsep=;\r\na;b\r\n1;2\r\n"), [
+  ["a", "b"],
+  ["1", "2"],
+]);
+assert.deepEqual(readCsv("sep=,\na,b\n1,2"), [
+  ["a", "b"],
+  ["1", "2"],
+]);
+const commaLegacy =
+  csvHeaders.join(",") +
+  "\n" +
+  salesCsvValues({ ...raw, keterangan_pengeluaran: "Cash" }).join(",");
+assert.deepEqual(parseSalesCsv(commaLegacy).errors, []);
+console.log(
+  "PASS: Excel delimiter hint and semicolon columns, legacy comma files, and both explicit separator declarations supported.",
+);

@@ -21,10 +21,10 @@ export const csvHeaders = [
   "total_penjualan",
   "sumber_penjualan",
 ];
-/** UTF-8 BOM and CRLF for Excel; neutralize spreadsheet formulas in text cells. */
+/** Excel delimiter hint makes columns independent of Windows list-separator settings. */
 export function encodeCsv(rows: (string | number | null | undefined)[][]) {
   return (
-    "\uFEFF" +
+    "\uFEFFsep=;\r\n" +
     rows
       .map((row) =>
         row
@@ -33,7 +33,7 @@ export function encodeCsv(rows: (string | number | null | undefined)[][]) {
             if (typeof value === "string" && /^[=+@\-\t\r]/.test(text)) text = "'" + text;
             return /[",;\r\n]/.test(text) ? '"' + text.replaceAll('"', '""') + '"' : text;
           })
-          .join(","),
+          .join(";"),
       )
       .join("\r\n") +
     "\r\n"
@@ -43,8 +43,10 @@ export function readCsv(text: string): string[][] {
   text = text.replace(/^\uFEFF/, "");
   if (text.length > 2_000_000 || text.includes("\u0000"))
     throw Error("CSV maksimal 2 MB dan harus berupa teks UTF-8.");
+  const hint = /^sep=([,;])(?:\r\n|\r|\n|$)/i.exec(text);
+  if (hint) text = text.slice(hint[0].length);
   const first = text.split(/\r?\n/)[0] || "",
-    delimiter = first.split(";").length > first.split(",").length ? ";" : ",";
+    delimiter = hint?.[1] ?? (first.split(";").length > first.split(",").length ? ";" : ",");
   const rows: string[][] = [];
   let row: string[] = [],
     cell = "",
