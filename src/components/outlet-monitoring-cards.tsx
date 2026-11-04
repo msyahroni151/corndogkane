@@ -410,15 +410,32 @@ export function OutletMonitoringCards({
                   <span
                     className="monitor-status"
                     data-state={
-                      currentSales?.schedules?.[outlet.id]?.openDays === 0
+                      values[outlet.id]?.closedDays && !values[outlet.id]?.days
                         ? "closed"
-                        : currentSales?.schedules?.[outlet.id]
+                        : values[outlet.id]?.days || currentSales?.schedules?.[outlet.id]?.openDays
                           ? "open"
                           : "loading"
                     }
-                    title="Status mengikuti jadwal Kerja pada tanggal yang dipilih."
+                    title={
+                      values[outlet.id]?.closedDays
+                        ? "Status tutup harian yang dicatat pada periode ini."
+                        : values[outlet.id]?.days
+                          ? "Status berdasarkan rekap penjualan yang sudah tercatat."
+                          : "Status mengikuti jadwal Kerja pada tanggal yang dipilih."
+                    }
                   >
-                    <i /> {outletScheduleLabel(currentSales?.schedules?.[outlet.id])}
+                    <i />{" "}
+                    {values[outlet.id]?.closedDays
+                      ? !values[outlet.id]?.days
+                        ? "Tutup"
+                        : `${values[outlet.id].closedDays} hari tutup`
+                      : values[outlet.id]?.days
+                        ? period.start === period.end
+                          ? "Buka"
+                          : `Buka ${values[outlet.id].days} hari`
+                        : currentSales?.schedules?.[outlet.id]?.openDays === 0
+                          ? "Belum ada jadwal"
+                          : outletScheduleLabel(currentSales?.schedules?.[outlet.id])}
                   </span>
                 </div>
                 <div className="monitor-turnover">
@@ -426,9 +443,11 @@ export function OutletMonitoringCards({
                   <strong>{values[outlet.id] ? rupiah(values[outlet.id].total) : "—"}</strong>
                   <p>
                     {values[outlet.id]
-                      ? values[outlet.id].source === "manual"
-                        ? `Rekap manual · ${values[outlet.id].days} tanggal`
-                        : `${values[outlet.id].count} transaksi POS selesai`
+                      ? values[outlet.id].closedDays && !values[outlet.id].days
+                        ? "Outlet tutup · tidak ada penjualan"
+                        : values[outlet.id].source === "manual"
+                          ? `Rekap manual · ${values[outlet.id].days} tanggal`
+                          : `${values[outlet.id].count} transaksi POS selesai`
                       : `${unknown} · transaksi POS`}
                   </p>
                 </div>
@@ -452,7 +471,10 @@ export function OutletMonitoringCards({
                 <div className="monitor-card-meta">
                   <span>
                     <UiIcon name="people" size={15} />{" "}
-                    {values[outlet.id]?.crewNames?.join(", ") || "Crew belum diisi"}
+                    {values[outlet.id]?.crewNames?.join(", ") ||
+                      (values[outlet.id]?.closedDays
+                        ? "Tidak ada crew bertugas"
+                        : "Crew belum diisi")}
                   </span>
                   <span>
                     <UiIcon name="box" size={15} />{" "}
@@ -461,6 +483,11 @@ export function OutletMonitoringCards({
                       : "Stok mengikuti transaksi beresep"}
                   </span>
                 </div>
+                {!!values[outlet.id]?.closureNotes?.length && (
+                  <p className="px-4 pb-3 text-xs text-slate-600">
+                    {values[outlet.id].closureNotes?.join("; ")}
+                  </p>
+                )}
                 <details className="monitor-hours">
                   <summary>
                     <span className={!outlet.hours ? "monitor-needs-hours" : ""}>

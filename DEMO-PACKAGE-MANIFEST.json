@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-11-04T13:17:05.308Z",
+  "createdAt": "2026-11-04T14:04:57.207Z",
   "containsRealData": false,
   "files": [
     {
@@ -20,7 +20,7 @@
     },
     {
       "path": "docs/impor-ekspor-penjualan.csv.md",
-      "sha256": "9f32ae1f65cf8a7be34229bfffdb7d92cb74fe18414a76b68d6a669d70bafa8e"
+      "sha256": "83fa1eb5ac94def7e10e57de7c43cd29278cd31632e01c06ca8cfc0178f28a85"
     },
     {
       "path": "docs/integrasi-penjualan-outlet.md",
@@ -247,12 +247,16 @@
       "sha256": "3083d43aed1a1c290231e5190e93675e649fd3d6382a1706eef109d43b318c25"
     },
     {
+      "path": "prisma/migrations/20261104134559_outlet_daily_closures/migration.sql",
+      "sha256": "276918eaa177c255214798e25104dcd06c44c948306edd248f454c054b93609d"
+    },
+    {
       "path": "prisma/migrations/migration_lock.toml",
       "sha256": "99836963713b4f5b269ad49af0ed3d7b0b2e336115c2f92dc9ac683d139d0900"
     },
     {
       "path": "prisma/schema.prisma",
-      "sha256": "f7db434143c139118bbf311f2fc781c82242ebbde36090d3c139a01c6fc7d57c"
+      "sha256": "c84481f9cd43ec0648520f7dea4446bef60e5b809d39f4791074463059d548fb"
     },
     {
       "path": "public/corndog-kane-logo.png",
@@ -336,7 +340,7 @@
     },
     {
       "path": "scripts/verify-outlet-sales-csv.ts",
-      "sha256": "ad8eb79186a589ad0565ed7a0633555ba348b6319f1b469086636908c68aedc1"
+      "sha256": "a447ca458baaf01b794b0b961c89fb4ade2aeaef8065a108ee39459140202a3a"
     },
     {
       "path": "scripts/verify-schedule-payroll.ts",
@@ -516,19 +520,19 @@
     },
     {
       "path": "src/app/api/outlets/operations/csv/route.ts",
-      "sha256": "c5c29fd21890f6abc1a753aa7bb432d2eae470591933d69a773471d9d612d20c"
+      "sha256": "bcf307763d134366621a0977b66da84480ad2d2d259f717a2880adcbc6593a73"
     },
     {
       "path": "src/app/api/outlets/operations/recap/route.ts",
-      "sha256": "6744d3a663a7bc5666f4456519bb3a3e8a1029106e51ab6f923cf1938290754a"
+      "sha256": "b36633d3b63b62deb09ca83cd46e71d454a0dd7acd2c505c339f7cedfbca98fa"
     },
     {
       "path": "src/app/api/outlets/operations/route.ts",
-      "sha256": "4439d454136622b93078d488ec99a8d6aa57d394bfbc4c61ce6c8950653c56c8"
+      "sha256": "f9edc94d207ebe6abb7f0a3c2129040e75c17a533c9ff850c3efa832f72b5a12"
     },
     {
       "path": "src/app/api/outlets/sales/route.ts",
-      "sha256": "2cdb5c3e59579ece36925bb3490d99f73ab1b2b835fdf73f5d8e7d17594923e5"
+      "sha256": "305e527dfaa237867cc341645fed4b6d3dae733236df59eadb5e13b917c13a37"
     },
     {
       "path": "src/app/api/portal/attendance/route.ts",
@@ -883,6 +887,10 @@
       "sha256": "12ef546cd4f45214d084b11b93295aaaa2fec1d90eb47a71d137a3679dcd8002"
     },
     {
+      "path": "src/components/outlet-daily-status-form.tsx",
+      "sha256": "7af0f66478512279d4ab21d7ff68adbee980a2848d6fed2abca79923712f518b"
+    },
+    {
       "path": "src/components/outlet-dashboard-chart.tsx",
       "sha256": "bc1790c5b590e936d5e40ae3dbd7e05d7c04a1a4e43645f440f84db71485f2b2"
     },
@@ -920,7 +928,7 @@
     },
     {
       "path": "src/components/outlet-monitoring-cards.tsx",
-      "sha256": "1f2cf9046d493818b87fdce970ae989fee8fc9b75c72f44263a98d54ac83d942"
+      "sha256": "1a6fa10b7b9f0920a34196dd9a4f9aacc7e23324e55929468ee39846cc8d88c1"
     },
     {
       "path": "src/components/outlet-monitoring.css",
@@ -928,7 +936,7 @@
     },
     {
       "path": "src/components/outlet-operation-dialog.tsx",
-      "sha256": "b65e80f2295d21adda860880e63794321caf82a11d46a841b35c08f9c552ab97"
+      "sha256": "230693451ea419ee965934f684523aa0b88957be76462a8e9df208b5ac5ae290"
     },
     {
       "path": "src/components/outlet-owner-insights.tsx",
@@ -948,7 +956,7 @@
     },
     {
       "path": "src/components/outlet-sales-csv.tsx",
-      "sha256": "9649b3f9019a1181c6105ba1e76503d68ec6140ca59ae0c6ba6c4ca384310873"
+      "sha256": "4e62a7ecbedc73f49b1ec5b187a712b78d296f38e7e0c7aeac3bd669829b09d0"
     },
     {
       "path": "src/components/outlet-stock-forms.tsx",
@@ -1276,11 +1284,11 @@
     },
     {
       "path": "src/lib/outlet-operation-write.ts",
-      "sha256": "b720ef8510e553821412b418a0850342df8648dd76819838e46e3412a08ddd83"
+      "sha256": "1ed537517e964c8613c409961becfc9320fe773392506d40d5d12857b59f1e8f"
     },
     {
       "path": "src/lib/outlet-operations.ts",
-      "sha256": "9d0b6d8f08d8074fc02d48574e425b551276793f035350fd8e6c9152a62a670a"
+      "sha256": "462755e14cb7eb7d201357f75e81dc4f1d8c40a18a8a166237de26ac70068384"
     },
     {
       "path": "src/lib/outlet-recap-image.ts",
@@ -1288,19 +1296,19 @@
     },
     {
       "path": "src/lib/outlet-recap.ts",
-      "sha256": "f842898cfb0d42fbec3ec1065cebfd3a9115fc488f9d3fccaf3af94265a9487a"
+      "sha256": "b7dd6e46e0efe439c9000bb31557e93744d453c6f72d6b77e89e19da5c967be4"
     },
     {
       "path": "src/lib/outlet-sales-csv-service.ts",
-      "sha256": "131c74706ec33f18e6d295cc42117e883a50ce703fb44e70f3f77d76277e72c6"
+      "sha256": "0e13d96cda5f0ac910258a9d8315757d8302f7578eade2e7e72521ae75facb11"
     },
     {
       "path": "src/lib/outlet-sales-csv.ts",
-      "sha256": "6efd74688c5b4f17be126c0bd18435851b6bc1d3550a2143c1ead2da3c92539b"
+      "sha256": "2b104acd4a0ff605fd8c8da31d34bd85300a9d312a112a2baf747bd50ecd9290"
     },
     {
       "path": "src/lib/outlet-sales.ts",
-      "sha256": "78e40989759039cc1b50b20aa0ff04ee5836497cf97ede9a7faca013a27229ac"
+      "sha256": "bfb461353dbc27fb1a6787fb0e2f03c0934706ac21269df887a72f6d9f4a673d"
     },
     {
       "path": "src/lib/outlet-schedule-data.ts",
@@ -1396,7 +1404,7 @@
     },
     {
       "path": "src/lib/sale-service.ts",
-      "sha256": "93c812355dc48c94147c5bb904b0674e2e45a8773ed7761846e6cacde92b933f"
+      "sha256": "92823a1688866b4a3b19ae7eab6db926974bd90333e4368469ddd108a6122892"
     },
     {
       "path": "src/lib/schedule-outlet.ts",

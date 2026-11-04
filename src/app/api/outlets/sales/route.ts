@@ -117,6 +117,30 @@ export async function GET(request: Request) {
       stockPending: row.stockPending,
     };
   });
+  const closures = await getPrisma().outletDailyStatus.findMany({
+    where: {
+      closed: true,
+      date: { gte: parseCivilDate(start), lte: parseCivilDate(end) },
+      outletId: { in: local.map((o) => o.id) },
+    },
+  });
+  for (const day of closures) {
+    const value = (values[day.outletId] ||= {
+      source: "manual",
+      countKnown: true,
+      cashKnown: true,
+      total: 0,
+      count: 0,
+      cash: 0,
+      qris: 0,
+      online: 0,
+      expense: 0,
+      crewNames: [],
+      days: 0,
+    });
+    value.closedDays = (value.closedDays || 0) + 1;
+    value.closureNotes = [...new Set([...(value.closureNotes || []), day.notes].filter(Boolean))];
+  }
   return json({
     status: "connected",
     start,

@@ -51,6 +51,7 @@ model Employee {
 }
 
 model User {
+  outletDailyStatuses OutletDailyStatus[]
   scheduleAreaNotes ScheduleAreaNote[]
   createdProductionPlans ProductionPlan[] @relation("PlanCreator")
   updatedProductionPlans ProductionPlan[] @relation("PlanEditor")
@@ -147,6 +148,7 @@ model Area {
 }
 
 model Outlet {
+  dailyStatuses OutletDailyStatus[]
   sales SaleTransaction[]
   stockReturns StockReturn[]
   address        String?     @db.VarChar(500)
@@ -1129,4 +1131,21 @@ model ProductionPlan {
   updatedAt DateTime @updatedAt
   @@index([date,status])
   @@map("production_plans")
+}
+
+// Daily closures are separate from sales and never require a fictitious employee.
+model OutletDailyStatus {
+  id String @id @default(cuid())
+  outletId String
+  outlet Outlet @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  date DateTime @db.Date
+  closed Boolean @default(true)
+  notes String @default("") @db.VarChar(1000)
+  updatedById String
+  updatedBy User @relation(fields: [updatedById], references: [id], onDelete: Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([outletId, date])
+  @@index([date, closed])
+  @@map("outlet_daily_statuses")
 }

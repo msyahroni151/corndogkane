@@ -106,5 +106,45 @@ export async function GET(request: Request) {
       shopeefood: entry.shopeefood,
     };
   });
+  const closures = await getPrisma().outletDailyStatus.findMany({
+    where: { closed: true, date: { gte: from, lte: to } },
+    include: { outlet: { include: { area: { select: { name: true } } } } },
+    take: 10001,
+  });
+  if (rows.length + closures.length > 10000)
+    return json({ error: "Rekap melebihi 10.000 baris. Persempit periode." }, 400);
+  for (const entry of closures) {
+    const date = entry.date.toISOString().slice(0, 10);
+    rows.push({
+      id: entry.id,
+      reference: `TUTUP-${date.replaceAll("-", "")}-${entry.outletId}`,
+      date,
+      outletId: entry.outletId,
+      outletName: entry.outlet.name,
+      outletCode: entry.outlet.nameCode,
+      areaId: entry.outlet.areaId,
+      areaName: entry.outlet.area.name,
+      crewId: "",
+      crewCode: null,
+      crewName: "—",
+      trainingCrewName: null,
+      doughUsed: null,
+      expenseAmount: 0,
+      expenseNotes: null,
+      cashReceived: 0,
+      bonusAmount: 0,
+      quantities: Object.fromEntries(Object.keys(snapshotItems(null)).map((k) => [k, 0])),
+      totalGross: 0,
+      qris: 0,
+      gofood: 0,
+      grabfood: 0,
+      shopeefood: 0,
+      salesSource: "MANUAL",
+      hasManual: true,
+      operationalStatus: "TUTUP",
+      operationalNotes: entry.notes,
+    });
+  }
+  rows.sort((a, b) => b.date.localeCompare(a.date) || a.outletName.localeCompare(b.outletName));
   return json({ start, end, rows });
 }

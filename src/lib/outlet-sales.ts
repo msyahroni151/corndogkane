@@ -1,5 +1,7 @@
 export type OutletSales = {
   source?: "manual" | "pos" | "mixed" | "review";
+  closedDays?: number;
+  closureNotes?: string[];
   stockPending?: number;
   countKnown?: boolean;
   cashKnown?: boolean;

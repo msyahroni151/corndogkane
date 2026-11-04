@@ -2,7 +2,7 @@ import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { parseSalesCsv, type SalesCsvRow } from "@/lib/outlet-sales-csv";
 import { getPrisma } from "@/lib/db";
 import { canImportOutletCrew } from "@/lib/outlet-operations";
-import { InputError, saveOutletOperation } from "@/lib/outlet-operation-write";
+import { InputError, saveOutletOperation, saveOutletClosure } from "@/lib/outlet-operation-write";
 import { BonusSyncError } from "@/lib/outlet-bonus-ledger";
 import { SaleError } from "@/lib/sale-input";
 type Resolved = SalesCsvRow & {
@@ -63,23 +63,27 @@ export async function prepareSalesImport(db: LookupDb, csv: string) {
           (o) => o.name,
           "Outlet",
         ),
-        employee = match(
-          crew,
-          row.crew,
-          (e) => e.employeeCode,
-          (e) => e.fullName,
-          "Crew",
-        );
+        employee =
+          row.operationalStatus === "TUTUP"
+            ? null
+            : match(
+                crew,
+                row.crew,
+                (e) => e.employeeCode,
+                (e) => e.fullName,
+                "Crew",
+              );
       const identity = outlet.id + "|" + row.date;
       if (seen.has(identity)) throw Error("Outlet dan tanggal berulang di dalam file.");
       seen.add(identity);
       rows.push({
         ...row,
         outletId: outlet.id,
-        crewId: employee.id,
+        crewId: employee?.id || "",
         outletName: outlet.name,
-        crewName:
-          (employee.employeeCode || employee.fullName) + (employee.active ? "" : " (nonaktif)"),
+        crewName: employee
+          ? (employee.employeeCode || employee.fullName) + (employee.active ? "" : " (nonaktif)")
+          : "Tidak bertugas",
       });
     } catch (error) {
       errors.push({
@@ -98,9 +102,29 @@ export async function prepareSalesImport(db: LookupDb, csv: string) {
         select: { outletId: true, date: true },
       })
     : [];
+  const closures = rows.length
+    ? await db.outletDailyStatus.findMany({
+        where: {
+          OR: rows.map((row) => ({
+            outletId: row.outletId,
+            date: new Date(row.date + "T00:00:00Z"),
+          })),
+        },
+        select: { outletId: true, date: true, closed: true },
+      })
+    : [];
   const occupied = new Set(
     existing.map((r) => r.outletId + "|" + r.date.toISOString().slice(0, 10)),
   );
+  const dailyStatuses = new Map(
+    closures.map((r) => [r.outletId + "|" + r.date.toISOString().slice(0, 10), r]),
+  );
+  for (const row of rows) {
+    const identity = row.outletId + "|" + row.date;
+    const daily = dailyStatuses.get(identity);
+    // Reimporting an old file must never close a day an admin has explicitly reopened.
+    if (daily && (daily.closed || row.operationalStatus === "TUTUP")) occupied.add(identity);
+  }
   const fresh = rows.filter((row) => !occupied.has(row.outletId + "|" + row.date));
   return {
     rows,
@@ -112,6 +136,7 @@ export async function prepareSalesImport(db: LookupDb, csv: string) {
       date: row.date,
       outlet: row.outletName,
       crew: row.crewName,
+      operationalStatus: row.operationalStatus,
       total: row.totalGross,
       status: occupied.has(row.outletId + "|" + row.date) ? "Dilewati: sudah tercatat" : "Baru",
     })),
@@ -129,19 +154,32 @@ export async function importSalesCsv(csv: string, userId: string) {
       const current = await prepareSalesImport(tx, csv);
       if (current.errors.length)
         throw new InputError("Referensi berubah saat impor. Periksa pratinjau kembali.");
-      const employees = [...new Set(current.fresh.map((row) => row.crewId))].sort();
+      const employees = [...new Set(current.fresh.map((row) => row.crewId).filter(Boolean))].sort();
       if (employees.length)
         await tx.$executeRaw`SELECT id FROM employees WHERE id IN (${Prisma.join(employees)}) ORDER BY id FOR UPDATE`;
       for (const row of current.fresh.sort((a, b) =>
         (a.outletId + a.date).localeCompare(b.outletId + b.date),
       )) {
         try {
-          await saveOutletOperation(
-            { ...row, date: row.date, version: null, salesMode: "TOTAL" },
-            userId,
-            tx,
-            { createOnly: true, allowInactiveCrew: true },
-          );
+          if (row.operationalStatus === "TUTUP") {
+            await saveOutletClosure(
+              {
+                outletId: row.outletId,
+                date: row.date,
+                operationalStatus: "TUTUP",
+                operationalNotes: row.operationalNotes,
+              },
+              userId,
+              tx,
+              true,
+            );
+          } else
+            await saveOutletOperation(
+              { ...row, date: row.date, version: null, salesMode: "TOTAL" },
+              userId,
+              tx,
+              { createOnly: true, allowInactiveCrew: true },
+            );
         } catch (error) {
           if (
             error instanceof InputError ||

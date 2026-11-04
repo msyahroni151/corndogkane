@@ -11,6 +11,7 @@ type Preview = {
     date: string;
     outlet: string;
     crew: string;
+    operationalStatus: "BUKA" | "TUTUP";
     total: number;
     status: string;
   }[];
@@ -125,6 +126,8 @@ function ImportSalesCsv({ onSaved }: { onSaved: () => void }) {
         </a>
       </div>
       <p className="text-xs leading-5 text-slate-500">
+        Status operasional: BUKA atau TUTUP. Untuk TUTUP, kosongkan crew dan isi penjualan nol;
+        keterangan_operasional untuk alasan tutup. File lama dengan crew TUTUP tetap diterima.
         Tanggal: YYYY-MM-DD atau DD/MM/YYYY. Nominal rupiah: 2500 atau 2.500. Isi harga lama bila
         berbeda; harga kosong memakai harga rekap standar. Total penjualan dihitung dari jumlah ×
         harga. Kolom total boleh dikosongkan atau diisi untuk dicocokkan.
@@ -186,7 +189,15 @@ function ImportSalesCsv({ onSaved }: { onSaved: () => void }) {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr>
-                    {["Baris", "Tanggal", "Outlet", "Crew", "Omzet", "Status"].map((h) => (
+                    {[
+                      "Baris",
+                      "Tanggal",
+                      "Outlet",
+                      "Crew",
+                      "Operasional",
+                      "Omzet",
+                      "Hasil impor",
+                    ].map((h) => (
                       <th key={h} className="p-2">
                         {h}
                       </th>
@@ -200,6 +211,9 @@ function ImportSalesCsv({ onSaved }: { onSaved: () => void }) {
                       <td className="whitespace-nowrap p-2">{row.date}</td>
                       <td className="p-2">{row.outlet}</td>
                       <td className="p-2">{row.crew}</td>
+                      <td className="p-2">
+                        {row.operationalStatus === "TUTUP" ? "Tutup" : "Buka"}
+                      </td>
                       <td className="whitespace-nowrap p-2">{rupiah(row.total)}</td>
                       <td className="p-2">{row.status}</td>
                     </tr>

@@ -31,6 +31,13 @@ export async function postSale(
       if (input.source === "MANUAL_ADD" && !actor.canManage)
         throw new SaleError("Tambahan manual hanya dapat dicatat pengelola Monitoring Outlet.");
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${input.outletId + "|" + input.date},0))`;
+      const closure = await tx.outletDailyStatus.findUnique({
+        where: { outletId_date: { outletId: input.outletId, date: parseCivilDate(input.date) } },
+      });
+      if (closure?.closed)
+        throw new SaleError(
+          "Outlet tercatat TUTUP. Pengelola perlu membuka status outlet di Monitoring Outlet sebelum transaksi.",
+        );
       const [outlet, crew] = await Promise.all([
         tx.outlet.findUnique({
           where: { id: input.outletId },

@@ -1,5 +1,7 @@
 import { operationalCash } from "@/lib/outlet-operations";
 export type OutletRecapRow = {
+  operationalStatus?: "BUKA" | "TUTUP";
+  operationalNotes?: string;
   salesSource?: string;
   hasManual?: boolean;
   id: string;
@@ -27,6 +29,8 @@ export type OutletRecapRow = {
   shopeefood: number;
 };
 export const recapColumns = [
+  { key: "operationalStatus", label: "Status Operasional", group: "Identitas Rekap" },
+  { key: "operationalNotes", label: "Keterangan Operasional", group: "Identitas Rekap" },
   { key: "reference", label: "ID Rekap", group: "Identitas Rekap" },
   { key: "date", label: "Tanggal Operasional", group: "Identitas Rekap" },
   { key: "outletName", label: "Cabang", group: "Identitas Rekap" },
@@ -72,6 +76,8 @@ export const recapMoneyKeys = new Set<string>([
   "difference",
 ]);
 export function recapValue(row: OutletRecapRow, key: string): string | number | null {
+  if (key === "operationalStatus") return row.operationalStatus === "TUTUP" ? "Tutup" : "Buka";
+  if (key === "operationalNotes") return row.operationalNotes || null;
   if (key === "salesSource")
     return (
       {

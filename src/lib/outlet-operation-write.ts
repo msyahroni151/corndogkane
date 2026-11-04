@@ -70,6 +70,14 @@ export async function saveOutletOperation(
   );
   const write = async (tx: Prisma.TransactionClient) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${outletId + "|" + str("date")}, 0))`;
+    const closure = await tx.outletDailyStatus.findUnique({
+      where: { outletId_date: { outletId, date } },
+    });
+    if (closure?.closed)
+      throw new InputError(
+        "Outlet tercatat TUTUP pada tanggal ini. Ubah status menjadi Buka di Monitoring Outlet terlebih dahulu.",
+        409,
+      );
     const existing = await tx.outletOperation.findUnique({
       where: { outletId_date: { outletId, date } },
     });
@@ -240,6 +248,65 @@ export async function saveOutletOperation(
       });
       await syncOutletBonus(tx, saved, userId);
     }
+  };
+  if (transaction) await write(transaction);
+  else await getPrisma().$transaction(write);
+}
+
+/** Daily status writes share the sales lock, so a closure cannot race a transaction. */
+export async function saveOutletClosure(
+  body: Record<string, unknown>,
+  userId: string,
+  transaction?: Prisma.TransactionClient,
+  createOnly = false,
+) {
+  const outletId = typeof body.outletId === "string" ? body.outletId.trim() : "";
+  let date: Date;
+  try {
+    date = parseCivilDate(typeof body.date === "string" ? body.date : "");
+  } catch {
+    throw new InputError("Tanggal operasional tidak valid.");
+  }
+  if (!outletId) throw new InputError("Pilih outlet.");
+  if (body.operationalStatus !== "TUTUP" && body.operationalStatus !== "BUKA")
+    throw new InputError("Status operasional tidak valid.");
+  const notes = typeof body.operationalNotes === "string" ? body.operationalNotes.trim() : "";
+  if (notes.length > 1000) throw new InputError("Keterangan maksimal 1.000 karakter.");
+  const write = async (tx: Prisma.TransactionClient) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${outletId + "|" + date.toISOString().slice(0, 10)},0))`;
+    await tx.$executeRaw`SELECT id FROM outlets WHERE id=${outletId} FOR SHARE`;
+    const outlet = await tx.outlet.findUnique({
+      where: { id: outletId },
+      include: { area: { select: { active: true } } },
+    });
+    if (!outlet?.active || outlet.closed || !outlet.area.active)
+      throw new InputError("Outlet tidak aktif atau tidak ditemukan.");
+    const old = await tx.outletDailyStatus.findUnique({
+      where: { outletId_date: { outletId, date } },
+    });
+    if (createOnly && old)
+      throw new InputError("Status outlet dan tanggal ini sudah tercatat.", 409);
+    if (!createOnly && (old?.updatedAt.toISOString() || null) !== (body.closureVersion ?? null))
+      throw new InputError("Status outlet sudah berubah. Tutup dan buka kembali formulir.", 409);
+    if (body.operationalStatus === "BUKA") {
+      if (!old?.closed) throw new InputError("Outlet tidak sedang tercatat tutup.", 409);
+      await tx.outletDailyStatus.update({
+        where: { id: old.id },
+        data: { closed: false, updatedById: userId },
+      });
+      return;
+    }
+    const existing = await tx.outletOperation.findUnique({
+      where: { outletId_date: { outletId, date } },
+    });
+    if (existing)
+      throw new InputError(
+        "Sudah ada rekap atau transaksi penjualan pada tanggal ini. Data yang ada tidak diubah menjadi TUTUP.",
+        409,
+      );
+    const data = { closed: true, notes, updatedById: userId };
+    if (old) await tx.outletDailyStatus.update({ where: { id: old.id }, data });
+    else await tx.outletDailyStatus.create({ data: { ...data, outletId, date } });
   };
   if (transaction) await write(transaction);
   else await getPrisma().$transaction(write);

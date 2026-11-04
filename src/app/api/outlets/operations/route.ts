@@ -1,4 +1,4 @@
-import { InputError, saveOutletOperation } from "@/lib/outlet-operation-write";
+import { InputError, saveOutletOperation, saveOutletClosure } from "@/lib/outlet-operation-write";
 import { salesAmounts } from "@/lib/daily-sales";
 import { SaleError } from "@/lib/sale-input";
 import { revalidatePath } from "next/cache";
@@ -81,7 +81,17 @@ export async function GET(request: Request) {
     if (key) live[key] += row.total;
   }
 
+  const dailyStatus = await db.outletDailyStatus.findUnique({
+    where: { outletId_date: { outletId, date } },
+  });
   return json({
+    dailyStatus: dailyStatus
+      ? {
+          closed: dailyStatus.closed,
+          notes: dailyStatus.notes,
+          version: dailyStatus.updatedAt.toISOString(),
+        }
+      : null,
     liveSales: ledger.length ? live : null,
     dailyRate: outlet.dailyRate,
     outletName: outlet.name,
@@ -148,7 +158,8 @@ export async function POST(request: Request) {
     }
     if (!body || typeof body !== "object" || Array.isArray(body))
       throw new InputError("Data tidak valid.");
-    await saveOutletOperation(body, user.id);
+    if (body.action === "daily-status") await saveOutletClosure(body, user.id);
+    else await saveOutletOperation(body, user.id);
     for (const path of [
       "/bonus",
       "/payroll",

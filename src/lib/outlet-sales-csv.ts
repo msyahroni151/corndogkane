@@ -20,6 +20,8 @@ export const csvHeaders = [
   "setoran_tunai",
   "total_penjualan",
   "sumber_penjualan",
+  "status_operasional",
+  "keterangan_operasional",
 ];
 /** Excel delimiter hint makes columns independent of Windows list-separator settings. */
 export function encodeCsv(rows: (string | number | null | undefined)[][]) {
@@ -108,6 +110,8 @@ export type SalesCsvRow = {
   date: string;
   outlet: string;
   crew: string;
+  operationalStatus: "BUKA" | "TUTUP";
+  operationalNotes: string;
   trainingCrewName: string | null;
   doughUsed: number | null;
   expenseAmount: number | null;
@@ -147,7 +151,24 @@ export function parseSalesCsv(text: string) {
       let date = get("tanggal");
       if (date.includes("/")) date = dateFromDisplay(date);
       parseCivilDate(date);
-      if (!get("outlet") || !get("crew")) throw Error("Outlet dan crew wajib diisi.");
+      const legacyClosed = get("crew").toUpperCase() === "TUTUP";
+      const operationalStatus =
+        get("status_operasional").toUpperCase() || (legacyClosed ? "TUTUP" : "BUKA");
+      if (!["BUKA", "TUTUP"].includes(operationalStatus))
+        throw Error("Status operasional harus BUKA atau TUTUP.");
+      if (legacyClosed && operationalStatus !== "TUTUP")
+        throw Error("Crew TUTUP bertentangan dengan status BUKA.");
+      if (!get("outlet")) throw Error("Outlet wajib diisi.");
+      if (operationalStatus === "BUKA" && !get("crew"))
+        throw Error("Crew wajib diisi untuk outlet BUKA.");
+      if (operationalStatus === "TUTUP" && get("crew") && !legacyClosed)
+        throw Error("Kosongkan crew untuk outlet TUTUP.");
+      if (operationalStatus === "BUKA" && get("keterangan_operasional"))
+        throw Error(
+          "Keterangan operasional digunakan untuk outlet TUTUP; gunakan keterangan_pengeluaran untuk catatan rekap BUKA.",
+        );
+      if (get("keterangan_operasional").length > 1000)
+        throw Error("Keterangan operasional maksimal 1.000 karakter.");
       if (get("sumber_penjualan") && get("sumber_penjualan").toUpperCase() !== "MANUAL")
         throw Error(
           "Hanya rekap MANUAL yang dapat diimpor. Ekspor POS/REVIEW adalah laporan dan tidak diimpor ulang.",
@@ -185,11 +206,30 @@ export function parseSalesCsv(text: string) {
         shopeefood = csvNumber(get("shopeefood"), "ShopeeFood", 1000000000)!;
       if (qris + gofood + grabfood + shopeefood > totalGross)
         throw Error("Pembayaran non-tunai melebihi omzet.");
+      if (
+        operationalStatus === "TUTUP" &&
+        (Object.values(quantities).some(Boolean) ||
+          qris ||
+          gofood ||
+          grabfood ||
+          shopeefood ||
+          csvNumber(get("pengeluaran"), "Pengeluaran", 1000000000) ||
+          csvNumber(get("setoran_tunai"), "Setoran tunai", 1000000000) ||
+          csvNumber(get("adonan_terpakai"), "Adonan", 10000) ||
+          get("crew_training"))
+      )
+        throw Error(
+          "Outlet TUTUP tidak boleh memiliki penjualan, pembayaran, pengeluaran, setoran, pemakaian adonan, atau crew training.",
+        );
       rows.push({
         row,
         date,
         outlet: get("outlet"),
-        crew: get("crew"),
+        crew: operationalStatus === "TUTUP" ? "" : get("crew"),
+        operationalStatus: operationalStatus as "BUKA" | "TUTUP",
+        operationalNotes:
+          get("keterangan_operasional") ||
+          (operationalStatus === "TUTUP" ? get("keterangan_pengeluaran") : ""),
         trainingCrewName: get("crew_training") || null,
         doughUsed: csvNumber(get("adonan_terpakai"), "Adonan", 10000, null),
         expenseAmount: csvNumber(get("pengeluaran"), "Pengeluaran", 1000000000, null),

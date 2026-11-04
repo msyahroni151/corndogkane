@@ -36,6 +36,7 @@ export type OperationalEntry = {
   shopeefood: number;
 };
 export type OperationalLoad = {
+  dailyStatus?: { closed: boolean; notes: string; version: string } | null;
   liveSales?: {
     totalGross: number;
     qris: number;

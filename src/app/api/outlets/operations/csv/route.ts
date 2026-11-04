@@ -71,27 +71,33 @@ export async function GET(request: Request) {
       search = query.get("search")?.trim() || "";
     if (to < from || to.getTime() - from.getTime() > 365 * 86400000)
       throw new InputError("Pilih rentang tanggal maksimal 366 hari.");
-    const entries = await db.outletOperation.findMany({
-      where: {
-        date: { gte: from, lte: to },
-        outlet: {
-          ...(area ? { areaId: area } : {}),
-          ...(search
-            ? {
-                OR: [
-                  { name: { contains: search, mode: "insensitive" } },
-                  { nameCode: { contains: search, mode: "insensitive" } },
-                  { area: { name: { contains: search, mode: "insensitive" } } },
-                ],
-              }
-            : {}),
-        },
+    const where = {
+      date: { gte: from, lte: to },
+      outlet: {
+        ...(area ? { areaId: area } : {}),
+        ...(search
+          ? {
+              OR: [
+                { name: { contains: search, mode: "insensitive" as const } },
+                { nameCode: { contains: search, mode: "insensitive" as const } },
+                { area: { name: { contains: search, mode: "insensitive" as const } } },
+              ],
+            }
+          : {}),
       },
+    };
+    const entries = await db.outletOperation.findMany({
+      where,
       orderBy: [{ date: "asc" }, { outletName: "asc" }],
       take: 10001,
       include: { crew: { select: { employeeCode: true } } },
     });
-    if (entries.length > 10000)
+    const closures = await db.outletDailyStatus.findMany({
+      where: { ...where, closed: true },
+      include: { outlet: { select: { name: true } } },
+      take: 10001,
+    });
+    if (entries.length + closures.length > 10000)
       throw new InputError("Lebih dari 10.000 baris. Persempit rentang ekspor.");
     const data = entries.map((row) => {
       const items = snapshotItems(row.items);
@@ -118,9 +124,28 @@ export async function GET(request: Request) {
         setoran_tunai: row.cashReceived,
         total_penjualan: row.totalGross,
         sumber_penjualan: row.salesSource,
+        status_operasional: "BUKA",
       });
     });
-    return download(encodeCsv([csvHeaders, ...data]), `penjualan-outlet-${start}-${end}.csv`);
+    const closedRows = closures.map((row) =>
+      salesCsvValues({
+        tanggal: row.date.toISOString().slice(0, 10),
+        outlet: row.outletId,
+        nama_outlet: row.outlet.name,
+        crew: "",
+        nama_crew: "",
+        status_operasional: "TUTUP",
+        keterangan_operasional: row.notes,
+        ...Object.fromEntries(operationalProducts.map((p) => [p.key, 0])),
+        total_penjualan: 0,
+        sumber_penjualan: "MANUAL",
+      }),
+    );
+    const combined = [...data, ...closedRows].sort(
+      (a, b) =>
+        String(a[0]).localeCompare(String(b[0])) || String(a[1]).localeCompare(String(b[1])),
+    );
+    return download(encodeCsv([csvHeaders, ...combined]), `penjualan-outlet-${start}-${end}.csv`);
   } catch (error) {
     return json(
       {

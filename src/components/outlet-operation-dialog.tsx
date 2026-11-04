@@ -1,4 +1,5 @@
 "use client";
+import { OutletDailyStatusForm } from "@/components/outlet-daily-status-form";
 import { outletBonus, outletBonusRate } from "@/lib/outlet-bonus";
 
 import { useEffect, useRef, useState } from "react";
@@ -141,6 +142,8 @@ function OperationDateForm({
     [error, setError] = useState("");
 
   const [retry, setRetry] = useState(0);
+  const [statusBusy, setStatusBusy] = useState(false);
+  const [operationalMode, setOperationalMode] = useState<"BUKA" | "TUTUP" | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -196,14 +199,33 @@ function OperationDateForm({
       </div>
     );
 
+  const closed = operationalMode ? operationalMode === "TUTUP" : !!loaded.dailyStatus?.closed;
+  const reportSaving = (pending: boolean) => {
+    setStatusBusy(pending);
+    onSaving(pending);
+  };
   return (
-    <OperationFields
-      loaded={loaded}
-      date={date}
-      outletId={outletId}
-      onSaving={onSaving}
-      onSaved={onSaved}
-    />
+    <>
+      <OutletDailyStatusForm
+        loaded={loaded}
+        date={date}
+        outletId={outletId}
+        closed={closed}
+        disabled={statusBusy}
+        onModeChange={setOperationalMode}
+        onSaving={reportSaving}
+        onSaved={onSaved}
+      />
+      {!closed && !loaded.dailyStatus?.closed && (
+        <OperationFields
+          loaded={loaded}
+          date={date}
+          outletId={outletId}
+          onSaving={reportSaving}
+          onSaved={onSaved}
+        />
+      )}
+    </>
   );
 }
 

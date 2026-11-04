@@ -6,7 +6,11 @@ import {
   parseSalesCsv,
   salesCsvValues,
 } from "../src/lib/outlet-sales-csv";
-import { operationalProducts, canRecordOutletCrew, canImportOutletCrew } from "../src/lib/outlet-operations";
+import {
+  operationalProducts,
+  canRecordOutletCrew,
+  canImportOutletCrew,
+} from "../src/lib/outlet-operations";
 const raw: Record<string, string | number> = {
   tanggal: "2026-11-01",
   outlet: "OUTLET A",
@@ -112,4 +116,43 @@ for (const position of ["CREW OUTLET", "CREW BACKUP", "AREA SUPERVISOR"])
 assert.equal(canImportOutletCrew({ ...formerCrew, employeeCode: " " }), false);
 assert.equal(canImportOutletCrew({ ...formerCrew, position: "ADMIN" }), false);
 assert.equal(canImportOutletCrew({ ...formerCrew, department: "OPERASIONAL GUDANG" }), false);
-console.log("PASS: historical crew eligibility accepts inactive outlet crew without relaxing manual input or role/code requirements.");
+console.log(
+  "PASS: historical crew eligibility accepts inactive outlet crew without relaxing manual input or role/code requirements.",
+);
+
+assert.equal(csvHeaders.length, 38);
+const closed = {
+  crew: "",
+  status_operasional: "TUTUP",
+  keterangan_operasional: "Libur outlet",
+  mozarella: 0,
+  sosis: 0,
+  qris: 0,
+  pengeluaran: 0,
+  setoran_tunai: 0,
+  total_penjualan: 0,
+};
+let closure = parseSalesCsv(make(closed));
+assert.deepEqual(closure.errors, []);
+assert.equal(closure.rows[0].operationalStatus, "TUTUP");
+assert.equal(closure.rows[0].crew, "");
+assert.equal(closure.rows[0].operationalNotes, "Libur outlet");
+closure = parseSalesCsv(make({ ...closed, crew: "TUTUP", status_operasional: "" }));
+assert.deepEqual(closure.errors, []);
+assert.equal(closure.rows[0].operationalStatus, "TUTUP");
+for (const extra of [
+  { status_operasional: "INVALID" },
+  { crew: "CREW A" },
+  { mozarella: 1, total_penjualan: 10000 },
+  { pengeluaran: 1 },
+  { setoran_tunai: 1 },
+  { adonan_terpakai: 1 },
+  { crew_training: "TRAINING" },
+  { crew: "TUTUP", status_operasional: "BUKA" },
+])
+  assert.ok(parseSalesCsv(make({ ...closed, ...extra })).errors.length);
+assert.equal(parseSalesCsv(make()).rows[0].operationalStatus, "BUKA");
+assert.ok(parseSalesCsv(make({ crew: "" })).errors.length);
+console.log(
+  "PASS: explicit/legacy daily closures, zero-activity validation, unknown statuses and conflicting crew/status rejected; 38-column template.",
+);
