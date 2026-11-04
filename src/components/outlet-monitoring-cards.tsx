@@ -1,5 +1,6 @@
 "use client";
 
+import { OutletSalesCsv } from "@/components/outlet-sales-csv";
 import { SalesReconciliation } from "@/components/sales-reconciliation";
 import { useEffect, useState } from "react";
 import { outletScheduleLabel } from "@/lib/outlet-schedule-status";
@@ -329,6 +330,16 @@ export function OutletMonitoringCards({
             ))}
           </select>
           <ShareOutletRecap from={period.start} to={period.end} area={area} outlets={outlets} />
+          <OutletSalesCsv
+            from={period.start}
+            to={period.end}
+            area={area}
+            search={search}
+            onSaved={() => {
+              setRecap(null);
+              setRefresh((value) => value + 1);
+            }}
+          />
         </div>
       </section>
       {dateError && (

@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-11-03T12:44:46.241Z",
+  "createdAt": "2026-11-04T09:03:26.583Z",
   "containsRealData": false,
   "files": [
     {
@@ -17,6 +17,10 @@
     {
       "path": "docs/employee-portal.md",
       "sha256": "5607b019ef221d813ecb378468a19d15b87d22ac1d6c06987656c40a8dd726e8"
+    },
+    {
+      "path": "docs/impor-ekspor-penjualan.csv.md",
+      "sha256": "01c43884eb8c05abec51b3a85dbc9e15240784553f81c73374bf432d2279c510"
     },
     {
       "path": "docs/integrasi-penjualan-outlet.md",
@@ -320,7 +324,7 @@
     },
     {
       "path": "scripts/package-demo.cjs",
-      "sha256": "6fbbbebe8b0ff7690ad6651be50e8dc1512b703b729da18fe94dcccb8dec7d1c"
+      "sha256": "7e39cf7adeb3d8b8f238e56111511105add67ec6dd8244d180b6f958c496eeba"
     },
     {
       "path": "scripts/seed-demo.ts",
@@ -329,6 +333,10 @@
     {
       "path": "scripts/start-demo.cjs",
       "sha256": "4f297cb0f52e3090f5ec4cb56d03852f50c79740dd7cb4769144a8928ccf134c"
+    },
+    {
+      "path": "scripts/verify-outlet-sales-csv.ts",
+      "sha256": "dff159c009a7713ade3fb3a7d7c8291030fe5ec433ab843f5a55e5e2d9322256"
     },
     {
       "path": "scripts/verify-schedule-payroll.ts",
@@ -507,12 +515,16 @@
       "sha256": "cd190533a89945d42b2f77fb56570e0dec35f7537c9c313c5e3d4df3a2a52f60"
     },
     {
+      "path": "src/app/api/outlets/operations/csv/route.ts",
+      "sha256": "70da315000d4cbcf4e19f7d206f477b1e0186c52b6df955bf05f1e6810f8f8a2"
+    },
+    {
       "path": "src/app/api/outlets/operations/recap/route.ts",
       "sha256": "6744d3a663a7bc5666f4456519bb3a3e8a1029106e51ab6f923cf1938290754a"
     },
     {
       "path": "src/app/api/outlets/operations/route.ts",
-      "sha256": "22b28b9a1dcda00861bbeb0086cfee81cbba1134a1bb41c31c4ed31cc1c6a6af"
+      "sha256": "4439d454136622b93078d488ec99a8d6aa57d394bfbc4c61ce6c8950653c56c8"
     },
     {
       "path": "src/app/api/outlets/sales/route.ts",
@@ -908,11 +920,11 @@
     },
     {
       "path": "src/components/outlet-monitoring-cards.tsx",
-      "sha256": "3412b2d12b1e40f3e1decf4edc1d5fbc4d4049f26e68aafed2534f592f3b137c"
+      "sha256": "1f2cf9046d493818b87fdce970ae989fee8fc9b75c72f44263a98d54ac83d942"
     },
     {
       "path": "src/components/outlet-monitoring.css",
-      "sha256": "79f2e14202bcf6a3590ebcf9c70ee2d94ec73cf4c8d1f0bfcd6134088317ea86"
+      "sha256": "213205491ed3b4e58f57a71c9b6ca0371235070518a0cc89b8aa1fb9bd41afe1"
     },
     {
       "path": "src/components/outlet-operation-dialog.tsx",
@@ -933,6 +945,10 @@
     {
       "path": "src/components/outlet-report-export.tsx",
       "sha256": "36e6505566b1b1348cd41465db3a760b58c3311855c2d54bb1389fdff55d76d8"
+    },
+    {
+      "path": "src/components/outlet-sales-csv.tsx",
+      "sha256": "feadfe855ec6433bfa3f0ccb5f9f210794d646f1ce55a1cc516e2146419f2532"
     },
     {
       "path": "src/components/outlet-stock-forms.tsx",
@@ -1255,6 +1271,10 @@
       "sha256": "a0662c8512121746016483e16e25293aa7418c826b675dd71ac97ff6d3399afc"
     },
     {
+      "path": "src/lib/outlet-operation-write.ts",
+      "sha256": "c4d460c72e2721679a117f9fe35932bde2e644a36bfa4a2b8b0248ef5a629a4b"
+    },
+    {
       "path": "src/lib/outlet-operations.ts",
       "sha256": "3c1ac21ab65ea01cf564008620a9d4a0ff14ba1915b00dd4110f66d6bac327b0"
     },
@@ -1265,6 +1285,14 @@
     {
       "path": "src/lib/outlet-recap.ts",
       "sha256": "f842898cfb0d42fbec3ec1065cebfd3a9115fc488f9d3fccaf3af94265a9487a"
+    },
+    {
+      "path": "src/lib/outlet-sales-csv-service.ts",
+      "sha256": "d1bfa97efec5ea5914e6dfab396622bba1f2c45e6d84485b6cef8427d5379ba8"
+    },
+    {
+      "path": "src/lib/outlet-sales-csv.ts",
+      "sha256": "062206167850d358ffdac3fc7d46466c57a3b695fb690510a8464e9183c26d57"
     },
     {
       "path": "src/lib/outlet-sales.ts",

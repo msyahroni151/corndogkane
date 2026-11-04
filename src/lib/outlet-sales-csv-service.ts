@@ -1,0 +1,159 @@
+import { Prisma, type PrismaClient } from "@/generated/prisma/client";
+import { parseSalesCsv, type SalesCsvRow } from "@/lib/outlet-sales-csv";
+import { getPrisma } from "@/lib/db";
+import { canRecordOutletCrew } from "@/lib/outlet-operations";
+import { InputError, saveOutletOperation } from "@/lib/outlet-operation-write";
+import { BonusSyncError } from "@/lib/outlet-bonus-ledger";
+import { SaleError } from "@/lib/sale-input";
+type Resolved = SalesCsvRow & {
+  outletId: string;
+  crewId: string;
+  outletName: string;
+  crewName: string;
+};
+type LookupDb = PrismaClient | Prisma.TransactionClient;
+const key = (value: string) => value.trim().replace(/\s+/g, " ").toLocaleUpperCase("id-ID");
+function match<T extends { id: string }>(
+  items: T[],
+  value: string,
+  code: (item: T) => string | null,
+  name: (item: T) => string,
+  label: string,
+): T {
+  const exact = items.find((item) => item.id === value);
+  if (exact) return exact;
+  const codes = items.filter((item) => code(item) && key(code(item)!) === key(value));
+  const found = codes.length ? codes : items.filter((item) => key(name(item)) === key(value));
+  if (found.length !== 1)
+    throw Error(
+      found.length
+        ? label + " ambigu. Gunakan ID atau kode dari Referensi Outlet & Crew."
+        : label + " tidak ditemukan atau tidak aktif: " + value + ".",
+    );
+  return found[0];
+}
+export async function prepareSalesImport(db: LookupDb, csv: string) {
+  const parsed = parseSalesCsv(csv),
+    errors = [...parsed.errors];
+  const [outlets, employees] = await Promise.all([
+    db.outlet.findMany({
+      where: { active: true, closed: false, area: { active: true } },
+      select: { id: true, name: true, nameCode: true },
+    }),
+    db.employee.findMany({
+      where: { active: true },
+      select: {
+        id: true,
+        employeeCode: true,
+        fullName: true,
+        active: true,
+        department: true,
+        position: true,
+      },
+    }),
+  ]);
+  const crew = employees.filter(canRecordOutletCrew),
+    rows: Resolved[] = [],
+    seen = new Set<string>();
+  for (const row of parsed.rows)
+    try {
+      const outlet = match(
+          outlets,
+          row.outlet,
+          (o) => o.nameCode,
+          (o) => o.name,
+          "Outlet",
+        ),
+        employee = match(
+          crew,
+          row.crew,
+          (e) => e.employeeCode,
+          (e) => e.fullName,
+          "Crew",
+        );
+      const identity = outlet.id + "|" + row.date;
+      if (seen.has(identity)) throw Error("Outlet dan tanggal berulang di dalam file.");
+      seen.add(identity);
+      rows.push({
+        ...row,
+        outletId: outlet.id,
+        crewId: employee.id,
+        outletName: outlet.name,
+        crewName: employee.employeeCode || employee.fullName,
+      });
+    } catch (error) {
+      errors.push({
+        row: row.row,
+        message: error instanceof Error ? error.message : "Referensi tidak valid.",
+      });
+    }
+  const existing = rows.length
+    ? await db.outletOperation.findMany({
+        where: {
+          OR: rows.map((row) => ({
+            outletId: row.outletId,
+            date: new Date(row.date + "T00:00:00Z"),
+          })),
+        },
+        select: { outletId: true, date: true },
+      })
+    : [];
+  const occupied = new Set(
+    existing.map((r) => r.outletId + "|" + r.date.toISOString().slice(0, 10)),
+  );
+  const fresh = rows.filter((row) => !occupied.has(row.outletId + "|" + row.date));
+  return {
+    rows,
+    fresh,
+    errors: errors.sort((a, b) => a.row - b.row),
+    skipped: rows.length - fresh.length,
+    preview: rows.map((row) => ({
+      row: row.row,
+      date: row.date,
+      outlet: row.outletName,
+      crew: row.crewName,
+      total: row.totalGross,
+      status: occupied.has(row.outletId + "|" + row.date) ? "Dilewati: sudah tercatat" : "Baru",
+    })),
+  };
+}
+export async function importSalesCsv(csv: string, userId: string) {
+  return getPrisma().$transaction(
+    async (tx) => {
+      const plan = await prepareSalesImport(tx, csv);
+      if (plan.errors.length)
+        throw new InputError("CSV masih memiliki kesalahan. Periksa pratinjau sebelum impor.");
+      // Match the manual/POS writer's lock; an import can never overwrite a concurrent save.
+      for (const identity of plan.rows.map((row) => row.outletId + "|" + row.date).sort())
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${identity},0))`;
+      const current = await prepareSalesImport(tx, csv);
+      if (current.errors.length)
+        throw new InputError("Referensi berubah saat impor. Periksa pratinjau kembali.");
+      const employees = [...new Set(current.fresh.map((row) => row.crewId))].sort();
+      if (employees.length)
+        await tx.$executeRaw`SELECT id FROM employees WHERE id IN (${Prisma.join(employees)}) ORDER BY id FOR UPDATE`;
+      for (const row of current.fresh.sort((a, b) =>
+        (a.outletId + a.date).localeCompare(b.outletId + b.date),
+      )) {
+        try {
+          await saveOutletOperation(
+            { ...row, date: row.date, version: null, salesMode: "TOTAL" },
+            userId,
+            tx,
+            true,
+          );
+        } catch (error) {
+          if (
+            error instanceof InputError ||
+            error instanceof BonusSyncError ||
+            error instanceof SaleError
+          )
+            throw new InputError("Baris " + row.row + ": " + error.message);
+          throw error;
+        }
+      }
+      return { imported: current.fresh.length, skipped: current.skipped };
+    },
+    { timeout: 120000, maxWait: 10000 },
+  );
+}
