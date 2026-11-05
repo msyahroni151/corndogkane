@@ -1,3 +1,4 @@
+import { canManageOutletSales } from "@/lib/sale-authority";
 import { hasAction } from "@/lib/permission-actions";
 import { boundedJsonText, RequestBodyError } from "@/lib/request-body";
 import { sameOrigin } from "@/lib/request-origin";
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
     }
     const receipt = await postSale(
       getPrisma(),
-      { id: user.id, name: user.name, canManage: hasPermission(user, "monitoring-outlet") },
+      { id: user.id, name: user.name, canManage: canManageOutletSales(user) },
       parseSaleInput(body),
     );
     for (const path of [

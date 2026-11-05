@@ -68,7 +68,7 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
   const permissions = rolePermissions(user.role!);
   if (!permissions.length)
     return { error: "Role akun belum memiliki hak akses. Hubungi pengelola." };
-  if (user.mfaCredential || requiresMfa(user.role!)) {
+  if (user.mfaCredential || requiresMfa()) {
     await beginMfa(user.id);
     redirect("/verifikasi-keamanan");
   }

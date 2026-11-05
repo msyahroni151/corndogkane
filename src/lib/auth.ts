@@ -46,7 +46,7 @@ export const currentUser = cache(async function currentUser() {
     !session.user.active ||
     !session.user.role?.active ||
     session.user.employee?.active === false ||
-    ((!!session.user.mfaCredential || (session.user.role && requiresMfa(session.user.role))) &&
+    ((!!session.user.mfaCredential || (session.user.role && requiresMfa())) &&
       !session.mfaVerifiedAt)
   )
     return null;

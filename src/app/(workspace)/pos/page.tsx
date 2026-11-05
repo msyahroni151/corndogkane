@@ -1,3 +1,4 @@
+import { canManageOutletSales } from "@/lib/sale-authority";
 import { loadReceiptTemplates } from "@/lib/receipt-template-data";
 import { hasPermission } from "@/lib/permissions";
 import { requireAccess } from "@/lib/auth";
@@ -15,7 +16,7 @@ export default async function PosPage({
   const query = await searchParams;
   const db = getPrisma(),
     today = todayWib(),
-    canManage = hasPermission(user, "monitoring-outlet");
+    canManage = canManageOutletSales(user);
   const masterQuery = {
     where: { active: true, closed: false, area: { active: true } },
     select: { id: true, name: true, area: { select: { name: true } } },

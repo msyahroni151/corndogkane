@@ -117,7 +117,7 @@ export default async function Page({
   if (section.length > 1 || (!portalTabs.some((t) => t.key === tab) && tab !== "persetujuan"))
     notFound();
   const canReview = hasPermission(user, "portal-review"),
-    canPreview = hasPermission(user, "role");
+    canPreview = user.roleSystemKey === "OWNER";
   if (tab === "persetujuan" ? !canReview : !hasPermission(user, "portal-karyawan"))
     return <div className="panel p-6">Anda tidak memiliki akses ke bagian ini.</div>;
   const db = getPrisma(),

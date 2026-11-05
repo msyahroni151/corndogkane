@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-11-05T13:38:44.948Z",
+  "createdAt": "2026-11-05T14:31:30.045Z",
   "containsRealData": false,
   "files": [
     {
@@ -40,7 +40,7 @@
     },
     {
       "path": "docs/security-hardening.md",
-      "sha256": "781a350126b0c1353092b963e4d37c3e0a0ae5b64d14b8c4f9f269fa0e353980"
+      "sha256": "aee724e54f76b33ad3d725052bf9d5db5687d9e54668642f0b3adc0990368913"
     },
     {
       "path": "eslint.config.mjs",
@@ -508,7 +508,7 @@
     },
     {
       "path": "src/app/(workspace)/portal-karyawan/[[...section]]/page.tsx",
-      "sha256": "eb906524efc3d0b672fd2448d8b4417293e4365c19618d0f3483dea51d11bda6"
+      "sha256": "729a1b63fdd17085344f0d06c506c4b58a0ab7562c82059efd872a5c2b9a9c29"
     },
     {
       "path": "src/app/(workspace)/pos/draft/page.tsx",
@@ -516,7 +516,7 @@
     },
     {
       "path": "src/app/(workspace)/pos/page.tsx",
-      "sha256": "0fd16a85efad538b3573d1978feb72cf173e0cd038c76df65448d44a10852ba2"
+      "sha256": "10ee5a924ad62cf48de3a25b9c14707a978d92b78ecb790ad52fee390af55b52"
     },
     {
       "path": "src/app/(workspace)/produksi-gudang/page.tsx",
@@ -592,7 +592,7 @@
     },
     {
       "path": "src/app/api/pos/sales/route.ts",
-      "sha256": "0b396274f3750a72856ce01283e8b5313e94d35de4ab0561ee07c5f1c0ec8dcc"
+      "sha256": "f73099314548527c03638001470030ae007f94e804c589039c5e58396ff42f50"
     },
     {
       "path": "src/app/api/schedules/share-warehouse/route.ts",
@@ -608,7 +608,7 @@
     },
     {
       "path": "src/app/auth-actions.ts",
-      "sha256": "52b70870c8feed2c7ed6b3f8529155fc448331fa2e3ac59d86577467c8cffe45"
+      "sha256": "1e6a0858402bd59958492417c9880bb8ac0b9f79a8240cbe1e43e7fe94a1bd5f"
     },
     {
       "path": "src/app/bonus-withdrawal-actions.ts",
@@ -1228,7 +1228,7 @@
     },
     {
       "path": "src/lib/auth.ts",
-      "sha256": "f1e40eefc2bb94237dc208999af4508e1a2a137ce24424a56be4c5851e9c9bca"
+      "sha256": "41af81660613b0828c7c8df205e96358c634de7434beddd75e125a930e754e96"
     },
     {
       "path": "src/lib/backup-schedules.ts",
@@ -1324,7 +1324,7 @@
     },
     {
       "path": "src/lib/mfa-policy.ts",
-      "sha256": "894028523fb1cb8d6a2bc9cc6a28f4632ed70485477924506189b66192b30831"
+      "sha256": "0a994af6b0c26373da38d05206adde126b6ba1012666896bb8ce88fcd757c42b"
     },
     {
       "path": "src/lib/mfa.ts",
@@ -1493,6 +1493,10 @@
     {
       "path": "src/lib/request-origin.ts",
       "sha256": "37314904a9c13eb957581fc3670f24e0f9557e4b840d45fed0a9354c25c6efcd"
+    },
+    {
+      "path": "src/lib/sale-authority.ts",
+      "sha256": "0bd56b52a212524b95a6984c4fbb461b773f60b6f78bb9de0d8ec69f7d0647af"
     },
     {
       "path": "src/lib/sale-input.ts",
