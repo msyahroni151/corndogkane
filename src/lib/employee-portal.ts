@@ -1,3 +1,4 @@
+import { PortalInputError } from "@/lib/portal-input-error";
 import { isWorkingSchedule } from "@/lib/schedules";
 import { parseCivilDate, todayWib } from "@/lib/placements";
 export const portalTabs = [
@@ -26,9 +27,9 @@ export function descriptorOf(value: unknown): number[] {
     value.length !== 128 ||
     value.some((n) => typeof n !== "number" || !Number.isFinite(n) || Math.abs(n) > 10)
   )
-    throw Error("Data wajah tidak valid. Ulangi pemindaian.");
+    throw new PortalInputError("Data wajah tidak valid. Ulangi pemindaian.");
   const norm = Math.sqrt(value.reduce((sum, n) => sum + n * n, 0));
-  if (norm < 0.1 || norm > 5) throw Error("Data wajah tidak valid.");
+  if (norm < 0.1 || norm > 5) throw new PortalInputError("Data wajah tidak valid.");
   return value;
 }
 export function faceDistance(a: number[], b: number[]) {
@@ -38,7 +39,9 @@ export function portalLeaveDates(start: string, end: string, now = todayWib()) {
   const from = parseCivilDate(start),
     to = parseCivilDate(end);
   if (start < now || end < start || (to.getTime() - from.getTime()) / 86400000 > 30)
-    throw Error("Pilih tanggal mulai hari ini atau mendatang, maksimal 31 hari per pengajuan.");
+    throw new PortalInputError(
+      "Pilih tanggal mulai hari ini atau mendatang, maksimal 31 hari per pengajuan.",
+    );
   return { from, to };
 }
 export function clock(minutes: number | null | undefined, next = false) {
@@ -55,7 +58,9 @@ export function portalWindow(
   now = new Date(),
 ) {
   if (!isWorkingSchedule(s.status) || s.startMinutes === null || s.endMinutes === null)
-    throw Error("Absensi memerlukan jadwal kerja dengan jam masuk dan pulang yang lengkap.");
+    throw new PortalInputError(
+      "Absensi memerlukan jadwal kerja dengan jam masuk dan pulang yang lengkap.",
+    );
   const midnight = s.date.getTime() - 7 * 3600000,
     start = midnight + s.startMinutes * 60000,
     end = midnight + (s.endMinutes + (s.endMinutes <= s.startMinutes ? 1440 : 0)) * 60000;
@@ -63,7 +68,7 @@ export function portalWindow(
     now.getTime() < start - 2 * 3600000 ||
     now.getTime() > end + (kind === "OUT" ? 4 : 0) * 3600000
   )
-    throw Error("Absensi berada di luar waktu shift. Hubungi admin untuk koreksi.");
+    throw new PortalInputError("Absensi berada di luar waktu shift. Hubungi admin untuk koreksi.");
 }
 export function portalMinutes(date: Date, scheduleDate: Date) {
   const wib = new Date(date.getTime() + 7 * 3600000);

@@ -1,38 +1,46 @@
 {
-  "createdAt": "2026-11-04T14:04:57.207Z",
+  "createdAt": "2026-11-05T13:38:44.948Z",
   "containsRealData": false,
   "files": [
     {
       "path": "DEMO-DEPLOYMENT.md",
-      "sha256": "ec37b522aa6470c78589b4b5204308803637b23d2078a136596ea57714e8437f"
+      "sha256": "47f3381ab7b572e02533c2a01b212aa63f7b21309b6d5eed53040cc38a0002d8"
     },
     {
       "path": "docs/control-stok.md",
-      "sha256": "a2913bea24c6958d21594b07d01173ce7d9bdd6a0d8e2425c10a627ff787dff4"
+      "sha256": "fc6235996a14b2658d842087063a4a6a2a81158a7cdd96fbf94c5a0c3a1c4d50"
     },
     {
       "path": "docs/data-retention.md",
-      "sha256": "4fbe3b60c8077c6edfb93fddb39327facb6e32a88345681b129a6fdd5d3098e2"
+      "sha256": "2d2df7c3807e3ccf52a0f4b69e15200a5bbbb42e0af61c1ae7e3d23a251d5a7a"
+    },
+    {
+      "path": "docs/database-runtime-access.md",
+      "sha256": "f583f65ccbf69e7b2b4cd235a9e789d21c81d8a342b093eedc81f30c425d8fce"
     },
     {
       "path": "docs/employee-portal.md",
-      "sha256": "5607b019ef221d813ecb378468a19d15b87d22ac1d6c06987656c40a8dd726e8"
+      "sha256": "0e515fbbdfcf8349ef719fb4820d8d35626550d8f96254422e4649472bd9fce9"
     },
     {
       "path": "docs/impor-ekspor-penjualan.csv.md",
-      "sha256": "83fa1eb5ac94def7e10e57de7c43cd29278cd31632e01c06ca8cfc0178f28a85"
+      "sha256": "d6a24173f649761b81bc371e1d5b9f8c89d9ffdb54fba2e10939b39ce16a8e9b"
     },
     {
       "path": "docs/integrasi-penjualan-outlet.md",
-      "sha256": "25c0239a43a21890801331e4601911a9739781edc2b16c2d14119bd32762e225"
+      "sha256": "f92af5407f3f17bc8eecb44c4ee92264ec4b15221af27af4ca838590584797b3"
     },
     {
       "path": "docs/jadwal-dan-produksi.md",
-      "sha256": "fa88599fec1138f11a54f59be751b07d5d12c6874e292ea4fb6274d4b7784876"
+      "sha256": "bf409be7c6f7249c72d9069c6fdbb6e5ad33ac6daa9c4f562488e1d39a7764bd"
     },
     {
       "path": "docs/resep-produksi.md",
-      "sha256": "e30d379bcda4e7f498be439f57547f58bf2fdba1aaa4a4fc53e82007418e0d43"
+      "sha256": "4f43128d50f068498087d2b9d4865265140b70e513126f4d1f7e8fae9f12bcc6"
+    },
+    {
+      "path": "docs/security-hardening.md",
+      "sha256": "781a350126b0c1353092b963e4d37c3e0a0ae5b64d14b8c4f9f269fa0e353980"
     },
     {
       "path": "eslint.config.mjs",
@@ -52,23 +60,23 @@
     },
     {
       "path": "next.config.ts",
-      "sha256": "dc69383c301e414c1f839fc1189d1825d791f7a0431166cea9200cccb0f2084a"
+      "sha256": "202ed849db9e0e970036d9ab83c6c2c627d8514c56dd2903493cb2ae0c97c2aa"
     },
     {
       "path": "package.json",
-      "sha256": "7dca3328339ad0caf70532e0905234178b5aec7565cf42bb5ee1789d778d1460"
+      "sha256": "0282de29b1468088b4cc3d84e109ef657ec01391672a8cd439210ab998b10831"
     },
     {
       "path": "pnpm-lock.yaml",
-      "sha256": "c0d6e96eb0c8b73c1aeca36da5278ce68c57763c6aaa04bc8cbe237fbc069b8c"
+      "sha256": "d332fc0ab4aa1171467083eed326679610e6982f7b1f80c1f930189e00922859"
     },
     {
       "path": "pnpm-workspace.yaml",
-      "sha256": "68b1ffdd376eaa800352281665874ca2168d7e60aeebf44f9ba8c80b1cf37bed"
+      "sha256": "97cd807b89ba4004c8667ff1ca3b86659b510e791c0aceab7f761ae405c77e85"
     },
     {
       "path": "prisma.config.ts",
-      "sha256": "2d2716248f9290bb6a496034c01d5db6f5254deaa1fa8fad21786dd5d9581194"
+      "sha256": "3ee808d6f9269699832eebedc7173a33f095b108200d50fdf88014f022f4cdbf"
     },
     {
       "path": "prisma/migrations/20261013133916_init_employee/migration.sql",
@@ -128,31 +136,31 @@
     },
     {
       "path": "prisma/migrations/20261016080000_access_roles/migration.sql",
-      "sha256": "f4ed6a94038f22fdc64c5795a2c7154d07b3f39b787479f0535f9a1746b15dcf"
+      "sha256": "d679dfbb9057a3e9d844177c19f79caddf939b1e8aea8e469bb633a646f41428"
     },
     {
       "path": "prisma/migrations/20261019090000_outlet_name_code/migration.sql",
-      "sha256": "bbc3375335b9c1504f061eaf934a1d62c2885a7cb812c9594a22514957c4cd06"
+      "sha256": "f728cc789924ff2add5aa5e1dc2e5b987abda94292d3709e663f40af8a63dbac"
     },
     {
       "path": "prisma/migrations/20261019093000_outlet_operations/migration.sql",
-      "sha256": "a242cc98ce8269da9472c05bfd7ae20b0d8a1c8fd387561055008bab315b75e5"
+      "sha256": "dfa835c0d7e6c6259382d4a578ae9d138201840fe1487af46482ff548ed733fb"
     },
     {
       "path": "prisma/migrations/20261019100000_outlet_operation_expenses/migration.sql",
-      "sha256": "743edd26409207be05d9a6059089754dd1b9b78a1c6a3a0f733c1dc8478bac8d"
+      "sha256": "820e1ae06d0f1a911f11777c009997fae867bc37fc7ea066ca47d179da5352d8"
     },
     {
       "path": "prisma/migrations/20261019120000_outlet_cash_received/migration.sql",
-      "sha256": "65f63e2c6b7403265935ac90f0ac06e658ac84dc4a51efe27c8febf155e6b819"
+      "sha256": "051fc0eef3918faa3a3534d5e8c0cba526cdfd19c4d71ab3ee2931876a03fc1b"
     },
     {
       "path": "prisma/migrations/20261019140000_settlement_reviews/migration.sql",
-      "sha256": "20e57e6b39a856767779c4f4556c755eeb949787bf81fc5fb21f7921cde31194"
+      "sha256": "dc9196c6cc6ce68aeb98ebddeebbd0727e8f744cd12ce4ebd98632751279ca16"
     },
     {
       "path": "prisma/migrations/20261019160000_bonus_balance_auto_credit/migration.sql",
-      "sha256": "8398ea88d5bbc770c74ab7da293f4d8d714f7e88f996a63fec690742a6cd7270"
+      "sha256": "a52cd8d61e05923b05ade3cfecd3f4052921308b2c053aaaeb0f06e357bb2431"
     },
     {
       "path": "prisma/migrations/20261019200000_general_journal/migration.sql",
@@ -176,79 +184,91 @@
     },
     {
       "path": "prisma/migrations/20261021090000_supplier_default_payment_method/migration.sql",
-      "sha256": "2b0e48affa4a1530b7b2859e42f2d278e85f2f66cc4ae71ad7f2e6830ac63013"
+      "sha256": "bb3677624fd5490e5599f7ceb399158b498a8fcaecb488719f785751c2bdee03"
     },
     {
       "path": "prisma/migrations/20261021110000_goods_receipts/migration.sql",
-      "sha256": "c3440063465016c413adc231e05710ab92d31e2b0fa25d32802d317cad73bd6f"
+      "sha256": "6687c13664fc92e7b59e72234c2afcfe3d461fd487ab933e899aa2d85d9ab5c3"
     },
     {
       "path": "prisma/migrations/20261021140000_inventory_management/migration.sql",
-      "sha256": "b2852c3bab9dc2c5792b4911ee893e710b850195352467de3e38d588c0764e9c"
+      "sha256": "a0b0ec1da6afbde8873f3415ebb7d8b6bcd190ad989e2cda89b16b7687ff7335"
     },
     {
       "path": "prisma/migrations/20261021160000_receipt_templates/migration.sql",
-      "sha256": "e7bc97ab72eaa6738162088b3a04c729cd29de6717505d1d9708704f9606a767"
+      "sha256": "71ca869b1d3e3daff3df780070068e5ba28539e0cd172b84798e1836bb9fb2d2"
     },
     {
       "path": "prisma/migrations/20261021190000_employee_portal/migration.sql",
-      "sha256": "6ac4e21b7fe2876575001c2471ebbd583cc2eccec75254370936f2145b1dfa37"
+      "sha256": "02e423c52112750dfa9b9b00037b9ba8cdc11df61660b539112b4a204186dfc5"
     },
     {
       "path": "prisma/migrations/20261025100000_outlet_stock_control/migration.sql",
-      "sha256": "0bea3244e87b65319e3032da01d67985f347fbc1669509efe23eb49cb26d7b3a"
+      "sha256": "0a00ef8702fb6d232dabd5ec8dc4b71926481b723094e43092fa48ad00f59328"
     },
     {
       "path": "prisma/migrations/20261026110000_finished_warehouse_stock/migration.sql",
-      "sha256": "f47a9fe1f0258b2c2c187ec6226438dcd644be550fac46847bea80604a961c24"
+      "sha256": "f8f4a6c61b6c53cfbc83c9b71a16f74089b63bc91f406678603093b28de26fe4"
     },
     {
       "path": "prisma/migrations/20261026160000_production_recipe_yield/migration.sql",
-      "sha256": "5caab9b1a5a499921b6ec78c6c436819cfba221793b462b9111a4d98d7c473f0"
+      "sha256": "54d7d4a9359585f79cff9e9e57dfff9251cf696b207ef528dcfe489195a2665f"
     },
     {
       "path": "prisma/migrations/20261029110000_warehouse_category/migration.sql",
-      "sha256": "3cbad5312c4f08015fe7e3868e90d29ec968e53a6d2007c960af03b8c4329d9b"
+      "sha256": "50ceb1b86fae6c0531097a08985ce1b6e450b9514e17d31974e6c7c4921efc3c"
     },
     {
       "path": "prisma/migrations/20261029130000_custom_stock_units/migration.sql",
-      "sha256": "fe32fc9dfc2ddb337132bcd905c71bf14ef3a6af3f135f49455201ea1f01fd1a"
+      "sha256": "caff0fb02b4765026107cec35dc876430115725a0b951c982a39f2a9494c8cb9"
     },
     {
       "path": "prisma/migrations/20261029150000_production_remainders/migration.sql",
-      "sha256": "856ad79af440c6de6ec6fc9d4b51c36737df1f3bbada28c927927d07b9d688c0"
+      "sha256": "4c193caaa15dbbcb43b1d45059215b73b3829cb0a052553739d93f914382847c"
     },
     {
       "path": "prisma/migrations/20261030100000_outlet_locations/migration.sql",
-      "sha256": "a9e4f4dc4f95d6fc102ae90d480dd7c874a1d54b2b4d13149749fd25ecaf5ba1"
+      "sha256": "50102c99b55f0e280e1ac0090d44c033d42bfecbf92c9b9f499402e4cf947f5c"
     },
     {
       "path": "prisma/migrations/20261030160000_outlet_stock_returns/migration.sql",
-      "sha256": "a2ae5071d48970fa287882c61cb520a1bde670910cb599e372d78a30681f18f8"
+      "sha256": "6560301e32e2bb7f900877cb27409e75a887b3481876da672f382e4995203b60"
     },
     {
       "path": "prisma/migrations/20261030200000_unified_outlet_sales/migration.sql",
-      "sha256": "5f6c924e2c9df4b66c1daf518fce4b43198b74383667a2ebc66ca21a8b3ab8ac"
+      "sha256": "921057739c9b09afca4c1eb97d844630b002894c95ec255236b6f088482b0d82"
     },
     {
       "path": "prisma/migrations/20261030210000_production_remainders_rls/migration.sql",
-      "sha256": "00866cbd6d788e656b14ed557d8ad601a9dc6d47ef28d656eae84d0d2e43cc11"
+      "sha256": "3061f2d4e6af93dc2217eab6c6d5269f1f60286a8a80d2893a330e70f2ff5b53"
     },
     {
       "path": "prisma/migrations/20261030220000_restore_fixed_sales_products/migration.sql",
-      "sha256": "72be28d994a08d5e0b150390be23703d7f2baf51f02af71592448e2e13b1642a"
+      "sha256": "e79d59ed610bee88ccb31eb1762e8923ce12d0c88540f93c30138bb5caad786a"
     },
     {
       "path": "prisma/migrations/20261031090000_schedule_notes_and_production_plans/migration.sql",
-      "sha256": "a9be1a839cbac483c6080c110cca9ce70557dfdf92042976a38fb01e28e030e0"
+      "sha256": "3e3acc34c6f8488439221cb253915fd7e8f0110e08ace1bfb1cac43a9bd94b96"
     },
     {
       "path": "prisma/migrations/20261103130000_schedule_openingan/migration.sql",
-      "sha256": "3083d43aed1a1c290231e5190e93675e649fd3d6382a1706eef109d43b318c25"
+      "sha256": "e586c36c9370cd09794a20dc721cf12a9ab7a34c4d5dd6e85eab9c326a8df67a"
     },
     {
       "path": "prisma/migrations/20261104134559_outlet_daily_closures/migration.sql",
-      "sha256": "276918eaa177c255214798e25104dcd06c44c948306edd248f454c054b93609d"
+      "sha256": "83b646bf72d9ab9604aa95ae5151989d4eafda629e734997c1fc2725e6687ca5"
+    },
+    {
+      "path": "prisma/migrations/20261105111739_security_events/migration.sql",
+      "sha256": "5657a6078f8ad483a9aa2797ef58e8d4dbb3775279c8e0829df3924ddddcd3b2"
+    },
+    {
+      "path": "prisma/migrations/20261105120815_account_security/migration.sql",
+      "sha256": "2f719dfabbeaf988d80203346cb6cd92db4b0979fe2b8de268f160fc2863f2c1"
+    },
+    {
+      "path": "prisma/migrations/20261105123727_security_alert_trigger_fix/migration.sql",
+      "sha256": "67d3cecc1ed3aecda3505c771c662ccbe642466f04fca6e0b3ca4a7bb48983c4"
     },
     {
       "path": "prisma/migrations/migration_lock.toml",
@@ -256,7 +276,7 @@
     },
     {
       "path": "prisma/schema.prisma",
-      "sha256": "c84481f9cd43ec0648520f7dea4446bef60e5b809d39f4791074463059d548fb"
+      "sha256": "fa353f321ff8440018694f0a80c96a09f34f59ec4f9cd1d4eb9e288839477d74"
     },
     {
       "path": "public/corndog-kane-logo.png",
@@ -296,7 +316,7 @@
     },
     {
       "path": "public/face-api/NOTICE.md",
-      "sha256": "b717b771cb6668e52a43fe2b25e60f9ac70a2ef0eb7dd620f2518cf1e0a1eead"
+      "sha256": "ad749adb47e7886bfeaee3dff7a78dea314168e1279e4bc940e39b174c471c99"
     },
     {
       "path": "public/file.svg",
@@ -320,15 +340,31 @@
     },
     {
       "path": "render.yaml",
-      "sha256": "81f175c8c7df073f17cd48453cc3cb2defb265aee31a3745639ef1e59d4b7920"
+      "sha256": "82425b24fcf65dc4b1a10bf15ab7a6cfc30a6ff3f49e437389635d4cde148b6d"
+    },
+    {
+      "path": "scripts/database-runtime-policies.sql",
+      "sha256": "ec80fd03e36ec0d042b95d3093b1b66bce2aa17fc321387f4fe35519a239016c"
+    },
+    {
+      "path": "scripts/database-runtime-role-bootstrap.sql",
+      "sha256": "9f0af74cba897a78e64e9c9ad336b6182650e4b9410b556ae8d859cc4a02ebd8"
     },
     {
       "path": "scripts/demo-target.cjs",
-      "sha256": "f7424e04d12011640525e551d9ba034cafc2d84b98274d84742680fe445562b6"
+      "sha256": "5517ec560bcf365fff01166093df697590911b2360b56fc9193433c2592cd7c6"
     },
     {
       "path": "scripts/package-demo.cjs",
-      "sha256": "7e39cf7adeb3d8b8f238e56111511105add67ec6dd8244d180b6f958c496eeba"
+      "sha256": "eb01ddacb539df99af11a06ab2d22697d92c7afdab2f841aef61a5715d3c5ba1"
+    },
+    {
+      "path": "scripts/register-security-backup.ps1",
+      "sha256": "e5767f5a1a75b58da99a0409686e3544fcbcb5e1a02813666cd92465aa025a94"
+    },
+    {
+      "path": "scripts/security-backup.cjs",
+      "sha256": "5ab0cef3109fd5a52102016d0612f047d7a5845e3e888dc63f10fc56e2ade83f"
     },
     {
       "path": "scripts/seed-demo.ts",
@@ -336,7 +372,11 @@
     },
     {
       "path": "scripts/start-demo.cjs",
-      "sha256": "4f297cb0f52e3090f5ec4cb56d03852f50c79740dd7cb4769144a8928ccf134c"
+      "sha256": "54ca5e80fba92dbc78c723813f203a19ecf6ed1d51e141a7435d8e2581e3c78b"
+    },
+    {
+      "path": "scripts/start-secure.cjs",
+      "sha256": "554cf8b9e0de18ae91f0132ba2c99bee8f52200c8aeb0351f9e4e9a3b87d8ebf"
     },
     {
       "path": "scripts/verify-outlet-sales-csv.ts",
@@ -376,7 +416,7 @@
     },
     {
       "path": "src/app/(workspace)/dashboard/page.tsx",
-      "sha256": "b9b7433b64fa4524f6ccdbdf2326e1828866e3ab8f9378d5b97bde73669f8a77"
+      "sha256": "074be1749ef53e6f7f9354c2e9c99b5027937b9a88497ef675c9366fe900d8c3"
     },
     {
       "path": "src/app/(workspace)/error.tsx",
@@ -400,7 +440,7 @@
     },
     {
       "path": "src/app/(workspace)/finance/laporan-akuntansi/page.tsx",
-      "sha256": "108bfcd50adf08c82ed598a39081e0910ed422adf7f80fb732d835eacda20901"
+      "sha256": "5d2b9a4fa4b562dad2525547266a3ae4be2dee299ada7524f752289f62a3a332"
     },
     {
       "path": "src/app/(workspace)/finance/pengeluaran-operasional/page.tsx",
@@ -412,11 +452,11 @@
     },
     {
       "path": "src/app/(workspace)/karyawan/[id]/page.tsx",
-      "sha256": "4aad3e2d704779d93370447faca072cb5f46b0341d19e7f76929a8076248dac0"
+      "sha256": "f272d5382535ac8085c1e3f8c404934d7318b923b79df6bfda0dcaa94df9ae63"
     },
     {
       "path": "src/app/(workspace)/karyawan/baru/page.tsx",
-      "sha256": "38327149aa6dfc8aa21e233fcf455873e4ca9d268f3ea24a0ac98b640ae5ac57"
+      "sha256": "2d90c94c0e53912d540a1eb0161aa3bcb3759cefea9b2e0e29e640e4ea6f9f41"
     },
     {
       "path": "src/app/(workspace)/karyawan/page.tsx",
@@ -427,8 +467,12 @@
       "sha256": "d733257e584206382122b81671daab8c533aedfb09e7e0c1fd562c71aa0c5e8d"
     },
     {
+      "path": "src/app/(workspace)/keamanan/page.tsx",
+      "sha256": "63280d1dac55fdadbab0e7b9122098abb3441c63ff249759975a238e4e2a56f2"
+    },
+    {
       "path": "src/app/(workspace)/layout.tsx",
-      "sha256": "fa87eb6544b6cc3d0bf63570bc89765d5d7002116321f15704f0a8d744fe0cba"
+      "sha256": "4ff28c5c590bfadd38a245868e7159aedc92149dc82011b645f65f7110e55659"
     },
     {
       "path": "src/app/(workspace)/master-area/page.tsx",
@@ -488,7 +532,7 @@
     },
     {
       "path": "src/app/(workspace)/role/page.tsx",
-      "sha256": "69b1a8973efcc686adbcbd1fac9bb65e4fae0fca92e0589c581df49def1ebbc9"
+      "sha256": "e7bd00ab7bbcf0695243b5ff458190bc2ffa0698b29a6ecc5e28243a5e7ce0b0"
     },
     {
       "path": "src/app/(workspace)/selisih-setor/page.tsx",
@@ -520,7 +564,7 @@
     },
     {
       "path": "src/app/api/outlets/operations/csv/route.ts",
-      "sha256": "bcf307763d134366621a0977b66da84480ad2d2d259f717a2880adcbc6593a73"
+      "sha256": "fc6a25d9216b04244f03cf70748372ff97dbe41c61b1eea302deffe390759034"
     },
     {
       "path": "src/app/api/outlets/operations/recap/route.ts",
@@ -528,7 +572,7 @@
     },
     {
       "path": "src/app/api/outlets/operations/route.ts",
-      "sha256": "f9edc94d207ebe6abb7f0a3c2129040e75c17a533c9ff850c3efa832f72b5a12"
+      "sha256": "78cac8382b4c1ccda03af892f5c9135e923459048176964fdd4ff1c527c2efa5"
     },
     {
       "path": "src/app/api/outlets/sales/route.ts",
@@ -536,43 +580,43 @@
     },
     {
       "path": "src/app/api/portal/attendance/route.ts",
-      "sha256": "031f4919aa12da06a642510b17b50f82974a84c985f5d7e1312456bd10822c62"
+      "sha256": "326225ac17af44fd407f03968b4b66833ebe3cac6b3e00ee06148780a6ac95af"
     },
     {
       "path": "src/app/api/portal/photo/[type]/[id]/route.ts",
-      "sha256": "2d3e0fdc4c8e626ae4c88fd6c3e688dc9b86504ceb72ebe9974203309b3ec8fa"
+      "sha256": "3a57042cd8086715016bcbdc66e5a61921047343fc3ccafda92249723f3367a1"
     },
     {
       "path": "src/app/api/pos/reconcile/route.ts",
-      "sha256": "334a174ad6904c06212e8cb7321e16e5d33992a0a9d19fe54b9379f566b02472"
+      "sha256": "a9e3d91b629d7fe1f98d466fd5a5eea078d17d91809c43ccee7235d73cb532d1"
     },
     {
       "path": "src/app/api/pos/sales/route.ts",
-      "sha256": "bff810ca45eaef8cec9a18dd6145b5723c6b1c484c405a032b35a52edf6d4c8c"
+      "sha256": "0b396274f3750a72856ce01283e8b5313e94d35de4ab0561ee07c5f1c0ec8dcc"
     },
     {
       "path": "src/app/api/schedules/share-warehouse/route.ts",
-      "sha256": "0e45e3176bbae9ca456a033230d22b10a1a5e9eef66e67ce576ab3509181385a"
+      "sha256": "821afd41252ca949b91c07952874c1215396abaca0daa13acd67d360dd71e77d"
     },
     {
       "path": "src/app/api/schedules/share/route.ts",
-      "sha256": "966911a863d802fab50be4bf4212f2204e3dc3414ad3d4de38843c4a9eefa51c"
+      "sha256": "14d68b32cc28ca56ac25281efaab832f06276dbb03fda10d6e86783976885673"
     },
     {
       "path": "src/app/attendance-actions.ts",
-      "sha256": "e5d51be65077ad6ab73ad6beafb8d38f3ce410f6cc79c94ea646c3e46d86fad5"
+      "sha256": "969f1a003e5dc1f09be3b76f8d10657b0f3ff2c8174884c9c283751ae00729c1"
     },
     {
       "path": "src/app/auth-actions.ts",
-      "sha256": "d12bc857c59d5530ea0cecd1241102ed40111487b486f06b4aabbfeac1266767"
+      "sha256": "52b70870c8feed2c7ed6b3f8529155fc448331fa2e3ac59d86577467c8cffe45"
     },
     {
       "path": "src/app/bonus-withdrawal-actions.ts",
-      "sha256": "223b660fe0492d31781c3e17f21f7310baba0c96dda524fec574c01e51ba0463"
+      "sha256": "5f002c83ab4325a0a224e3762785fbeba489fe3304746aa29c44a876a90aba59"
     },
     {
       "path": "src/app/employee-actions.ts",
-      "sha256": "ccb30ea99e0dc09165e5929eb60f7c1723de924564a1d0d0e99b223287f4a09f"
+      "sha256": "293891167059423132d38a766bba0bb577b0816922a6cc34fb302bbe51a51b44"
     },
     {
       "path": "src/app/error.tsx",
@@ -584,15 +628,15 @@
     },
     {
       "path": "src/app/fixed-asset-actions.ts",
-      "sha256": "90fe2f22dd407d43e3f2fc5dbaac7109c1973c2354058bf7ba0d2428ffe3de25"
+      "sha256": "ecd85ec7ff52205eaad322f24834afb70cabac707d614487dcd7990d57bd30f3"
     },
     {
       "path": "src/app/globals.css",
-      "sha256": "0c9f1fff4a247d2b50748b0040df38284dd8f6af9899b0f5d5f5f0eb3e371f53"
+      "sha256": "0d020c828e4607345647015b2ce9889acbfb692981e78364a6c9dfe1c1bd0dd0"
     },
     {
       "path": "src/app/goods-receipt-actions.ts",
-      "sha256": "0651d53079e931408a3ed189d84810ea13c592821ae3af4f9469a5723602b18c"
+      "sha256": "cee322c8c57bd473666f9e3e11e69c169e1ae308279c72d178029232e855cc55"
     },
     {
       "path": "src/app/icon.png",
@@ -600,75 +644,79 @@
     },
     {
       "path": "src/app/inventory-actions.ts",
-      "sha256": "a7caac3d5807971a5d8ea40d90fa800e58f1d41647502ca164d49ef8b878e5d5"
+      "sha256": "c39b0eba5e0cf264c48d130a1c1eba7b084f4a9526ed4b0c7a7782282c406fc5"
     },
     {
       "path": "src/app/journal-actions.ts",
-      "sha256": "a0128d3a59a2db9395612ef9b4c3f887d8ef1723bf45d2d611dbefbd07029a16"
+      "sha256": "78e8bf0fa67925374597489306323c73ef35bd30b9a7d9c0f741b062bb1ffcb6"
     },
     {
       "path": "src/app/layout.tsx",
-      "sha256": "cb008628af0d109e801c97143f121ffd259604763233048567264897723f96ea"
+      "sha256": "99476487a82d11bfcd0b853d4e97f126ef504b841d785d300dfe95e022dd6362"
     },
     {
       "path": "src/app/login/page.tsx",
-      "sha256": "63388c2279f7db3cc337f3be78ea5bbaa5f6290bddbdf48e13e3e74d2311756d"
+      "sha256": "5cd61cbf25ba48fca68907081df476319b4619d6eb888e32a9a414a00b8125cd"
     },
     {
       "path": "src/app/master-actions.ts",
-      "sha256": "55f184e785512f69e4dc4dcf5631bb9db4776ef1375255d2739b22c0df68a0f5"
+      "sha256": "82da9c9c2a393ef3543aaa8812b9b84373701fe53052533d68890268186cf38b"
+    },
+    {
+      "path": "src/app/mfa-actions.ts",
+      "sha256": "c9ebce48ffe8f72b5d909289c7d40028309437b927d36aafc618a39160b49497"
     },
     {
       "path": "src/app/money-actions.ts",
-      "sha256": "2201444853f1a57bf678e01f8100cfcaa833dca9d52992848eab043a6633d7e4"
+      "sha256": "26cb046c908bab97dfaa057ba15576bb6a2c628d1db24c17adf6f32d8b97f2bf"
     },
     {
       "path": "src/app/operational-expense-actions.ts",
-      "sha256": "42aafe89ebf677416e11f91c07df430d71dcd02f8a7a6f30c4a475dc0588dc78"
+      "sha256": "6ee2ef497525f42873ffee4b6276d32cc0c1e0d705b82721515f1047c3e22a54"
     },
     {
       "path": "src/app/outlet-bonus-actions.ts",
-      "sha256": "e4ab5f6832410e99cdcb6e42c1e99a6d87181ea03739b07549466f12d6929955"
+      "sha256": "bb162aa857bdb3573a720a234266ccae428231dbba5d09369addceb82ec0dabf"
     },
     {
       "path": "src/app/outlet-stock-actions.ts",
-      "sha256": "89e1f00fb3f1b9b920eb1b6f51e1e037874dd026125a7718a3dfdeaa8aaa6aae"
+      "sha256": "76044a3f8232d971082d5b3cadc267608db3a86f3c95991606eb80ef51f8f354"
     },
     {
       "path": "src/app/page.tsx",
-      "sha256": "f89a26e41813863131d507d4b7c841b0541da12903ad909f01bb3b54de9695b6"
+      "sha256": "e99621b4a0262e043ce392774e68b9c92889bc71e9ef18c07f8773bc2e465304"
     },
     {
       "path": "src/app/partner-actions.ts",
-      "sha256": "322e0e95fa9bf6ab279543273234b768c9bc7b70b1d8fc495ed7d36b6692b777"
+      "sha256": "e9a0f4ef4aa543e3ed99cf8c5a969f4699f488418f55828009a54d7eafea3885"
     },
     {
       "path": "src/app/payroll-actions.ts",
-      "sha256": "be767c7cda7edf74518ec54fefc727bd58470c5bba8c98cffc039343c215b99a"
+      "sha256": "2f752f6127729c5a8a0335fc261f5edebfc76c33cce66bbceed0d630e10fda10"
     },
     {
       "path": "src/app/placement-actions.ts",
-      "sha256": "13ffa4a7830af127a46e696104e056a7a16418970d0cfccdab4d8d25829b84d5"
+      "sha256": "92ceabdf634846d5d622eec43887b392fa483632303c36e562c97bf26ce6cd4c"
     },
     {
       "path": "src/app/portal-actions.ts",
-      "sha256": "ee0e52586091561f4038d3840d8b345b92588169e683a7e79cb8dd6156c112a5"
+      "sha256": "a8e85a4805563cc1f6e31dd631db9c44ae7b30663c197cc3b53b4df8b639b2c3"
     },
     {
       "path": "src/app/portal-review-actions.ts",
-      "sha256": "fa0605fe33150d29e93bc04be10a00ee84c4f76f0e4dd24de9f93bb1d4ea0f18"
+      "sha256": "8abafc0657078cf808f73563f05694f5149eb5ac2cfaee6ddf1f4567d560c652"
     },
     {
       "path": "src/app/production-plan-actions.ts",
-      "sha256": "ee1eccdb1a034de89a862049f657752d6a38e4981956b697ba4e80b7a6ba1408"
+      "sha256": "9e77a2a71cae8cdbf8a57b685d95bf9e9d91852db0f9a37bbb0f3d0814abeac6"
     },
     {
       "path": "src/app/receipt-template-actions.ts",
-      "sha256": "fc8dddf0e0b0ec070ea938b0faab8d58b17e24243954f85b9b4d22887a75f7d4"
+      "sha256": "cb230237f6acff16544a53d224bdd724718ec4835ec348f6a825f31c1b454125"
     },
     {
       "path": "src/app/recipe-actions.ts",
-      "sha256": "5ba3b34102499dddce72d047fe247466c54174d81820364fb87e0bb80f8f007f"
+      "sha256": "9918078fd910af5808242db696faf4cb44ba8396b8488ce4f48351342e9922e8"
     },
     {
       "path": "src/app/robots.ts",
@@ -676,15 +724,19 @@
     },
     {
       "path": "src/app/role-actions.ts",
-      "sha256": "88769361b4d75a8b41b733062369412145986b3f046049b9ff1fba3a670ed74c"
+      "sha256": "293287cd00a8300c6232f7acbbf1539822eca74541986d7a8dffb708601bd027"
     },
     {
       "path": "src/app/schedule-actions.ts",
-      "sha256": "f9033556a91df012904b312448b7edf0953b3978043f5837a858f449888f0d8e"
+      "sha256": "a4e6b0871a56c561a7bd00266c8f4f940f88e815dd56e6dd7bf528480a209d7f"
+    },
+    {
+      "path": "src/app/security-actions.ts",
+      "sha256": "b8fc4d7078c087dd8afa95e2f2a0682da764c2a75bb4f455ef75ade52337c635"
     },
     {
       "path": "src/app/settlement-actions.ts",
-      "sha256": "1e5ab3c921d94771910faf11b29e23754f0b805a9686db1cdcf155e9a6ab3075"
+      "sha256": "737154a964c97463eb3dc331b8db01fd4b809a7b57048fd0962d905406d9566f"
     },
     {
       "path": "src/app/setup/page.tsx",
@@ -692,7 +744,11 @@
     },
     {
       "path": "src/app/stock-return-actions.ts",
-      "sha256": "1fd04b91b021fa87a3700b48cbc3c8bf54caeb49dbcc0abc142ea65a74b25230"
+      "sha256": "3ecdc9cd95107bc495d03ab0e05340940342e3a26f546e4084197782a9a9e4fe"
+    },
+    {
+      "path": "src/app/verifikasi-keamanan/page.tsx",
+      "sha256": "313ac84fb623e5bcc21652dc04649d1bfdc95dc33e78d72748efd8b8f7d630bd"
     },
     {
       "path": "src/components/attendance-date-gate.tsx",
@@ -708,11 +764,11 @@
     },
     {
       "path": "src/components/auth-form.tsx",
-      "sha256": "7d8fb3be5c962566e2f63a59d55552d7de34e5fdf078ceccb07f8d1d7f840b7a"
+      "sha256": "787d8e3105582141184f8279a40b214421c19883765aa9c0a53ef9e6db06e2fd"
     },
     {
       "path": "src/components/auth-screen.tsx",
-      "sha256": "0eda455ff65f02b356f83ee22d41c1c7931f657074394d1004a2cbf8f480666b"
+      "sha256": "c5cc5c925d6d9c0eb02349411f48411deaa9d195d9f55594b0ebbea358acdcd2"
     },
     {
       "path": "src/components/bonus-page.tsx",
@@ -720,11 +776,11 @@
     },
     {
       "path": "src/components/bonus-view.css",
-      "sha256": "bf3303532e521cb903aede59375abee3d64b45a5644eb6f8d456ca9fecf1c8c1"
+      "sha256": "dcf829133b652660e793beded511c044edb677c17fe4e6e92a4d215f6e369011"
     },
     {
       "path": "src/components/bonus-view.tsx",
-      "sha256": "f3a9502562b6d6499b46266d946c0b6b1f3e6d51192c924296cc023380fa48f3"
+      "sha256": "1acab83d6ee77181ab87a6492dd0ece8ff5547415c90944631070229f813ee82"
     },
     {
       "path": "src/components/bonus-withdrawal-form.tsx",
@@ -744,7 +800,7 @@
     },
     {
       "path": "src/components/business-dashboard-trend.tsx",
-      "sha256": "578a3eaa4bb555d6547ce7e00cda54b15bb06a0bf823bfcdbe6ed6be61ab8501"
+      "sha256": "1708e82dc58bbc5d8c7eeb1b03bd2069a33078f379b328a1b57620c6072c3436"
     },
     {
       "path": "src/components/business-dashboard.css",
@@ -808,7 +864,7 @@
     },
     {
       "path": "src/components/fixed-asset-forms.tsx",
-      "sha256": "990d50b64d2154390d31584c7dc252b594650efa0322448b5a84e3ced5183efb"
+      "sha256": "7ff36f3589e880e409a95b27cdd7cdaf77ff90a0866ae8de1ad912da9253ab0a"
     },
     {
       "path": "src/components/fixed-assets.css",
@@ -816,11 +872,11 @@
     },
     {
       "path": "src/components/form-dialog.tsx",
-      "sha256": "e7f7311aced7d8cfbb695a8a569eebcabaa4ae75f44de995d051e5b4352d44b5"
+      "sha256": "413783b813ed51acdca265c5c293b3618fa96c62fa863b0694b6e8d2a8116dcb"
     },
     {
       "path": "src/components/goods-receipt-form.tsx",
-      "sha256": "d74a02b0c6e96173ded8147924803f6c07c912b16334c8a3865670baaa8ec7f8"
+      "sha256": "d04b39e6954e3b908b5d7f082d4399b0fbd9c93cd7b9c925338efeff93e13d4e"
     },
     {
       "path": "src/components/goods-receipts.css",
@@ -840,7 +896,7 @@
     },
     {
       "path": "src/components/journal-forms.tsx",
-      "sha256": "3b8ddc2bd07fff023f3d48eae79388bef447dcf5b743c034dcb8748bd1d20c39"
+      "sha256": "195560b129f2fda83f22d3dd2cceafbc0f322cd4188a4500b9b97edd4c96145b"
     },
     {
       "path": "src/components/local-input.tsx",
@@ -851,8 +907,12 @@
       "sha256": "3f42dd2c0a2d3044535abe4c84d296a51b1975521676b98f59a58085d3749aa4"
     },
     {
+      "path": "src/components/mfa-form.tsx",
+      "sha256": "b6c6d4f2292dd81203a07eb9ac4fd33511900a4980d4a769cd448d4453998903"
+    },
+    {
       "path": "src/components/money-form.tsx",
-      "sha256": "eb5839d0f47306fcd8486f6a4c892c09884f873a7680a4f7afbbf48d110a2c5b"
+      "sha256": "6cdaa9e2729c1b5ac988d73aa49d32ccb112cdd1da75cb807987ba989b9c9b6e"
     },
     {
       "path": "src/components/money-page.tsx",
@@ -864,7 +924,7 @@
     },
     {
       "path": "src/components/navigation.tsx",
-      "sha256": "cefa313726bc27450b15c56c4eb7c64272c4317d309952a3cdfd280118d9b580"
+      "sha256": "68ee63ead1ce258f7544f8d74f3c1ff53e73754e19d5c064333d5b9eaed3fae7"
     },
     {
       "path": "src/components/notification-toasts.tsx",
@@ -872,7 +932,7 @@
     },
     {
       "path": "src/components/operational-expense-form.tsx",
-      "sha256": "4a4b01d24f42de3898e7e3494143ff73a2a12e06d4b3e81837c45383877ea5ee"
+      "sha256": "df413333c6ef174388834373977194b88e6021feae985379b3ac1d7c18b34ece"
     },
     {
       "path": "src/components/operational-expenses.css",
@@ -936,7 +996,7 @@
     },
     {
       "path": "src/components/outlet-operation-dialog.tsx",
-      "sha256": "230693451ea419ee965934f684523aa0b88957be76462a8e9df208b5ac5ae290"
+      "sha256": "e6a98666c13edce649d168b5927622b22f6342e70e1ef6324dec5157f467d5a9"
     },
     {
       "path": "src/components/outlet-owner-insights.tsx",
@@ -992,7 +1052,7 @@
     },
     {
       "path": "src/components/placement-form.tsx",
-      "sha256": "4c40b092d81eb295bdc4ba2f70ce053dc049693dc8b43e2474b474515c8b216e"
+      "sha256": "ea3894354c529bd776bab9bbfcc697252a29e8a0e2b7e2f652c40da3e41830fb"
     },
     {
       "path": "src/components/portal-camera.tsx",
@@ -1036,7 +1096,7 @@
     },
     {
       "path": "src/components/receipt-template-editor.tsx",
-      "sha256": "57e35a763365364b6f02d50a49c1432033b23af22223e59b5c8382ffe6639a3b"
+      "sha256": "f4fed56924f12e3d8c22d9c1580b3defef51cef88099ad6cd26352a9a1b12784"
     },
     {
       "path": "src/components/receipt-template.css",
@@ -1060,7 +1120,7 @@
     },
     {
       "path": "src/components/role-settings-forms.tsx",
-      "sha256": "0b7b9c8ca729c0ed183ff363041d151f31ba6d6f6b9bcce930e9c7b11fc0ad08"
+      "sha256": "61d52b8587052cb6703333b7b172866f90b48555a3d44773303dc7dde1ac2690"
     },
     {
       "path": "src/components/sales-reconciliation.tsx",
@@ -1072,11 +1132,15 @@
     },
     {
       "path": "src/components/schedule-outlet-form.tsx",
-      "sha256": "d14e4760dedcf92b82a07d71e0a409746bc609b3c9fa019d00e322cdc0bd7f24"
+      "sha256": "4b171e152c590474c02b6c34df4bf643fb4db48293b5d6c5a124e4516e4103f4"
     },
     {
       "path": "src/components/section-navigation.tsx",
       "sha256": "bdc13c83b364b0357c0d6da43c60620dc9c9141d2cc0ddefcbf279f33c864e7c"
+    },
+    {
+      "path": "src/components/security-retention-form.tsx",
+      "sha256": "613e99547085588cf32f2ba99f7bdcdb1591dadb56fab86f806687c318eed97d"
     },
     {
       "path": "src/components/session-expiry.tsx",
@@ -1136,7 +1200,7 @@
     },
     {
       "path": "src/components/workspace-heading.tsx",
-      "sha256": "3039f6d2153b66f504eb5602fdac27e4052dcbb5a91f65b0d2d6ff22dec61fb6"
+      "sha256": "606ee757d143ec50d1099436ea593b92eeeccee0e97c09bd0279d5827f5fb0d2"
     },
     {
       "path": "src/lib/asset-code.ts",
@@ -1159,8 +1223,12 @@
       "sha256": "e78e472c50aa54f44f1d898f632580b3587b5865912ceef7d8a3ecac05404d50"
     },
     {
+      "path": "src/lib/auth-revocation.ts",
+      "sha256": "111640a968d0152d449d32294a1faae50c679c9e12c9d4908a49d3af400bedde"
+    },
+    {
       "path": "src/lib/auth.ts",
-      "sha256": "c41e905599c022636b2bd964490ff718739d5d4a6d3d8251d48825a70e64857b"
+      "sha256": "f1e40eefc2bb94237dc208999af4508e1a2a137ce24424a56be4c5851e9c9bca"
     },
     {
       "path": "src/lib/backup-schedules.ts",
@@ -1200,7 +1268,7 @@
     },
     {
       "path": "src/lib/employee-portal.ts",
-      "sha256": "2d7fe5ba1c044b3865156ab7285efe5af64f48f9046aa32074fa25624f4fb963"
+      "sha256": "b264b8137343722f02d77d3599b40c9c858f50007bbfee2a1ba606b68f399c11"
     },
     {
       "path": "src/lib/financial-report-excel.ts",
@@ -1240,7 +1308,7 @@
     },
     {
       "path": "src/lib/inventory-item-lifecycle.ts",
-      "sha256": "9b0b3a1479a8ddbb67b6411359f74e2d8458a2604ce09f4ef94a3b58f0302933"
+      "sha256": "950b6f0fa8fe475ea0b076d9d1ccb04568932157c1ad45d5fa33db3afc3ea394"
     },
     {
       "path": "src/lib/inventory.ts",
@@ -1251,12 +1319,24 @@
       "sha256": "17e8a4105ea8ed6b2ada15e24c10a70c7a69d8eace746fcf1702d90f3c7c8748"
     },
     {
+      "path": "src/lib/login-rate-limit.ts",
+      "sha256": "90b08cfbe85cb61ba177c72e0f6727ee8850924b2ed6cc53fd59cc82d4ca24dc"
+    },
+    {
+      "path": "src/lib/mfa-policy.ts",
+      "sha256": "894028523fb1cb8d6a2bc9cc6a28f4632ed70485477924506189b66192b30831"
+    },
+    {
+      "path": "src/lib/mfa.ts",
+      "sha256": "9818d2f43799dfb1ffadabdf5aff2aa9d9e8514c01bb9a8a3467db58fdc0c345"
+    },
+    {
       "path": "src/lib/money.ts",
       "sha256": "62cec91a31461f70a76b6b0616f4ea3e914dfcb0d808d46a71b20bbd0402187f"
     },
     {
       "path": "src/lib/navigation.ts",
-      "sha256": "71e754aff2b315d21f3ad079a375446b218d87bf0a16ed689e3e5e8c2f8431e1"
+      "sha256": "d250ba5db4196322acb1098e3e852ca22e4d3e4444d7981e6f839e2e538ab0f5"
     },
     {
       "path": "src/lib/operational-expenses.ts",
@@ -1264,7 +1344,7 @@
     },
     {
       "path": "src/lib/outlet-bonus-ledger.ts",
-      "sha256": "ad97e95a3ed78f48e16aa9c5b46bdfd57119cf1ea537a3a72deaf4ada33563ef"
+      "sha256": "47e3b18ef5a38be82253b45c7fd53687b5241138670ed8b13ab9324084b57ef5"
     },
     {
       "path": "src/lib/outlet-bonus.ts",
@@ -1284,7 +1364,7 @@
     },
     {
       "path": "src/lib/outlet-operation-write.ts",
-      "sha256": "1ed537517e964c8613c409961becfc9320fe773392506d40d5d12857b59f1e8f"
+      "sha256": "30771d4dd095f3ad25f9b69b877dd46d3e3f352ea9247df239ddb4eedc4d7a5d"
     },
     {
       "path": "src/lib/outlet-operations.ts",
@@ -1300,7 +1380,7 @@
     },
     {
       "path": "src/lib/outlet-sales-csv-service.ts",
-      "sha256": "0e13d96cda5f0ac910258a9d8315757d8302f7578eade2e7e72521ae75facb11"
+      "sha256": "65712b17207d36bfcd319d6efe7759a4f82ff3125f720084a4130cf9ac3c6002"
     },
     {
       "path": "src/lib/outlet-sales-csv.ts",
@@ -1328,19 +1408,23 @@
     },
     {
       "path": "src/lib/outlet-stock.ts",
-      "sha256": "8ea049dcd287c98b36f202a2e80f96a8fac802f2989ccad6497eb4e6e5711da7"
+      "sha256": "f99f602fafcb8804f0bba56a027ef9d67fd5594603b134165ae9647a87418268"
     },
     {
       "path": "src/lib/password-policy.ts",
-      "sha256": "8f4ebd77dba0c78c7bb14c9390cd4fc78ebfdc016a15feeb306ec25a936ff2e7"
+      "sha256": "08fe770e4f59e0ffb3393255720c86c30c0e6cf59fc6a1a73882b21499f67b6a"
     },
     {
       "path": "src/lib/payroll.ts",
       "sha256": "db3ea98a0fdcd1dbaceb460bb0bdec00f86d5b8eca654a074aa160680a7c86f0"
     },
     {
+      "path": "src/lib/permission-actions.ts",
+      "sha256": "99366d41106f9efcf55e3dd02602156738157bc671701b51ad2b6242aa58a23d"
+    },
+    {
       "path": "src/lib/permissions.ts",
-      "sha256": "667e56e969150d7c9bab5e237d56d87eb41aa9e57c9838542be8e84097d362d1"
+      "sha256": "2c7c501f7e10f85591cb1fcf70bc260bc1f1d600d1b47a90eb50b4219981baa5"
     },
     {
       "path": "src/lib/placements.ts",
@@ -1348,7 +1432,11 @@
     },
     {
       "path": "src/lib/portal-access.ts",
-      "sha256": "6db786bc2020cce9f80e8ef37f0f3cc3882f6332dc397f741fb0e585583da631"
+      "sha256": "aa03bec4a75acc27fffaa20918f9f00e2c824eb6ad87e948d21a3c37f5dee600"
+    },
+    {
+      "path": "src/lib/portal-input-error.ts",
+      "sha256": "3a048e71663315c69d747655e28c797b242bc5db538860c222f109af7a065197"
     },
     {
       "path": "src/lib/pos-catalog.ts",
@@ -1361,6 +1449,10 @@
     {
       "path": "src/lib/position-badge.ts",
       "sha256": "2fa560f1e021b0f3900cdef79f1b209bc6417ca3f8e2e7090ef40d99b0438389"
+    },
+    {
+      "path": "src/lib/private-data.ts",
+      "sha256": "d325f22b5d1e011b51802bc563766a861831241d51245861dfdcd3df049e76ab"
     },
     {
       "path": "src/lib/production-plans.ts",
@@ -1395,8 +1487,12 @@
       "sha256": "daaf2cdb4b86583db1d9ce16043565ea2ce16901dac4fd7d8cd6997d1c9e6cac"
     },
     {
+      "path": "src/lib/request-body.ts",
+      "sha256": "9472a17b44a429364cd35e3e5bb6794a3c9dc535325daaaf85a6f01f5c6382b5"
+    },
+    {
       "path": "src/lib/request-origin.ts",
-      "sha256": "870ad6eb20d9dd628965d7119eefefa31a8caea1736585a97d9e25ea56c0b945"
+      "sha256": "37314904a9c13eb957581fc3670f24e0f9557e4b840d45fed0a9354c25c6efcd"
     },
     {
       "path": "src/lib/sale-input.ts",
@@ -1455,8 +1551,12 @@
       "sha256": "1da0f93a5f74454897af34259234de665b19fcf8db9c4eee77563274d7b897fa"
     },
     {
+      "path": "src/proxy.ts",
+      "sha256": "2236839d13b019e6ef9aa06f8b4fbafe25b5f04946659f410b51ca71ce0d689e"
+    },
+    {
       "path": "tsconfig.json",
-      "sha256": "947dcba9f2b66d907792014b9ed621e172a2a23466c0a2a1d8d743a3e31c1952"
+      "sha256": "54c8bde2bb01ee7606849d8370a6c5a9117098f2049e04dca0dc63744f309839"
     }
   ]
 }

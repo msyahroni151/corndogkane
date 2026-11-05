@@ -13,6 +13,7 @@ export async function syncOutletBonus(
     bonusAmount: number | null;
   },
   userId: string,
+  reservedInitialId?: string,
 ) {
   if (row.bonusAmount == null) return;
   const current = await tx.outletOperation.findUnique({
@@ -78,7 +79,20 @@ export async function syncOutletBonus(
   };
   if (old && old.status !== "REJECTED") await tx.moneyEntry.update({ where: { id: old.id }, data });
   else {
-    const id = await allocateBusinessId(tx, "bonus");
+    let id: string;
+    if (reservedInitialId !== undefined) {
+      const numeric = /^BON-([0-9]{5,})$/.exec(reservedInitialId);
+      const reserved = await tx.sequenceCounter.findUnique({ where: { name: "bonus-entry" } });
+      if (
+        !numeric ||
+        !Number.isSafeInteger(Number(numeric[1])) ||
+        Number(numeric[1]) < 1 ||
+        !reserved ||
+        Number(numeric[1]) > reserved.value
+      )
+        throw new BonusSyncError("ID bonus historis belum dicadangkan.");
+      id = reservedInitialId;
+    } else id = await allocateBusinessId(tx, "bonus");
     await tx.moneyEntry.create({
       data: {
         ...data,

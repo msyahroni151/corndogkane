@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import type { FormState } from "@/lib/form-state";
 class SettlementError extends Error {}
 export async function decideSettlement(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("selisih-setor", "approve");
   const user = await requireAccess("selisih-setor");
   const id = String(form.get("operationId") || ""),
     version = String(form.get("version") || ""),

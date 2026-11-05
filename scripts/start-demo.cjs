@@ -12,28 +12,45 @@ async function start() {
   });
   try {
     await check.connect();
-    await assertDemoDatabase(check);
+    const state = await assertDemoDatabase(check);
+    if (process.env.SECURITY_RUNTIME_DATABASE === "1") {
+      if (!state.seeded) throw Error("Database runtime belum dipersiapkan oleh proses migrasi.");
+      const role = (
+        await check.query(
+          "SELECT current_user name,rolsuper,rolbypassrls,rolcreaterole,rolcreatedb FROM pg_roles WHERE rolname=current_user",
+        )
+      ).rows[0];
+      if (
+        role.name !== "corndog_runtime" ||
+        role.rolsuper ||
+        role.rolbypassrls ||
+        role.rolcreaterole ||
+        role.rolcreatedb
+      )
+        throw Error("Role runtime database tidak memenuhi pembatasan keamanan.");
+    }
   } finally {
     await check.end();
   }
   console.log("Target database demo sudah diverifikasi.");
-  for (const args of [
-    [path.join(root, "node_modules/prisma/build/index.js"), "migrate", "deploy"],
-    [path.join(root, "node_modules/tsx/dist/cli.mjs"), path.join(__dirname, "seed-demo.ts")],
-  ]) {
-    const result = spawnSync(process.execPath, args, {
-      cwd: root,
-      env: { ...process.env, CHECKPOINT_DISABLE: "1" },
-      encoding: "utf8",
-      windowsHide: true,
-      timeout: 180000,
-      maxBuffer: 5 * 1024 * 1024,
-    });
-    if (result.status !== 0)
-      throw Error(
-        "Persiapan database demo gagal. Periksa konfigurasi project demo; detail koneksi tidak dicetak.",
-      );
-  }
+  if (process.env.SECURITY_RUNTIME_DATABASE !== "1")
+    for (const args of [
+      [path.join(root, "node_modules/prisma/build/index.js"), "migrate", "deploy"],
+      [path.join(root, "node_modules/tsx/dist/cli.mjs"), path.join(__dirname, "seed-demo.ts")],
+    ]) {
+      const result = spawnSync(process.execPath, args, {
+        cwd: root,
+        env: { ...process.env, CHECKPOINT_DISABLE: "1" },
+        encoding: "utf8",
+        windowsHide: true,
+        timeout: 180000,
+        maxBuffer: 5 * 1024 * 1024,
+      });
+      if (result.status !== 0)
+        throw Error(
+          "Persiapan database demo gagal. Periksa konfigurasi project demo; detail koneksi tidak dicetak.",
+        );
+    }
   const port = process.env.PORT || "10000";
   if (!/^\d{2,5}$/.test(port) || Number(port) > 65535 || Number(port) < 1024)
     throw Error("Port hosting demo tidak valid.");

@@ -1,12 +1,12 @@
 services:
   - type: web
-    name: corndog-kane-demo
+    name: corndogkane
     runtime: node
     plan: free
-    region: singapore
+    region: oregon
     autoDeployTrigger: off
     buildCommand: corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm run build
-    startCommand: node scripts/start-demo.cjs
+    startCommand: node scripts/start-secure.cjs
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
@@ -18,12 +18,10 @@ services:
       - key: NODE_EXTRA_CA_CERTS
         value: integrations/supabase/prod-ca-2021.crt
       - key: HRIS_DEMO_MODE
+        value: "0"
+      - key: SECURITY_RUNTIME_DATABASE
         value: "1"
-      - key: HRIS_DEMO_PROJECT_REF
+      - key: SECURITY_ENCRYPTION_KEY
         sync: false
       - key: DATABASE_URL
         sync: false
-      - key: DEMO_ADMIN_EMAIL
-        value: owner@demo.corndogkane.test
-      - key: DEMO_ADMIN_PASSWORD
-        generateValue: true

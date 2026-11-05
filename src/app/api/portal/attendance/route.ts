@@ -1,3 +1,8 @@
+import { sealDescriptor, openDescriptor } from "@/lib/private-data";
+import { hasAction } from "@/lib/permission-actions";
+import { boundedJsonText, RequestBodyError } from "@/lib/request-body";
+import { sameOrigin } from "@/lib/request-origin";
+import { PortalInputError } from "@/lib/portal-input-error";
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
@@ -11,26 +16,12 @@ export async function POST(req: Request) {
       { error: "Masuk kembali dengan akun portal karyawan." },
       { status: 401 },
     );
+  if (!hasAction(user, "portal-karyawan", "create"))
+    return Response.json({ error: "Izin aksi ditolak." }, { status: 403 });
   try {
-    if (
-      !req.headers.get("content-type")?.startsWith("application/json") ||
-      new URL(req.headers.get("origin") || "https://invalid.invalid").host !==
-        req.headers.get("host")
-    )
-      throw Error("Permintaan kamera tidak valid.");
-    let raw = "";
-    const reader = req.body?.getReader();
-    if (!reader) throw Error("Data kamera kosong.");
-    const decoder = new TextDecoder();
-    while (true) {
-      const r = await reader.read();
-      if (r.done) break;
-      raw += decoder.decode(r.value, { stream: true });
-      if (raw.length > 650000) {
-        await reader.cancel();
-        throw Error("Ukuran foto terlalu besar.");
-      }
-    }
+    if (!sameOrigin(req))
+      return NextResponse.json({ error: "Permintaan kamera tidak valid." }, { status: 403 });
+    const raw = await boundedJsonText(req, 650000);
     const body = JSON.parse(raw),
       db = getPrisma(),
       account = await db.user.findUnique({
@@ -38,16 +29,17 @@ export async function POST(req: Request) {
         select: { employee: { select: { id: true, active: true } } },
       });
     const employee = account?.employee;
-    if (!employee?.active) throw Error("Akun belum terhubung ke karyawan aktif.");
+    if (!employee?.active) throw new PortalInputError("Akun belum terhubung ke karyawan aktif.");
     if (body.step === "ENROLL") {
-      if (body.consent !== true) throw Error("Persetujuan penggunaan wajah diperlukan.");
-      const descriptor = descriptorOf(body.descriptor),
+      if (body.consent !== true)
+        throw new PortalInputError("Persetujuan penggunaan wajah diperlukan.");
+      const descriptor = sealDescriptor(descriptorOf(body.descriptor)),
         photo = jpegOf(body.photo);
       await db.$transaction(async (tx) => {
         await tx.$executeRaw`SELECT id FROM employees WHERE id=${employee.id} FOR UPDATE`;
         const existing = await tx.portalFace.findUnique({ where: { employeeId: employee.id } });
         if (existing && existing.status !== "REJECTED")
-          throw Error("Wajah sudah terdaftar atau menunggu persetujuan admin.");
+          throw new PortalInputError("Wajah sudah terdaftar atau menunggu persetujuan admin.");
         await tx.portalFace.upsert({
           where: { employeeId: employee.id },
           create: { employeeId: employee.id, descriptor, photo, requestedById: user.id },
@@ -69,7 +61,7 @@ export async function POST(req: Request) {
     }
     if (body.step === "START") {
       if (!["IN", "OUT"].includes(body.kind) || typeof body.scheduleId !== "string")
-        throw Error("Pilih jadwal dan jenis absensi.");
+        throw new PortalInputError("Pilih jadwal dan jenis absensi.");
       await db.portalChallenge.deleteMany({
         where: { expiresAt: { lt: new Date(Date.now() - 86400000) } },
       });
@@ -80,30 +72,35 @@ export async function POST(req: Request) {
             where: { userId: user.id, createdAt: { gt: new Date(Date.now() - 15 * 60000) } },
           })) >= 10
         )
-          throw Error("Terlalu banyak percobaan. Coba lagi setelah 15 menit.");
+          throw new PortalInputError("Terlalu banyak percobaan. Coba lagi setelah 15 menit.");
         const face = await tx.portalFace.findUnique({ where: { employeeId: employee.id } });
-        if (face?.status !== "APPROVED") throw Error("Pendaftaran wajah belum disetujui admin.");
+        if (face?.status !== "APPROVED")
+          throw new PortalInputError("Pendaftaran wajah belum disetujui admin.");
         const s = await tx.schedule.findFirst({
           where: { id: body.scheduleId, employeeId: employee.id },
           include: { attendance: true },
         });
-        if (!s) throw Error("Jadwal tidak tersedia.");
+        if (!s) throw new PortalInputError("Jadwal tidak tersedia.");
         portalWindow(s, body.kind);
         if (body.kind === "IN" && s.attendance)
-          throw Error("Absensi masuk sudah tercatat. Hubungi admin jika perlu koreksi.");
+          throw new PortalInputError(
+            "Absensi masuk sudah tercatat. Hubungi admin jika perlu koreksi.",
+          );
         if (
           body.kind === "OUT" &&
           (!s.attendance ||
             s.attendance.checkInMinutes === null ||
             s.attendance.checkOutMinutes !== null)
         )
-          throw Error("Absensi masuk harus disetujui terlebih dahulu dan belum tercatat pulang.");
+          throw new PortalInputError(
+            "Absensi masuk harus disetujui terlebih dahulu dan belum tercatat pulang.",
+          );
         if (
           await tx.portalCapture.findFirst({
             where: { scheduleId: s.id, kind: body.kind, status: { in: ["PENDING", "APPROVED"] } },
           })
         )
-          throw Error("Bukti absensi ini sudah dikirim.");
+          throw new PortalInputError("Bukti absensi ini sudah dikirim.");
         if (
           await tx.payroll.findFirst({
             where: {
@@ -114,7 +111,7 @@ export async function POST(req: Request) {
             },
           })
         )
-          throw Error("Periode absensi sudah ditutup payroll.");
+          throw new PortalInputError("Periode absensi sudah ditutup payroll.");
         return tx.portalChallenge.create({
           data: {
             employeeId: employee.id,
@@ -130,19 +127,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ id: challenge.id });
     }
     if (!["VERIFY", "COMPLETE"].includes(body.step) || typeof body.id !== "string")
-      throw Error("Tahap absensi tidak valid.");
+      throw new PortalInputError("Tahap absensi tidak valid.");
     const result = await db.$transaction(
       async (tx) => {
         await tx.$executeRaw`SELECT id FROM employees WHERE id=${employee.id} FOR UPDATE`;
         await tx.$executeRaw`SELECT id FROM portal_challenges WHERE id=${body.id} FOR UPDATE`;
         const c = await tx.portalChallenge.findUnique({ where: { id: body.id } });
         if (!c || c.userId !== user.id || c.employeeId !== employee.id)
-          throw Error("Sesi kamera tidak tersedia.");
+          throw new PortalInputError("Sesi kamera tidak tersedia.");
         if (c.consumedAt) {
           if (body.step === "COMPLETE") return { success: "Bukti absensi sudah terkirim." };
-          throw Error("Sesi kamera sudah digunakan.");
+          throw new PortalInputError("Sesi kamera sudah digunakan.");
         }
-        if (c.expiresAt < new Date()) throw Error("Sesi kamera kedaluwarsa. Mulai kembali.");
+        if (c.expiresAt < new Date())
+          throw new PortalInputError("Sesi kamera kedaluwarsa. Mulai kembali.");
         const s = await tx.schedule.findFirst({
           where: { id: c.scheduleId, employeeId: employee.id },
           include: { attendance: true },
@@ -152,16 +150,19 @@ export async function POST(req: Request) {
           s.updatedAt.toISOString() !== c.scheduleVersion ||
           (s.attendance?.updatedAt.toISOString() || "") !== c.attendanceVersion
         )
-          throw Error("Jadwal atau absensi berubah. Mulai kembali.");
+          throw new PortalInputError("Jadwal atau absensi berubah. Mulai kembali.");
         portalWindow(s, c.kind);
         if (body.step === "VERIFY") {
           if (c.attempts >= 5 || c.verifiedAt)
-            throw Error("Batas percobaan tercapai atau wajah sudah diverifikasi. Mulai kembali.");
+            throw new PortalInputError(
+              "Batas percobaan tercapai atau wajah sudah diverifikasi. Mulai kembali.",
+            );
           const face = await tx.portalFace.findUnique({ where: { employeeId: employee.id } });
-          if (face?.status !== "APPROVED") throw Error("Wajah belum disetujui admin.");
+          if (face?.status !== "APPROVED")
+            throw new PortalInputError("Wajah belum disetujui admin.");
           const descriptor = descriptorOf(body.descriptor),
             photo = jpegOf(body.photo),
-            distance = faceDistance(descriptorOf(face.descriptor), descriptor);
+            distance = faceDistance(descriptorOf(openDescriptor(face.descriptor)), descriptor);
           await tx.portalChallenge.update({
             where: { id: c.id },
             data: {
@@ -174,7 +175,7 @@ export async function POST(req: Request) {
             : { error: "Wajah belum cocok. Pastikan pencahayaan cukup dan coba kembali." };
         }
         if (!c.verifiedAt || !c.facePhoto || c.distance === null)
-          throw Error("Verifikasi wajah harus diselesaikan terlebih dahulu.");
+          throw new PortalInputError("Verifikasi wajah harus diselesaikan terlebih dahulu.");
         const cartPhoto = jpegOf(body.photo);
         if (
           await tx.portalCapture.findFirst({
@@ -185,7 +186,7 @@ export async function POST(req: Request) {
             },
           })
         )
-          throw Error("Bukti absensi sudah dikirim dari sesi lain.");
+          throw new PortalInputError("Bukti absensi sudah dikirim dari sesi lain.");
         await tx.portalCapture.create({
           data: {
             challengeId: c.id,
@@ -213,9 +214,13 @@ export async function POST(req: Request) {
     );
     return NextResponse.json(result, result.error ? { status: 400 } : undefined);
   } catch (e) {
+    if (e instanceof RequestBodyError)
+      return NextResponse.json({ error: e.message }, { status: e.status });
     return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Absensi belum tersimpan. Coba kembali." },
-      { status: 400 },
+      {
+        error: e instanceof PortalInputError ? e.message : "Absensi belum tersimpan. Coba kembali.",
+      },
+      { status: e instanceof PortalInputError || e instanceof SyntaxError ? 400 : 500 },
     );
   }
 }

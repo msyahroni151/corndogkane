@@ -1,4 +1,5 @@
 "use server";
+import { requireAccess } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/db";
 import { portalIdentity } from "@/lib/portal-access";
@@ -13,6 +14,7 @@ function keyOf(f: FormData) {
   return key;
 }
 export async function requestPortalLoan(_: FormState, f: FormData): Promise<FormState> {
+  await requireAccess("portal-karyawan", "create");
   const { user, employee } = await portalIdentity();
   try {
     const key = keyOf(f),
@@ -52,6 +54,7 @@ export async function requestPortalLoan(_: FormState, f: FormData): Promise<Form
   }
 }
 export async function requestPortalLeave(_: FormState, f: FormData): Promise<FormState> {
+  await requireAccess("portal-karyawan", "create");
   const { user, employee } = await portalIdentity();
   try {
     const key = keyOf(f),
@@ -99,6 +102,7 @@ export async function requestPortalLeave(_: FormState, f: FormData): Promise<For
   }
 }
 export async function cancelPortalLeave(_: FormState, f: FormData): Promise<FormState> {
+  await requireAccess("portal-karyawan", "delete");
   const { employee } = await portalIdentity();
   const changed = await getPrisma().portalLeave.updateMany({
     where: { id: get(f, "id"), employeeId: employee.id, status: "PENDING" },

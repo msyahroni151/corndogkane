@@ -5,6 +5,7 @@ import { getPrisma } from "@/lib/db";
 import { parseReceiptSettings, receiptKinds, type ReceiptKind } from "@/lib/receipt-templates";
 import type { FormState } from "@/lib/form-state";
 export async function saveReceiptTemplate(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("template-struk", "edit");
   const user = await requireAccess("template-struk"),
     get = (key: string) => String(form.get(key) || "").trim(),
     kind = get("kind"),

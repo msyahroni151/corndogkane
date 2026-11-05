@@ -5,7 +5,10 @@ export function sameOrigin(request: Request) {
     return (
       parsed.origin === origin &&
       parsed.host === request.headers.get("host") &&
-      ["http:", "https:"].includes(parsed.protocol)
+      (parsed.protocol === "https:" ||
+        (parsed.protocol === "http:" &&
+          process.env.RENDER !== "true" &&
+          /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(parsed.host)))
     );
   } catch {
     return false;

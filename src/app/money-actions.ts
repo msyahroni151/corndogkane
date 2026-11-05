@@ -1,4 +1,5 @@
 "use server";
+import { hasAction } from "@/lib/permission-actions";
 import { hasPermission } from "@/lib/permissions";
 import { allocateBusinessId } from "@/lib/business-id";
 import { requireUser } from "@/lib/auth";
@@ -25,7 +26,10 @@ export async function createMoneyEntry(_: FormState, form: FormData): Promise<Fo
   const user = await requireUser();
   const get = (key: string) => String(form.get(key) || "").trim();
   const kind = get("kind");
-  if (!hasPermission(user, ["LOAN", "REPAYMENT"].includes(kind) ? "kasbon" : "bonus"))
+  if (
+    !hasPermission(user, ["LOAN", "REPAYMENT"].includes(kind) ? "kasbon" : "bonus") ||
+    !hasAction(user, ["LOAN", "REPAYMENT"].includes(kind) ? "kasbon" : "bonus", "create")
+  )
     return { error: "Anda tidak memiliki akses ke menu ini." };
   if (!Object.hasOwn(moneyLabels, kind)) return { error: "Jenis pencatatan tidak valid." };
   const raw = get("amount");
@@ -111,7 +115,8 @@ export async function decideMoneyEntry(_: FormState, form: FormData): Promise<Fo
   const target = await getPrisma().moneyEntry.findUnique({ where: { id }, select: { kind: true } });
   if (
     !target ||
-    !hasPermission(user, ["LOAN", "REPAYMENT"].includes(target.kind) ? "kasbon" : "bonus")
+    !hasPermission(user, ["LOAN", "REPAYMENT"].includes(target.kind) ? "kasbon" : "bonus") ||
+    !hasAction(user, ["LOAN", "REPAYMENT"].includes(target.kind) ? "kasbon" : "bonus", "approve")
   )
     return { error: "Catatan tidak tersedia atau Anda tidak memiliki akses." };
   const decision = String(form.get("decision") || "");

@@ -32,12 +32,25 @@ function match<T extends { id: string }>(
     );
   return found[0];
 }
-export async function prepareSalesImport(db: LookupDb, csv: string) {
+type HistoricalImportOptions = {
+  historicalCrewIds?: ReadonlySet<string>;
+  historicalOutletIds?: ReadonlySet<string>;
+};
+export async function prepareSalesImport(
+  db: LookupDb,
+  csv: string,
+  options: HistoricalImportOptions = {},
+) {
   const parsed = parseSalesCsv(csv),
     errors = [...parsed.errors];
   const [outlets, employees] = await Promise.all([
     db.outlet.findMany({
-      where: { active: true, closed: false, area: { active: true } },
+      where: {
+        OR: [
+          { active: true, closed: false, area: { active: true } },
+          { id: { in: [...(options.historicalOutletIds || [])] } },
+        ],
+      },
       select: { id: true, name: true, nameCode: true },
     }),
     db.employee.findMany({
@@ -51,7 +64,11 @@ export async function prepareSalesImport(db: LookupDb, csv: string) {
       },
     }),
   ]);
-  const crew = employees.filter(canImportOutletCrew),
+  const crew = employees.filter(
+      (employee) =>
+        canImportOutletCrew(employee) ||
+        (!!employee.employeeCode?.trim() && options.historicalCrewIds?.has(employee.id)),
+    ),
     rows: Resolved[] = [],
     seen = new Set<string>();
   for (const row of parsed.rows)
@@ -142,16 +159,20 @@ export async function prepareSalesImport(db: LookupDb, csv: string) {
     })),
   };
 }
-export async function importSalesCsv(csv: string, userId: string) {
+export async function importSalesCsv(
+  csv: string,
+  userId: string,
+  options: HistoricalImportOptions = {},
+) {
   return getPrisma().$transaction(
     async (tx) => {
-      const plan = await prepareSalesImport(tx, csv);
+      const plan = await prepareSalesImport(tx, csv, options);
       if (plan.errors.length)
         throw new InputError("CSV masih memiliki kesalahan. Periksa pratinjau sebelum impor.");
       // Match the manual/POS writer's lock; an import can never overwrite a concurrent save.
       for (const identity of plan.rows.map((row) => row.outletId + "|" + row.date).sort())
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${identity},0))`;
-      const current = await prepareSalesImport(tx, csv);
+      const current = await prepareSalesImport(tx, csv, options);
       if (current.errors.length)
         throw new InputError("Referensi berubah saat impor. Periksa pratinjau kembali.");
       const employees = [...new Set(current.fresh.map((row) => row.crewId).filter(Boolean))].sort();
@@ -172,13 +193,19 @@ export async function importSalesCsv(csv: string, userId: string) {
               userId,
               tx,
               true,
+              options.historicalOutletIds,
             );
           } else
             await saveOutletOperation(
               { ...row, date: row.date, version: null, salesMode: "TOTAL" },
               userId,
               tx,
-              { createOnly: true, allowInactiveCrew: true },
+              {
+                createOnly: true,
+                allowInactiveCrew: true,
+                historicalCrewIds: options.historicalCrewIds,
+                historicalOutletIds: options.historicalOutletIds,
+              },
             );
         } catch (error) {
           if (

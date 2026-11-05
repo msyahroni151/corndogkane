@@ -1,8 +1,11 @@
 "use server";
+import { requiresMfa } from "@/lib/mfa-policy";
+import { beginMfa, cancelPendingMfa } from "@/lib/mfa";
 import { isValidNewPassword, passwordError } from "@/lib/password-policy";
 import { homeFor, rolePermissions } from "@/lib/permissions";
 import { authNoticeCookie } from "@/lib/auth-notice";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { consumeLoginAttempt, loginIpKey } from "@/lib/login-rate-limit";
 import { redirect } from "next/navigation";
 import { getPrisma } from "@/lib/db";
 import { hashPassword, verifyPassword, digest } from "@/lib/security";
@@ -27,8 +30,8 @@ export async function setupAdmin(_: FormState, form: FormData): Promise<FormStat
     return (await tx.user.create({ data: { name, email, passwordHash, roleId: "ROLE-OWNER" } })).id;
   });
   if (!id) return { error: "Akun administrator sudah dibuat. Silakan masuk." };
-  await createSession(id);
-  redirect("/menu-utama/dashboard");
+  await beginMfa(id);
+  redirect("/verifikasi-keamanan");
 }
 
 export async function login(_: FormState, form: FormData): Promise<FormState> {
@@ -37,34 +40,42 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
   if (!email || email.length > 254 || !password || password.length > 128)
     return { error: "Email atau password tidak sesuai." };
   const key = digest(email);
-  const allowed = await getPrisma().$transaction(async (tx) => {
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
-    const now = new Date();
-    const record = await tx.loginThrottle.findUnique({ where: { key } });
-    if (!record || now.getTime() - record.windowStart.getTime() > 15 * 60_000) {
-      await tx.loginThrottle.upsert({
-        where: { key },
-        create: { key, attempts: 1, windowStart: now },
-        update: { attempts: 1, windowStart: now },
-      });
-      return true;
-    }
-    if (record.attempts >= 10) return false;
-    await tx.loginThrottle.update({ where: { key }, data: { attempts: { increment: 1 } } });
-    return true;
-  });
+  const ipHash = loginIpKey(await headers());
+  let allowed: boolean;
+  try {
+    allowed = await consumeLoginAttempt(email, ipHash);
+  } catch {
+    return { error: "Login sementara tidak tersedia. Silakan coba kembali." };
+  }
   if (!allowed) return { error: "Terlalu banyak percobaan. Silakan coba lagi setelah 15 menit." };
+  await cancelPendingMfa();
   const user = await getPrisma().user.findUnique({
     where: { email },
-    include: { role: true, employee: { select: { active: true } } },
+    include: {
+      role: true,
+      mfaCredential: { select: { userId: true } },
+      employee: { select: { active: true } },
+    },
   });
   const valid = await verifyPassword(password, user?.passwordHash || "");
-  if (!valid || !user?.active || !user.role?.active || user.employee?.active === false)
+  if (!valid || !user?.active || !user.role?.active || user.employee?.active === false) {
+    // No email, password, session token, or biometric data in the audit trail.
+    await getPrisma().securityEvent.create({
+      data: { action: "LOGIN_FAILED", outcome: "DENIED", ipHash },
+    });
     return { error: "Email atau password tidak sesuai." };
+  }
   const permissions = rolePermissions(user.role!);
   if (!permissions.length)
     return { error: "Role akun belum memiliki hak akses. Hubungi pengelola." };
+  if (user.mfaCredential || requiresMfa(user.role!)) {
+    await beginMfa(user.id);
+    redirect("/verifikasi-keamanan");
+  }
   await getPrisma().loginThrottle.deleteMany({ where: { key } });
+  await getPrisma().securityEvent.create({
+    data: { userId: user.id, action: "LOGIN", outcome: "SUCCESS", ipHash },
+  });
   await createSession(user.id);
   (await cookies()).set(authNoticeCookie, "signed-in", {
     path: "/",
@@ -74,9 +85,23 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
   redirect(homeFor(permissions));
 }
 export async function logout() {
+  await cancelPendingMfa();
   const jar = await cookies();
   const token = jar.get(sessionCookie)?.value;
-  if (token) await getPrisma().session.deleteMany({ where: { tokenHash: digest(token) } });
+  if (token && /^[a-f0-9]{64}$/.test(token)) {
+    await getPrisma().$transaction(async (tx) => {
+      const tokenHash = digest(token);
+      const session = await tx.session.findUnique({
+        where: { tokenHash },
+        select: { userId: true },
+      });
+      await tx.session.deleteMany({ where: { tokenHash } });
+      if (session)
+        await tx.securityEvent.create({
+          data: { userId: session.userId, action: "LOGOUT", outcome: "SUCCESS" },
+        });
+    });
+  }
   jar.delete(sessionCookie);
   jar.set(authNoticeCookie, "signed-out", {
     path: "/",

@@ -18,6 +18,7 @@ function fail(e: unknown): FormState {
   };
 }
 export async function saveFinancialAccount(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("master-akun", form.get("id") || form.get("existingId") ? "edit" : "create");
   const user = await requireAccess("master-akun"),
     get = (key: string) => String(form.get(key) || "").trim(),
     code = get("code").toUpperCase(),
@@ -79,6 +80,7 @@ export async function saveFinancialAccount(_: FormState, form: FormData): Promis
   return { success: "Akun berhasil disimpan." };
 }
 export async function createJournalTransaction(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("open-transaction", "create");
   const user = await requireAccess("open-transaction");
   let data: ReturnType<typeof parseJournal>;
   try {
@@ -136,6 +138,7 @@ export async function createJournalTransaction(_: FormState, form: FormData): Pr
 }
 
 export async function setFinancialAccountStatus(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("master-akun", "edit");
   await requireAccess("master-akun");
   const id = String(form.get("id") || ""),
     version = String(form.get("version") || ""),

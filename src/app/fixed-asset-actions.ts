@@ -79,6 +79,7 @@ function refresh() {
   revalidatePath("/finance/aset-tetap");
 }
 export async function createFixedAsset(_: FormState, form: FormData): Promise<AssetActionState> {
+  await requireAccess("finance-assets", "create");
   const user = await requireAccess("finance-assets");
   try {
     const key = assetRequestKey(form),
@@ -134,6 +135,7 @@ export async function createFixedAsset(_: FormState, form: FormData): Promise<As
   }
 }
 export async function updateFixedAsset(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("finance-assets", "edit");
   const user = await requireAccess("finance-assets");
   try {
     const key = assetRequestKey(form),
@@ -180,6 +182,7 @@ export async function updateFixedAsset(_: FormState, form: FormData): Promise<Fo
   }
 }
 export async function moveFixedAsset(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("finance-assets", "edit");
   const user = await requireAccess("finance-assets");
   try {
     const key = assetRequestKey(form),

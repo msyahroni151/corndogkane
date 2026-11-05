@@ -6,6 +6,7 @@ import { getPrisma } from "@/lib/db";
 import { portalMinutes } from "@/lib/employee-portal";
 import type { FormState } from "@/lib/form-state";
 export async function reviewPortalRequest(_: FormState, f: FormData): Promise<FormState> {
+  await requireAccess("portal-review", "approve");
   const user = await requireAccess("portal-review"),
     id = String(f.get("id") || ""),
     type = String(f.get("type") || ""),

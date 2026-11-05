@@ -50,3 +50,5 @@ next-env.d.ts
 /.next-dashboard-qa/
 
 /.next-local/
+
+/.next-security-qa/

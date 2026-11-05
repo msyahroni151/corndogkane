@@ -9,6 +9,10 @@ import {
 } from "@/lib/production-plans";
 import type { FormState } from "@/lib/form-state";
 export async function savePlan(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess(
+    "produksi-gudang",
+    form.get("id") || form.get("existingId") ? "edit" : "create",
+  );
   const user = await requireAccess("produksi-gudang"),
     get = (k: string) => String(form.get(k) || "").trim();
   try {
@@ -33,6 +37,7 @@ export async function savePlan(_: FormState, form: FormData): Promise<FormState>
   return { success: "Rencana produksi berhasil disimpan. Stok belum dikurangi." };
 }
 export async function updatePlan(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("produksi-gudang", "edit");
   const user = await requireAccess("produksi-gudang"),
     get = (k: string) => String(form.get(k) || "").trim();
   try {

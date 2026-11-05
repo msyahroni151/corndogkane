@@ -51,6 +51,10 @@ model Employee {
 }
 
 model User {
+  mfaCredential MfaCredential?
+  mfaChallenges MfaChallenge[]
+  acknowledgedAlerts SecurityAlert[]
+  securityEvents SecurityEvent[]
   outletDailyStatuses OutletDailyStatus[]
   scheduleAreaNotes ScheduleAreaNote[]
   createdProductionPlans ProductionPlan[] @relation("PlanCreator")
@@ -100,6 +104,7 @@ model User {
 }
 
 model Session {
+  mfaVerifiedAt DateTime?
   tokenHash String   @id
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -391,6 +396,7 @@ model Partner {
 }
 
 model AccessRole {
+  mfaRequired Boolean @default(false)
   id          String   @id @default(cuid())
   name        String   @unique
   systemKey   String?  @unique
@@ -1148,4 +1154,74 @@ model OutletDailyStatus {
   @@unique([outletId, date])
   @@index([date, closed])
   @@map("outlet_daily_statuses")
+}
+
+model SecurityEvent {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action String @db.VarChar(80)
+  outcome String @db.VarChar(20)
+  ipHash String? @db.VarChar(64)
+  metadata Json?
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("security_events")
+}
+
+model MfaCredential {
+ userId String @id
+ user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ secretCipher Bytes
+ lastCounter Int @default(-1)
+ recoveryHashes Json
+ createdAt DateTime @default(now())
+ @@map("mfa_credentials")
+}
+model MfaChallenge {
+ tokenHash String @id
+ userId String
+ user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ setupCipher Bytes?
+ recoveryCipher Bytes?
+ attempts Int @default(0)
+ verifiedAt DateTime?
+ expiresAt DateTime
+ createdAt DateTime @default(now())
+ @@index([expiresAt])
+ @@map("mfa_challenges")
+}
+model SecurityAlert {
+ id String @id @default(cuid())
+ fingerprint String @unique
+ title String
+ message String
+ severity String
+ occurrences Int @default(1)
+ acknowledgedAt DateTime?
+ acknowledgedById String?
+ acknowledgedBy User? @relation(fields: [acknowledgedById], references: [id], onDelete: SetNull)
+ createdAt DateTime @default(now())
+ updatedAt DateTime @default(now()) @updatedAt
+ @@index([acknowledgedAt, createdAt])
+ @@map("security_alerts")
+}
+model SecurityBackupRun {
+ id String @id
+ target String
+ status String
+ sha256 String?
+ restoredAt DateTime?
+ createdAt DateTime @default(now())
+ finishedAt DateTime?
+ @@index([target, createdAt])
+ @@map("security_backup_runs")
+}
+model SecuritySetting {
+ id String @id @default("default")
+ photoRetentionDays Int @default(180)
+ // Existing photos are preserved; deletion is deliberately not automated.
+ updatedAt DateTime @default(now()) @updatedAt
+ @@map("security_settings")
 }

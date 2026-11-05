@@ -1,3 +1,5 @@
+import { sealPrivate } from "@/lib/private-data";
+import { PortalInputError } from "@/lib/portal-input-error";
 import "server-only";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
@@ -8,7 +10,9 @@ export async function portalIdentity() {
     select: { employee: { select: { id: true, fullName: true, active: true } } },
   });
   if (!account?.employee?.active)
-    throw Error("Akun belum terhubung ke karyawan aktif. Hubungi admin melalui Role & Akun Login.");
+    throw new PortalInputError(
+      "Akun belum terhubung ke karyawan aktif. Hubungi admin melalui Role & Akun Login.",
+    );
   return { user, employee: account.employee };
 }
 export function jpegOf(value: unknown) {
@@ -17,7 +21,7 @@ export function jpegOf(value: unknown) {
     !value.startsWith("data:image/jpeg;base64,") ||
     value.length > 300000
   )
-    throw Error("Foto harus JPEG dengan ukuran maksimal 200 KB.");
+    throw new PortalInputError("Foto harus JPEG dengan ukuran maksimal 200 KB.");
   const b = Buffer.from(value.slice(23), "base64");
   if (
     b.length < 1000 ||
@@ -28,6 +32,6 @@ export function jpegOf(value: unknown) {
     b[b.length - 2] !== 255 ||
     b[b.length - 1] !== 217
   )
-    throw Error("Foto kamera tidak valid.");
-  return b;
+    throw new PortalInputError("Foto kamera tidak valid.");
+  return sealPrivate(b, "portal-photo");
 }

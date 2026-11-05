@@ -59,6 +59,7 @@ async function checkPortalLeave(
     );
 }
 export async function createSchedules(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("jadwal", "create");
   const user = await requireAccess("jadwal");
   const get = (key: string) => String(form.get(key) || "").trim();
   if (get("scheduleMode") === "backup") return createOutletScheduleRows(form, user.id, false);
@@ -427,6 +428,7 @@ async function createOutletScheduleRows(
   };
 }
 export async function updateSchedule(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("jadwal", "edit");
   await requireAccess("jadwal");
   const get = (key: string) => String(form.get(key) || "").trim();
   try {
@@ -557,6 +559,7 @@ function refreshSchedulePages() {
     revalidatePath(path);
 }
 export async function deleteSchedule(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("jadwal", "delete");
   await requireAccess("jadwal");
   const id = String(form.get("id") || ""),
     version = String(form.get("version") || "");
@@ -607,6 +610,7 @@ export async function deleteSchedule(_: FormState, form: FormData): Promise<Form
 }
 
 export async function updateScheduleOutlet(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("jadwal", "edit");
   await requireAccess("jadwal");
   try {
     await saveScheduleOutlet(getPrisma(), form);

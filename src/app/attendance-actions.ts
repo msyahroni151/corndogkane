@@ -21,6 +21,7 @@ function invalid(message: string): never {
   throw e;
 }
 export async function saveAttendance(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("absensi", "edit");
   const user = await requireAccess("absensi");
   const get = (key: string) => String(form.get(key) || "").trim();
   const status = get("status");
@@ -130,6 +131,7 @@ export async function saveAttendance(_: FormState, form: FormData): Promise<Form
 }
 
 export async function updateAttendanceOutlet(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("absensi", "edit");
   await requireAccess("absensi");
   try {
     await saveScheduleOutlet(getPrisma(), form);

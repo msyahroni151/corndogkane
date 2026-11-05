@@ -82,6 +82,7 @@ async function postExpense(
   });
 }
 export async function createOperationalExpense(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("finance-expenses", "create");
   const user = await requireAccess("finance-expenses");
   let data: ReturnType<typeof parseOperationalExpense>;
   try {
@@ -158,6 +159,7 @@ export async function createOperationalExpense(_: FormState, form: FormData): Pr
   return { success: "Pengeluaran operasional berhasil dicatat." };
 }
 export async function payOperationalExpense(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("finance-expenses", "approve");
   const user = await requireAccess("finance-expenses"),
     id = String(form.get("id") || ""),
     version = String(form.get("version") || "");

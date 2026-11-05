@@ -1,3 +1,5 @@
+import { requiresMfa } from "@/lib/mfa-policy";
+import { roleActionPermissions, hasAction, type PermissionAction } from "@/lib/permission-actions";
 import { hasPermission, rolePermissions, type PermissionKey } from "@/lib/permissions";
 import "server-only";
 import { cache } from "react";
@@ -15,15 +17,25 @@ export const currentUser = cache(async function currentUser() {
     where: { tokenHash: digest(token) },
     select: {
       expiresAt: true,
+      mfaVerifiedAt: true,
       user: {
         select: {
           id: true,
           employeeId: true,
+          mfaCredential: { select: { userId: true } },
           name: true,
           email: true,
           active: true,
           employee: { select: { active: true } },
-          role: { select: { name: true, systemKey: true, active: true, permissions: true } },
+          role: {
+            select: {
+              name: true,
+              systemKey: true,
+              active: true,
+              permissions: true,
+              mfaRequired: true,
+            },
+          },
         },
       },
     },
@@ -33,7 +45,9 @@ export const currentUser = cache(async function currentUser() {
     session.expiresAt <= new Date() ||
     !session.user.active ||
     !session.user.role?.active ||
-    session.user.employee?.active === false
+    session.user.employee?.active === false ||
+    ((!!session.user.mfaCredential || (session.user.role && requiresMfa(session.user.role))) &&
+      !session.mfaVerifiedAt)
   )
     return null;
   return {
@@ -42,7 +56,11 @@ export const currentUser = cache(async function currentUser() {
     name: session.user.name,
     email: session.user.email,
     expiresAt: session.expiresAt.toISOString(),
+    mfaEnabled: !!session.user.mfaCredential,
+    mfaVerifiedAt: session.mfaVerifiedAt?.toISOString() || null,
+    actionPermissions: roleActionPermissions(session.user.role),
     roleName: session.user.role.name,
+    roleSystemKey: session.user.role.systemKey,
     permissions: rolePermissions(session.user.role),
   };
 });
@@ -51,13 +69,27 @@ export async function requireUser() {
   if (!user) redirect("/login");
   return user;
 }
-export async function createSession(userId: string) {
+export async function createSession(userId: string, mfaVerified = false) {
   const token = randomBytes(32).toString("hex");
   const expiresAt = nextMidnight();
-  await getPrisma().session.create({ data: { tokenHash: digest(token), userId, expiresAt } });
+  const previous = (await cookies()).get(sessionCookie)?.value;
+  await getPrisma().$transaction(async (tx) => {
+    if (previous && /^[a-f0-9]{64}$/.test(previous))
+      await tx.session.deleteMany({ where: { tokenHash: digest(previous) } });
+    await tx.session.create({
+      data: {
+        tokenHash: digest(token),
+        userId,
+        expiresAt,
+        mfaVerifiedAt: mfaVerified ? new Date() : null,
+      },
+    });
+  });
   const host = (await headers()).get("host") || "";
   const localHttp =
-    process.env.HRIS_LOCAL_MODE === "1" && /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
+    process.env.RENDER !== "true" &&
+    process.env.HRIS_LOCAL_MODE === "1" &&
+    /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
   (await cookies()).set(sessionCookie, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -71,8 +103,8 @@ export async function localSetupAllowed() {
   return process.env.NODE_ENV === "development" && /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
 }
 
-export async function requireAccess(key: PermissionKey) {
+export async function requireAccess(key: PermissionKey, action: PermissionAction = "view") {
   const user = await requireUser();
-  if (!hasPermission(user, key)) redirect("/akses-ditolak");
+  if (!hasPermission(user, key) || !hasAction(user, key, action)) redirect("/akses-ditolak");
   return user;
 }

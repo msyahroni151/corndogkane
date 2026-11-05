@@ -15,6 +15,7 @@ function reject(message: string): never {
   throw error;
 }
 export async function savePlacement(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("jadwal", form.get("id") || form.get("existingId") ? "edit" : "create");
   const user = await requireAccess("jadwal");
   const get = (key: string) => String(form.get(key) || "").trim();
   let startDate: Date, endDate: Date;

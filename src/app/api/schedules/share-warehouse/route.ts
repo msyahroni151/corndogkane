@@ -1,3 +1,4 @@
+import { hasAction } from "@/lib/permission-actions";
 import { hasPermission } from "@/lib/permissions";
 import { currentUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
@@ -9,6 +10,8 @@ export async function GET(request: Request) {
     return Response.json({ error: "Sesi berakhir. Silakan masuk kembali." }, { status: 401 });
   if (!hasPermission(user, "jadwal"))
     return Response.json({ error: "Anda tidak memiliki akses jadwal." }, { status: 403 });
+  if (!hasAction(user, "jadwal", "export"))
+    return Response.json({ error: "Izin aksi ditolak." }, { status: 403 });
   const params = new URL(request.url).searchParams;
   let from: Date, to: Date;
   try {

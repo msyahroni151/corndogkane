@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import type { FormState } from "@/lib/form-state";
 class WithdrawalError extends Error {}
 export async function withdrawBonus(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("bonus", "approve");
   const user = await requireAccess("bonus");
   const get = (key: string) => String(form.get(key) || "").trim();
   const employeeId = get("employeeId"),

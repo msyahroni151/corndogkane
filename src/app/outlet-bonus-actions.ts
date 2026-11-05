@@ -6,6 +6,7 @@ import { syncOutletBonus, BonusSyncError } from "@/lib/outlet-bonus-ledger";
 import { revalidatePath } from "next/cache";
 import type { FormState } from "@/lib/form-state";
 export async function syncLegacyOutletBonuses(_: FormState): Promise<FormState> {
+  await requireAccess("bonus", "edit");
   const user = await requireAccess("bonus"),
     db = getPrisma();
   const rows = await db.outletOperation.findMany({

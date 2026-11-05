@@ -1,3 +1,5 @@
+import { hasAction } from "@/lib/permission-actions";
+import { boundedJsonText, RequestBodyError } from "@/lib/request-body";
 import { sameOrigin } from "@/lib/request-origin";
 import { currentUser } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -12,8 +14,10 @@ export async function POST(request: Request) {
   if (!user) return json({ error: "Silakan masuk kembali." }, 401);
   if (!hasPermission(user, "pos")) return json({ error: "Akses ditolak." }, 403);
   if (!sameOrigin(request)) return json({ error: "Permintaan tidak diizinkan." }, 403);
+  if (!hasAction(user, "pos", "create"))
+    return Response.json({ error: "Izin aksi ditolak." }, { status: 403 });
   try {
-    const raw = await request.text();
+    const raw = await boundedJsonText(request, 30000);
     if (raw.length > 30000) throw new SaleError("Data terlalu besar.");
     let body;
     try {
@@ -35,6 +39,8 @@ export async function POST(request: Request) {
       revalidatePath(path);
     return json({ receipt });
   } catch (error) {
+    if (error instanceof RequestBodyError)
+      return Response.json({ error: error.message }, { status: error.status });
     return json(
       {
         error:

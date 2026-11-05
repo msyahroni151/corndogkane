@@ -7,6 +7,10 @@ import { parseReturnCommand } from "@/lib/stock-returns";
 import { runReturnCommand } from "@/lib/stock-return-service";
 import type { FormState } from "@/lib/form-state";
 export async function manageStockReturn(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess(
+    "control-stok",
+    form.get("kind") === "CREATE" ? "create" : form.get("kind") === "CANCEL" ? "delete" : "approve",
+  );
   const user = await requireAccess("control-stok");
   try {
     await runReturnCommand(getPrisma(), user.id, parseReturnCommand(form));

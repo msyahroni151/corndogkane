@@ -35,6 +35,7 @@ function failed(error: unknown): FormState {
   return { error: "Data belum tersimpan. Periksa koneksi database dan coba lagi." };
 }
 export async function saveArea(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("master-area", form.get("id") || form.get("existingId") ? "edit" : "create");
   await requireAccess("master-area");
   const existingId = read(form, "existingId");
   let data: { name: string; active: boolean; color: string }, id: string;
@@ -74,6 +75,10 @@ export async function saveArea(_: FormState, form: FormData): Promise<FormState>
   return { success: "Master area berhasil disimpan." };
 }
 export async function saveOutlet(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess(
+    "master-outlet",
+    form.get("id") || form.get("existingId") ? "edit" : "create",
+  );
   await requireAccess("master-outlet");
   const existingId = read(form, "existingId");
   let data: {
@@ -145,6 +150,7 @@ export async function saveOutlet(_: FormState, form: FormData): Promise<FormStat
 }
 
 export async function deleteArea(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("master-area", "delete");
   await requireAccess("master-area");
   const id = read(form, "id"),
     version = new Date(read(form, "version"));

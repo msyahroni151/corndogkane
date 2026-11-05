@@ -13,6 +13,7 @@ function invalid(message: string): never {
   throw e;
 }
 export async function createGoodsReceipt(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("barang-masuk", "create");
   const user = await requireAccess("barang-masuk");
   let data: ReturnType<typeof parseGoodsReceipt>;
   try {

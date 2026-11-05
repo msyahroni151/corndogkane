@@ -5,3 +5,11 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
   core-js: false
+
+# Patched transitive packages; keep CommonJS exports used by ExcelJS/Prisma.
+overrides:
+  'exceljs>uuid': '11.1.1'
+  'mysql2': '3.23.1'
+  'fast-uri': '3.1.9'
+  '@prisma/config>deepmerge-ts': '8.0.0'
+  '@typescript-eslint/typescript-estree>minimatch': '11.0.1'

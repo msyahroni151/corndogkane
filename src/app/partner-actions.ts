@@ -1,4 +1,5 @@
 "use server";
+import { requireAccess } from "@/lib/auth";
 import { supplierPaymentMethods } from "@/lib/supplier-options";
 import { hasPermission } from "@/lib/permissions";
 import { allocateBusinessId } from "@/lib/business-id";
@@ -13,6 +14,10 @@ function invalid(message: string): never {
   throw e;
 }
 export async function savePartner(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess(
+    form.get("kind") === "SUPPLIER" ? "supplier" : "pelanggan",
+    form.get("id") || form.get("existingId") ? "edit" : "create",
+  );
   const user = await requireUser();
   const get = (key: string) => String(form.get(key) || "").trim();
   try {

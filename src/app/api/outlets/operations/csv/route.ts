@@ -1,3 +1,6 @@
+import { hasAction } from "@/lib/permission-actions";
+import { sameOrigin } from "@/lib/request-origin";
+import { boundedJsonText, RequestBodyError } from "@/lib/request-body";
 import { currentUser } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { getPrisma } from "@/lib/db";
@@ -62,6 +65,8 @@ export async function GET(request: Request) {
       "referensi-outlet-crew.csv",
     );
   }
+  if (!hasAction(user, "monitoring-outlet", "export"))
+    return json({ error: "Izin ekspor ditolak." }, 403);
   try {
     const start = query.get("start") || "",
       end = query.get("end") || "",
@@ -147,6 +152,8 @@ export async function GET(request: Request) {
     );
     return download(encodeCsv([csvHeaders, ...combined]), `penjualan-outlet-${start}-${end}.csv`);
   } catch (error) {
+    if (error instanceof RequestBodyError)
+      return Response.json({ error: error.message }, { status: error.status });
     return json(
       {
         error:
@@ -161,18 +168,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const user = await access();
   if (user instanceof Response) return user;
-  let allowed = false;
+  if (!sameOrigin(request)) return json({ error: "Permintaan tidak diizinkan." }, 403);
+  if (!hasAction(user, "monitoring-outlet", "create"))
+    return Response.json({ error: "Izin aksi ditolak." }, { status: 403 });
   try {
-    const origin = request.headers.get("origin") || "",
-      url = new URL(origin);
-    allowed =
-      url.origin === origin &&
-      url.host === request.headers.get("host") &&
-      ["http:", "https:"].includes(url.protocol);
-  } catch {}
-  if (!allowed) return json({ error: "Permintaan tidak diizinkan." }, 403);
-  try {
-    const raw = await request.text();
+    const raw = await boundedJsonText(request, 2500000);
     if (raw.length > 2_100_000) throw new InputError("File CSV maksimal 2 MB.");
     let body;
     try {
@@ -188,6 +188,8 @@ export async function POST(request: Request) {
       try {
         plan = await prepareSalesImport(getPrisma(), body.csv);
       } catch (error) {
+        if (error instanceof RequestBodyError)
+          return Response.json({ error: error.message }, { status: error.status });
         throw new InputError(error instanceof Error ? error.message : "CSV tidak valid.");
       }
       return json({
@@ -212,6 +214,8 @@ export async function POST(request: Request) {
       revalidatePath(path);
     return json(result);
   } catch (error) {
+    if (error instanceof RequestBodyError)
+      return Response.json({ error: error.message }, { status: error.status });
     return json(
       {
         error:

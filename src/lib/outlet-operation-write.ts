@@ -25,7 +25,13 @@ export async function saveOutletOperation(
   body: Record<string, unknown>,
   userId: string,
   transaction?: Prisma.TransactionClient,
-  options: { createOnly?: boolean; allowInactiveCrew?: boolean } = {},
+  options: {
+    createOnly?: boolean;
+    allowInactiveCrew?: boolean;
+    historicalCrewIds?: ReadonlySet<string>;
+    historicalOutletIds?: ReadonlySet<string>;
+    initialBonusId?: string;
+  } = {},
 ) {
   const createOnly = options.createOnly === true;
   // This exception is supplied by the CSV service, never from request body fields.
@@ -90,13 +96,18 @@ export async function saveOutletOperation(
       );
     await tx.$executeRaw`SELECT id FROM outlets WHERE id=${outletId} FOR SHARE`;
     const outlet = await tx.outlet.findUnique({ where: { id: outletId } });
-    if (!outlet || !outlet.active || outlet.closed)
+    const verifiedHistoricalOutlet = createOnly && options.historicalOutletIds?.has(outletId);
+    if (!outlet || ((!outlet.active || outlet.closed) && !verifiedHistoricalOutlet))
       throw new InputError("Outlet tidak aktif atau tidak ditemukan.");
     const crew = await tx.employee.findUnique({ where: { id: crewId } });
     if (!crew || (!crew.active && !allowInactiveCrew && crew.id !== existing?.crewId))
       throw new InputError("Pilih crew aktif yang terdaftar.");
+    // A trusted historical import may name explicitly verified employees whose current job differs.
+    const verifiedHistoricalCrew =
+      createOnly && !!crew.employeeCode?.trim() && options.historicalCrewIds?.has(crew.id);
     if (
       !(allowInactiveCrew ? canImportOutletCrew(crew) : canRecordOutletCrew(crew)) &&
+      !verifiedHistoricalCrew &&
       crew.id !== existing?.crewId
     )
       throw new InputError(
@@ -141,9 +152,12 @@ export async function saveOutletOperation(
       existing.totalGross === totalGross &&
       existing.crewId === crewId;
     const bonusAmount = legacyFinancialsUnchanged ? null : outletBonus(totalGross, bonusDailyRate);
-    const hasLedger = await tx.saleTransaction.count({
-      where: { operationId: existing?.id || "NONE" },
-    });
+    // A create-only import has no existing day or committed sales ledger to reconcile.
+    const hasLedger = createOnly
+      ? 0
+      : await tx.saleTransaction.count({
+          where: { operationId: existing?.id || "NONE" },
+        });
     if (salesMode === "POS" && !hasLedger)
       throw new InputError("Belum ada transaksi POS atau tambahan manual untuk dipakai.");
     const manualSales = {
@@ -224,17 +238,18 @@ export async function saveOutletOperation(
         data: { ...data, salesRevision: 1, createdById: userId },
       });
     }
-    saved = await refreshDailySales(
-      tx,
-      saved.id,
-      userId,
-      salesMode === "POS"
-        ? {
-            choice: "POS",
-            notes: "Konfirmasi rekap menggunakan transaksi POS / tambahan manual.",
-          }
-        : undefined,
-    );
+    if (!createOnly)
+      saved = await refreshDailySales(
+        tx,
+        saved.id,
+        userId,
+        salesMode === "POS"
+          ? {
+              choice: "POS",
+              notes: "Konfirmasi rekap menggunakan transaksi POS / tambahan manual.",
+            }
+          : undefined,
+      );
     if (!saved.salesPending && !legacyFinancialsUnchanged) {
       const rate = outletBonusRate(
         outlet.name,
@@ -242,11 +257,12 @@ export async function saveOutletOperation(
         saved.bonusDailyRate ?? outlet.dailyRate,
         saved.totalGross,
       );
-      saved = await tx.outletOperation.update({
-        where: { id: saved.id },
-        data: { bonusDailyRate: rate, bonusAmount: outletBonus(saved.totalGross, rate) },
-      });
-      await syncOutletBonus(tx, saved, userId);
+      if (!createOnly)
+        saved = await tx.outletOperation.update({
+          where: { id: saved.id },
+          data: { bonusDailyRate: rate, bonusAmount: outletBonus(saved.totalGross, rate) },
+        });
+      await syncOutletBonus(tx, saved, userId, createOnly ? options.initialBonusId : undefined);
     }
   };
   if (transaction) await write(transaction);
@@ -259,6 +275,7 @@ export async function saveOutletClosure(
   userId: string,
   transaction?: Prisma.TransactionClient,
   createOnly = false,
+  historicalOutletIds?: ReadonlySet<string>,
 ) {
   const outletId = typeof body.outletId === "string" ? body.outletId.trim() : "";
   let date: Date;
@@ -279,7 +296,11 @@ export async function saveOutletClosure(
       where: { id: outletId },
       include: { area: { select: { active: true } } },
     });
-    if (!outlet?.active || outlet.closed || !outlet.area.active)
+    const verifiedHistoricalOutlet = createOnly && historicalOutletIds?.has(outletId);
+    if (
+      !outlet ||
+      ((!outlet.active || outlet.closed || !outlet.area.active) && !verifiedHistoricalOutlet)
+    )
       throw new InputError("Outlet tidak aktif atau tidak ditemukan.");
     const old = await tx.outletDailyStatus.findUnique({
       where: { outletId_date: { outletId, date } },

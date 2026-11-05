@@ -1,4 +1,11 @@
 "use server";
+import { revokeAuthentication } from "@/lib/auth-revocation";
+import {
+  permissionActions,
+  hasAction,
+  canManageRole,
+  roleActionPermissions,
+} from "@/lib/permission-actions";
 import { isValidNewPassword, passwordError } from "@/lib/password-policy";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
@@ -19,7 +26,7 @@ function failure(error: unknown): FormState {
   return { error: "Perubahan belum tersimpan. Periksa koneksi dan coba lagi." };
 }
 export async function saveAccessRole(_: FormState, form: FormData): Promise<FormState> {
-  await requireAccess("role");
+  const actor = await requireAccess("role", form.get("id") ? "edit" : "create");
   const get = (key: string) => String(form.get(key) || "").trim();
   try {
     const name = get("name").replace(/\s+/g, " ");
@@ -29,9 +36,44 @@ export async function saveAccessRole(_: FormState, form: FormData): Promise<Form
     const selected = form.getAll("permission").map(String);
     if (selected.some((key) => !permissionMenus.some((item) => item.key === key)))
       invalid("Hak akses menu tidak valid.");
-    const permissions = Object.fromEntries(
+    if (
+      actor.roleSystemKey !== "OWNER" &&
+      selected.some((key) => !actor.permissions.some((own) => own === key))
+    )
+      invalid("Anda tidak dapat memberikan hak akses melebihi hak akses akun Anda.");
+    const permissions: Record<string, boolean | Record<string, string[]>> = Object.fromEntries(
       permissionMenus.map((item) => [item.key, selected.includes(item.key)]),
     );
+    const rules: Record<string, string[]> = {};
+    const requested = form.getAll("permissionAction").map(String);
+    for (const value of requested) {
+      const [menu, action, ...extra] = value.split(":");
+      if (
+        extra.length ||
+        !permissionMenus.some((m) => m.key === menu) ||
+        !permissionActions.some((a) => a === action)
+      )
+        invalid("Izin aksi tidak valid.");
+    }
+    for (const key of selected) {
+      rules[key] = [
+        "view",
+        ...permissionActions.filter((a) => a !== "view" && requested.includes(key + ":" + a)),
+      ];
+      if (
+        actor.roleSystemKey !== "OWNER" &&
+        rules[key].some(
+          (a) =>
+            !hasAction(
+              actor,
+              key as (typeof actor.permissions)[number],
+              a as (typeof permissionActions)[number],
+            ),
+        )
+      )
+        invalid("Izin aksi tidak boleh melebihi izin akun Anda.");
+    }
+    permissions._actions = rules;
     const active = get("active") === "true";
     if (active && !selected.length && !get("id"))
       invalid("Pilih minimal satu hak akses untuk role aktif.");
@@ -40,6 +82,10 @@ export async function saveAccessRole(_: FormState, form: FormData): Promise<Form
       const old = get("id") ? await tx.accessRole.findUnique({ where: { id: get("id") } }) : null;
       if (get("id") && (!old || old.updatedAt.toISOString() !== get("version")))
         invalid("Role sudah berubah. Tutup popup dan muat ulang sebelum mengedit.");
+      if (old && actor.roleSystemKey !== "OWNER" && !canManageRole(actor, old))
+        invalid(
+          "Role ini hanya dapat dikelola oleh Owner atau pengelola dengan hak akses yang sesuai.",
+        );
       if (old?.systemKey === "OWNER" && (!active || name !== old.name))
         invalid("Role Owner harus tetap aktif dan namanya tetap Owner.");
       if (active && !selected.length && old?.systemKey !== "OWNER")
@@ -61,21 +107,37 @@ export async function saveAccessRole(_: FormState, form: FormData): Promise<Form
         await tx.accessRole.update({ where: { id: old.id }, data });
         if (
           !active ||
-          JSON.stringify(rolePermissions(old)) !==
-            JSON.stringify(rolePermissions({ permissions, systemKey: old.systemKey }))
+          JSON.stringify(roleActionPermissions(old)) !==
+            JSON.stringify(roleActionPermissions({ permissions, systemKey: old.systemKey }))
         ) {
-          await tx.session.deleteMany({ where: { user: { roleId: old.id } } });
+          await revokeAuthentication(tx, { roleId: old.id });
         }
       } else await tx.accessRole.create({ data: { ...data, permissions } });
+      await tx.securityEvent.create({
+        data: {
+          userId: actor.id,
+          action: "ROLE_SAVED",
+          outcome: "SUCCESS",
+          metadata: { roleId: old?.id || "new" },
+        },
+      });
     });
   } catch (error) {
+    if (error instanceof Error && error.name === "RoleValidation") {
+      // Write after rollback; never store submitted email/password/form data.
+      await getPrisma()
+        .securityEvent.create({
+          data: { userId: actor.id, action: "ACCESS_CHANGE_DENIED", outcome: "DENIED" },
+        })
+        .catch(() => undefined);
+    }
     return failure(error);
   }
   revalidatePath("/role");
   return { success: "Pengaturan role berhasil disimpan." };
 }
 export async function saveLoginAccount(_: FormState, form: FormData): Promise<FormState> {
-  await requireAccess("role");
+  const actor = await requireAccess("role", form.get("id") ? "edit" : "create");
   const get = (key: string) => String(form.get(key) || "").trim();
   try {
     const email = get("email").toLowerCase();
@@ -97,6 +159,14 @@ export async function saveLoginAccount(_: FormState, form: FormData): Promise<Fo
         const active = get("active") === "true";
         if (!role || (active && (!role.active || !rolePermissions(role).length)))
           invalid("Pilih role aktif yang memiliki hak akses menu.");
+        const oldRole = old?.roleId
+          ? await tx.accessRole.findUnique({ where: { id: old.roleId } })
+          : null;
+        if (
+          actor.roleSystemKey !== "OWNER" &&
+          (!canManageRole(actor, role) || (oldRole && !canManageRole(actor, oldRole)))
+        )
+          invalid("Anda tidak diizinkan mengelola akun dengan hak akses ini. Hubungi Owner.");
         const employeeId = old ? old.employeeId : get("employeeId");
         if (!old && !employeeId) invalid("Pilih karyawan yang akan diberikan akun login.");
         const employee = employeeId
@@ -135,15 +205,31 @@ export async function saveLoginAccount(_: FormState, form: FormData): Promise<Fo
             old.roleId !== role.id ||
             old.active !== active
           )
-            await tx.session.deleteMany({ where: { userId: old.id } });
+            await revokeAuthentication(tx, { id: old.id });
         } else
           await tx.user.create({
             data: { ...data, employeeId: employee!.id, passwordHash: passwordHash! },
           });
+        await tx.securityEvent.create({
+          data: {
+            userId: actor.id,
+            action: passwordHash ? "ACCOUNT_PASSWORD_SET" : "ACCOUNT_SAVED",
+            outcome: "SUCCESS",
+            metadata: { accountId: old?.id || "new", roleId: role.id, active },
+          },
+        });
       },
       { timeout: 10000 },
     );
   } catch (error) {
+    if (error instanceof Error && error.name === "RoleValidation") {
+      // Write after rollback; never store submitted email/password/form data.
+      await getPrisma()
+        .securityEvent.create({
+          data: { userId: actor.id, action: "ACCESS_CHANGE_DENIED", outcome: "DENIED" },
+        })
+        .catch(() => undefined);
+    }
     return failure(error);
   }
   revalidatePath("/role");

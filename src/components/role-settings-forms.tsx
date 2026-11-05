@@ -12,6 +12,7 @@ import { useCloseFormDialog } from "@/components/form-dialog";
 import { notifySuccess } from "@/components/notification-toasts";
 import { saveAccessRole, saveLoginAccount } from "@/app/role-actions";
 import { permissionMenus } from "@/lib/permissions";
+import { permissionActions, actionLabels, type ActionPermissions } from "@/lib/permission-actions";
 import type { FormState } from "@/lib/form-state";
 function useSettingsAction(save: typeof saveAccessRole) {
   const [state, action, pending] = useActionState<FormState, FormData>(save, {});
@@ -34,6 +35,7 @@ type RoleValues = {
   systemKey: string | null;
   active: boolean;
   permissions: string[];
+  actionPermissions?: ActionPermissions;
   version: string;
 };
 function Feedback({ error }: { error?: string }) {
@@ -43,7 +45,15 @@ function Feedback({ error }: { error?: string }) {
     </p>
   ) : null;
 }
-export function AccessRoleForm({ values }: { values?: RoleValues }) {
+export function AccessRoleForm({
+  values,
+  allowedPermissions,
+  allowedActions,
+}: {
+  values?: RoleValues;
+  allowedPermissions?: readonly string[];
+  allowedActions?: ActionPermissions;
+}) {
   const { state, action, pending, close } = useSettingsAction(saveAccessRole);
   const owner = values?.systemKey === "OWNER";
   return (
@@ -99,7 +109,7 @@ export function AccessRoleForm({ values }: { values?: RoleValues }) {
           <legend className="text-sm font-semibold">Hak akses menu</legend>
           <p className="mb-3 mt-1 text-xs leading-5 text-slate-500">
             Menu yang dipilih dapat dibuka dan datanya dapat dikelola. Akses Role &amp; Akun Login
-            mencakup pengaturan semua akun dan hak akses.
+            mengikuti batas hak akses akun Anda. Akun Owner hanya dapat dikelola Owner.
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
             {permissionMenus.map((item) => (
@@ -115,13 +125,61 @@ export function AccessRoleForm({ values }: { values?: RoleValues }) {
                     owner ||
                     (values ? values.permissions.includes(item.key) : item.key === "dashboard")
                   }
-                  disabled={owner}
+                  disabled={
+                    owner ||
+                    (allowedPermissions !== undefined && !allowedPermissions.includes(item.key))
+                  }
                   className="h-4 w-4 accent-emerald-700"
                 />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
               </label>
             ))}
           </div>
+          <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200">
+            <table className="w-full min-w-[680px] text-left text-xs">
+              <thead>
+                <tr>
+                  <th className="p-3">Menu</th>
+                  {permissionActions.map((a) => (
+                    <th className="p-3" key={a}>
+                      {actionLabels[a]}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {permissionMenus.map((menu) => (
+                  <tr key={menu.key} className="border-t border-slate-100">
+                    <td className="p-3">{menu.label}</td>
+                    {permissionActions.map((a) => (
+                      <td className="p-3" key={a}>
+                        <input
+                          type="checkbox"
+                          aria-label={actionLabels[a] + " " + menu.label}
+                          name="permissionAction"
+                          value={menu.key + ":" + a}
+                          defaultChecked={
+                            owner ||
+                            a === "view" ||
+                            !!values?.actionPermissions?.[menu.key]?.includes(a)
+                          }
+                          disabled={
+                            owner ||
+                            a === "view" ||
+                            (!!allowedActions && !allowedActions[menu.key]?.includes(a))
+                          }
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Izin aksi hanya berlaku untuk menu yang dicentang di atas. Role lama mempertahankan izin
+            sebelumnya sampai disimpan ulang.
+          </p>
           {owner && (
             <p className="mt-3 text-xs text-slate-500">
               Owner selalu memiliki akses penuh dan tetap aktif.

@@ -1,3 +1,6 @@
+import { hasAction } from "@/lib/permission-actions";
+import { sameOrigin } from "@/lib/request-origin";
+import { boundedJsonText, RequestBodyError } from "@/lib/request-body";
 import { InputError, saveOutletOperation, saveOutletClosure } from "@/lib/outlet-operation-write";
 import { salesAmounts } from "@/lib/daily-sales";
 import { SaleError } from "@/lib/sale-input";
@@ -135,20 +138,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const user = await access();
   if (user instanceof Response) return user;
-  const origin = request.headers.get("origin");
-  let sameOrigin = false;
+  if (!sameOrigin(request)) return json({ error: "Permintaan tidak diizinkan." }, 403);
+  if (!hasAction(user, "monitoring-outlet", "create"))
+    return Response.json({ error: "Izin aksi ditolak." }, { status: 403 });
   try {
-    const parsed = new URL(origin || "");
-    sameOrigin =
-      parsed.origin === origin &&
-      parsed.host === request.headers.get("host") &&
-      ["http:", "https:"].includes(parsed.protocol);
-  } catch {
-    /* Missing or invalid origins cannot submit records. */
-  }
-  if (!sameOrigin) return json({ error: "Permintaan tidak diizinkan." }, 403);
-  try {
-    const raw = await request.text();
+    const raw = await boundedJsonText(request, 20000);
     if (raw.length > 20000) throw new InputError("Data terlalu besar.");
     let body;
     try {
@@ -158,8 +152,14 @@ export async function POST(request: Request) {
     }
     if (!body || typeof body !== "object" || Array.isArray(body))
       throw new InputError("Data tidak valid.");
-    if (body.action === "daily-status") await saveOutletClosure(body, user.id);
-    else await saveOutletOperation(body, user.id);
+    if (body.action === "daily-status") {
+      if (!hasAction(user, "monitoring-outlet", "edit"))
+        return json({ error: "Izin edit status outlet diperlukan." }, 403);
+      await saveOutletClosure(body, user.id);
+    } else
+      await saveOutletOperation(body, user.id, undefined, {
+        createOnly: !hasAction(user, "monitoring-outlet", "edit"),
+      });
     for (const path of [
       "/bonus",
       "/payroll",
@@ -172,6 +172,8 @@ export async function POST(request: Request) {
       revalidatePath(path);
     return json({ success: "Rekap operasional berhasil disimpan." });
   } catch (error) {
+    if (error instanceof RequestBodyError)
+      return Response.json({ error: error.message }, { status: error.status });
     if (error instanceof SaleError) return json({ error: error.message }, 409);
     if (error instanceof BonusSyncError) return json({ error: error.message }, 409);
     if (error instanceof InputError) return json({ error: error.message }, error.status);

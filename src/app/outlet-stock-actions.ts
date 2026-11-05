@@ -6,6 +6,16 @@ import { parseStockCommand, StockError } from "@/lib/outlet-stock";
 import { runStockCommand } from "@/lib/outlet-stock-service";
 import type { FormState } from "@/lib/form-state";
 export async function manageOutletStock(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess(
+    "control-stok",
+    form.get("kind") === "REQUEST"
+      ? "create"
+      : ["SEND", "RECEIVE"].includes(String(form.get("kind")))
+        ? "approve"
+        : form.get("kind") === "CANCEL"
+          ? "delete"
+          : "edit",
+  );
   const user = await requireAccess("control-stok");
   try {
     await runStockCommand(getPrisma(), user.id, parseStockCommand(form));

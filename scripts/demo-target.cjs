@@ -21,10 +21,14 @@ function assertDemoTarget(env = process.env) {
     const ref = env.HRIS_DEMO_PROJECT_REF || "";
     const direct =
       target.hostname === `db.${ref}.supabase.co` &&
-      ["postgres", "corndog_demo_app"].includes(decodeURIComponent(target.username));
+      ["postgres", "corndog_demo_app", "corndog_runtime"].includes(
+        decodeURIComponent(target.username),
+      );
     const pooler =
       /^[a-z0-9-]+\.pooler\.supabase\.com$/.test(target.hostname) &&
-      [`postgres.${ref}`, `corndog_demo_app.${ref}`].includes(decodeURIComponent(target.username));
+      [`postgres.${ref}`, `corndog_demo_app.${ref}`, `corndog_runtime.${ref}`].includes(
+        decodeURIComponent(target.username),
+      );
     if (
       !/^[a-z0-9]{20}$/.test(ref) ||
       (!direct && !pooler) ||
@@ -43,6 +47,7 @@ function assertDemoTarget(env = process.env) {
     )
       throw Error("Koneksi database demo harus memakai TLS.");
   }
+  if (env.SECURITY_RUNTIME_DATABASE === "1") return { database, localTest };
   const email = env.DEMO_ADMIN_EMAIL || "";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254)
     throw Error("Email administrator demo belum valid.");

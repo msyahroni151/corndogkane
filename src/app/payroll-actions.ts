@@ -94,6 +94,7 @@ async function sources(
   };
 }
 export async function createPayroll(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("payroll", "create");
   const user = await requireAccess("payroll");
   try {
     const employeeId = String(form.get("employeeId") || ""),
@@ -262,6 +263,7 @@ export async function createPayroll(_: FormState, form: FormData): Promise<FormS
   return { success: "Draft payroll tersimpan. Periksa rincian sebelum mencatat pembayaran." };
 }
 export async function decidePayroll(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("payroll", "approve");
   const user = await requireAccess("payroll"),
     id = String(form.get("id") || ""),
     decision = String(form.get("decision") || "");

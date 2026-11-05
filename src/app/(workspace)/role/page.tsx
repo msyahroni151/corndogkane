@@ -1,3 +1,4 @@
+import { canManageRole, roleActionPermissions } from "@/lib/permission-actions";
 import SearchForm from "next/form";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
@@ -19,7 +20,10 @@ export default async function RolePage({
 }: {
   searchParams: Promise<{ roleq?: string; accountq?: string }>;
 }) {
-  await requireAccess("role");
+  const actor = await requireAccess("role");
+  const owner = actor.roleSystemKey === "OWNER";
+  const canManage = (role: { systemKey?: string | null; permissions: unknown }) =>
+    canManageRole(actor, role);
   const query = await searchParams;
   const roleq = typeof query.roleq === "string" ? query.roleq.trim().slice(0, 100) : "";
   const accountq = typeof query.accountq === "string" ? query.accountq.trim().slice(0, 100) : "";
@@ -38,7 +42,7 @@ export default async function RolePage({
         employeeId: true,
         roleId: true,
         updatedAt: true,
-        role: { select: { name: true, active: true } },
+        role: { select: { name: true, active: true, systemKey: true, permissions: true } },
         employee: { select: { active: true } },
       },
     }),
@@ -59,7 +63,22 @@ export default async function RolePage({
     ),
   );
   const choices = employees.map((employee) => ({ id: employee.id, name: employee.fullName }));
-  const roleChoices = roles.map((role) => ({ id: role.id, name: role.name, active: role.active }));
+  const events = owner
+    ? await getPrisma().securityEvent.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        select: {
+          id: true,
+          createdAt: true,
+          action: true,
+          outcome: true,
+          user: { select: { name: true } },
+        },
+      })
+    : [];
+  const roleChoices = roles
+    .filter(canManage)
+    .map((role) => ({ id: role.id, name: role.name, active: role.active }));
   return (
     <div className="space-y-6">
       <section className="panel overflow-hidden">
@@ -78,7 +97,10 @@ export default async function RolePage({
               <button className="button-secondary">Cari</button>
             </SearchForm>
             <FormDialog title="Tambah role" trigger="+ Tambah role">
-              <AccessRoleForm />
+              <AccessRoleForm
+                allowedPermissions={owner ? undefined : actor.permissions}
+                allowedActions={owner ? undefined : actor.actionPermissions}
+              />
             </FormDialog>
           </div>
         </div>
@@ -129,19 +151,26 @@ export default async function RolePage({
                       <Status active={role.active} />
                     </td>
                     <td className="p-4">
-                      <FormDialog title="Edit role" trigger="Edit">
-                        <AccessRoleForm
-                          values={{
-                            id: role.id,
-                            name: role.name,
-                            description: role.description,
-                            active: role.active,
-                            systemKey: role.systemKey,
-                            permissions,
-                            version: role.updatedAt.toISOString(),
-                          }}
-                        />
-                      </FormDialog>
+                      {canManage(role) ? (
+                        <FormDialog title="Edit role" trigger="Edit">
+                          <AccessRoleForm
+                            allowedPermissions={owner ? undefined : actor.permissions}
+                            allowedActions={owner ? undefined : actor.actionPermissions}
+                            values={{
+                              id: role.id,
+                              name: role.name,
+                              description: role.description,
+                              active: role.active,
+                              systemKey: role.systemKey,
+                              permissions,
+                              actionPermissions: roleActionPermissions(role),
+                              version: role.updatedAt.toISOString(),
+                            }}
+                          />
+                        </FormDialog>
+                      ) : (
+                        <span className="text-slate-500">Akses terbatas</span>
+                      )}
                     </td>
                   </tr>
                 );
@@ -207,21 +236,25 @@ export default async function RolePage({
                     />
                   </td>
                   <td className="p-4">
-                    <FormDialog title="Edit akun login" trigger="Edit">
-                      <LoginAccountForm
-                        values={{
-                          id: account.id,
-                          name: account.name,
-                          email: account.email,
-                          employeeId: account.employeeId,
-                          roleId: account.roleId,
-                          active: account.active,
-                          version: account.updatedAt.toISOString(),
-                        }}
-                        employees={choices}
-                        roles={roleChoices}
-                      />
-                    </FormDialog>
+                    {owner || (account.role && canManage(account.role)) ? (
+                      <FormDialog title="Edit akun login" trigger="Edit">
+                        <LoginAccountForm
+                          values={{
+                            id: account.id,
+                            name: account.name,
+                            email: account.email,
+                            employeeId: account.employeeId,
+                            roleId: account.roleId,
+                            active: account.active,
+                            version: account.updatedAt.toISOString(),
+                          }}
+                          employees={choices}
+                          roles={roleChoices}
+                        />
+                      </FormDialog>
+                    ) : (
+                      <span className="text-slate-500">Akses terbatas</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -236,6 +269,41 @@ export default async function RolePage({
           </SortableTable>
         </div>
       </section>
+      {owner && (
+        <section className="panel overflow-hidden">
+          <h2 className="border-b border-slate-200 p-5 text-sm font-semibold">
+            Riwayat keamanan · 50 aktivitas terbaru
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr>
+                  {["Waktu (WIB)", "Aktivitas", "Hasil", "Akun"].map((title) => (
+                    <th key={title} className="p-4">
+                      {title}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((event) => (
+                  <tr key={event.id} className="border-t border-slate-100">
+                    <td className="p-4">
+                      {event.createdAt.toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}
+                    </td>
+                    <td className="p-4">{event.action}</td>
+                    <td className="p-4">{event.outcome}</td>
+                    <td className="p-4">{event.user?.name || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {!events.length && (
+              <p className="p-5 text-slate-500">Belum ada aktivitas keamanan tercatat.</p>
+            )}
+          </div>
+        </section>
+      )}
       <p className="text-xs leading-5 text-slate-500">
         Hak akses mengikuti role akun login dan terpisah dari jabatan, gaji, serta jadwal karyawan.
         Perubahan password, role, atau status akun mengakhiri sesi login terkait.

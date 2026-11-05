@@ -1,15 +1,20 @@
+import { hasAction } from "@/lib/permission-actions";
+import { boundedJsonText, RequestBodyError } from "@/lib/request-body";
 import { sameOrigin } from "@/lib/request-origin";
 import { hasPermission } from "@/lib/permissions";
 import { currentUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { parseCivilDate } from "@/lib/placements";
 import type { ShareScheduleData } from "@/lib/share-schedule";
+class ScheduleInputError extends Error {}
 export async function GET(request: Request) {
   const user = await currentUser();
   if (!user)
     return Response.json({ error: "Sesi berakhir. Silakan masuk kembali." }, { status: 401 });
   if (!hasPermission(user, "jadwal"))
     return Response.json({ error: "Anda tidak memiliki akses jadwal." }, { status: 403 });
+  if (!hasAction(user, "jadwal", "export"))
+    return Response.json({ error: "Izin aksi ditolak." }, { status: 403 });
   const params = new URL(request.url).searchParams;
   let from: Date, to: Date;
   try {
@@ -96,16 +101,18 @@ export async function PUT(request: Request) {
   if (!user) return Response.json({ error: "Silakan login kembali." }, { status: 401 });
   if (!hasPermission(user, "jadwal") || !sameOrigin(request))
     return Response.json({ error: "Permintaan tidak diizinkan." }, { status: 403 });
+  if (!hasAction(user, "jadwal", "edit"))
+    return Response.json({ error: "Izin aksi ditolak." }, { status: 403 });
   try {
-    const raw = await request.text();
-    if (raw.length > 100000) throw Error("Data terlalu besar.");
+    const raw = await boundedJsonText(request, 100000);
+    if (raw.length > 100000) throw new ScheduleInputError("Data terlalu besar.");
     const body = JSON.parse(raw),
       from = parseCivilDate(body.from),
       to = parseCivilDate(body.to);
     if (to < from || to.getTime() - from.getTime() > 30 * 86400000)
-      throw Error("Periode maksimal 31 hari.");
+      throw new ScheduleInputError("Periode maksimal 31 hari.");
     if (!Array.isArray(body.notes) || !body.notes.length || body.notes.length > 100)
-      throw Error("Pilih catatan area yang akan disimpan.");
+      throw new ScheduleInputError("Pilih catatan area yang akan disimpan.");
     const notes = body.notes.map((n: { areaId: string; note: string; version: string | null }) => {
       if (
         typeof n.areaId !== "string" ||
@@ -113,24 +120,24 @@ export async function PUT(request: Request) {
         n.note.length > 500 ||
         (n.version !== null && typeof n.version !== "string")
       )
-        throw Error("Catatan area tidak valid.");
+        throw new ScheduleInputError("Catatan area tidak valid.");
       return { areaId: n.areaId, note: n.note.trim(), version: n.version };
     });
     if (new Set(notes.map((n: { areaId: string }) => n.areaId)).size !== notes.length)
-      throw Error("Area tidak boleh berulang.");
+      throw new ScheduleInputError("Area tidak boleh berulang.");
     const saved = await getPrisma().$transaction(
       async (tx) => {
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"schedule-area-notes"}))`;
         const result = [];
         for (const n of notes) {
           if (!(await tx.area.findUnique({ where: { id: n.areaId }, select: { id: true } })))
-            throw Error("Area tidak ditemukan.");
+            throw new ScheduleInputError("Area tidak ditemukan.");
           const key = { areaId: n.areaId, startDate: from, endDate: to },
             old = await tx.scheduleAreaNote.findUnique({
               where: { areaId_startDate_endDate: key },
             });
           if ((old?.updatedAt.toISOString() || null) !== n.version)
-            throw Error(
+            throw new ScheduleInputError(
               "Catatan berubah oleh pengguna lain. Tampilkan jadwal kembali sebelum menyimpan.",
             );
           const row = old
@@ -149,12 +156,12 @@ export async function PUT(request: Request) {
     );
     return Response.json({ notes: saved });
   } catch (e) {
+    if (e instanceof RequestBodyError)
+      return Response.json({ error: e.message }, { status: e.status });
     return Response.json(
       {
         error:
-          e instanceof Error && !("code" in e)
-            ? e.message
-            : "Catatan belum tersimpan. Coba kembali.",
+          e instanceof ScheduleInputError ? e.message : "Catatan belum tersimpan. Coba kembali.",
       },
       { status: 400 },
     );

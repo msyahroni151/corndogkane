@@ -58,6 +58,13 @@ async function previous(tx: Prisma.TransactionClient, postingKey: string, reques
   return row;
 }
 export async function saveInventoryItem(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess(
+    form.get("catalogScope") === "warehouse" ||
+      ["RAW", "FINISHED"].includes(String(form.get("kind")))
+      ? "stok-inventory"
+      : "setting-menu",
+    form.get("id") || form.get("existingId") ? "edit" : "create",
+  );
   const user = await requireAccess(
     String(form.get("catalogScope")) === "warehouse" ||
       String(form.get("kind")) === "RAW" ||
@@ -187,6 +194,7 @@ export async function saveInventoryItem(_: FormState, form: FormData): Promise<F
   return { success: "Data barang berhasil disimpan." };
 }
 export async function reclassifyWarehouseStock(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("stok-inventory", "edit");
   const user = await requireAccess("stok-inventory");
   let data: ReturnType<typeof actionData>, id: string, version: string, name: string;
   try {
@@ -291,6 +299,7 @@ export async function reclassifyWarehouseStock(_: FormState, form: FormData): Pr
 }
 
 export async function adjustInventory(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("stok-inventory", "edit");
   const user = await requireAccess("stok-inventory");
   let data: ReturnType<typeof actionData>,
     kind: string,
@@ -419,6 +428,7 @@ export async function adjustInventory(_: FormState, form: FormData): Promise<For
   };
 }
 export async function produceInventory(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("produksi-gudang", "create");
   const user = await requireAccess("produksi-gudang");
   let data: ReturnType<typeof actionData>, itemId: string, quantity: number, batchCount: number;
   try {
@@ -630,6 +640,7 @@ export async function produceInventory(_: FormState, form: FormData): Promise<Fo
 }
 
 export async function changeInventoryItemStatus(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("stok-inventory", form.get("operation") === "RESTORE" ? "edit" : "delete");
   const user = await requireAccess("stok-inventory");
   try {
     const { get, postingKey, date } = actionData(form);
@@ -649,6 +660,7 @@ export async function changeInventoryItemStatus(_: FormState, form: FormData): P
 }
 
 export async function saveProductionRemainder(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("produksi-gudang", "create");
   const user = await requireAccess("produksi-gudang");
   try {
     const { get, postingKey, date, notes } = actionData(form);

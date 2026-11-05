@@ -5,6 +5,10 @@ import { getPrisma } from "@/lib/db";
 import { saveRecipeDefinition, deleteRecipeDefinition } from "@/lib/recipe-settings";
 import type { FormState } from "@/lib/form-state";
 export async function saveRecipe(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess(
+    form.get("scope") === "production" ? "produksi-gudang" : "setting-menu",
+    form.get("id") || form.get("existingId") ? "edit" : "create",
+  );
   const production = form.get("scope") === "production";
   await requireAccess(production ? "produksi-gudang" : "setting-menu");
   try {
@@ -19,6 +23,10 @@ export async function saveRecipe(_: FormState, form: FormData): Promise<FormStat
 }
 
 export async function deleteRecipe(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess(
+    form.get("scope") === "production" ? "produksi-gudang" : "setting-menu",
+    "delete",
+  );
   const production = form.get("scope") === "production";
   await requireAccess(production ? "produksi-gudang" : "setting-menu");
   try {

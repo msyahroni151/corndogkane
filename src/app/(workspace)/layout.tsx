@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { getPrisma } from "@/lib/db";
 import { SidebarShell, SidebarToggle } from "@/components/sidebar-shell";
 import "@/components/sidebar.css";
 import { DemoNotice } from "@/components/demo-notice";
@@ -10,6 +12,10 @@ import { WorkspaceHeading } from "@/components/workspace-heading";
 import { Navigation } from "@/components/navigation";
 export default async function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
+  const alertCount =
+    user.roleSystemKey === "OWNER"
+      ? await getPrisma().securityAlert.count({ where: { acknowledgedAt: null } })
+      : 0;
   const portalOnly = user.permissions.length === 1 && user.permissions[0] === "portal-karyawan";
   return (
     <SidebarShell>
@@ -65,6 +71,12 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
                 <p className="mt-0.5 text-[10px] text-slate-400">{user.roleName}</p>
               </div>
             </div>
+            <Link href="/keamanan" className="button-secondary">
+              Keamanan
+              {alertCount > 0 && (
+                <span className="ml-1 rounded-full bg-red-600 px-2 text-white">{alertCount}</span>
+              )}
+            </Link>
             <form action={logout}>
               <button className="button-secondary">Keluar</button>
             </form>

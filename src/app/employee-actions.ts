@@ -1,4 +1,5 @@
 "use server";
+import { revokeAuthentication } from "@/lib/auth-revocation";
 import { allocateBusinessId } from "@/lib/business-id";
 
 import { revalidatePath } from "next/cache";
@@ -85,7 +86,8 @@ function read(form: FormData) {
   };
 }
 export async function saveEmployee(_: FormState, form: FormData): Promise<FormState> {
-  await requireAccess("karyawan");
+  await requireAccess("karyawan", form.get("id") || form.get("existingId") ? "edit" : "create");
+  const actor = await requireAccess("karyawan");
   let data: ReturnType<typeof read>;
   try {
     data = read(form);
@@ -111,6 +113,13 @@ export async function saveEmployee(_: FormState, form: FormData): Promise<FormSt
             where: { employeeId: existingId, active: true, role: { systemKey: "OWNER" } },
             select: { id: true, roleId: true },
           });
+          if (owner && actor.roleSystemKey !== "OWNER") {
+            const error = new Error(
+              "Hanya Owner yang dapat menonaktifkan karyawan yang memiliki akun Owner.",
+            );
+            error.name = "EmployeeAccessValidation";
+            throw error;
+          }
           if (
             owner &&
             !(await tx.user.count({
@@ -130,8 +139,7 @@ export async function saveEmployee(_: FormState, form: FormData): Promise<FormSt
           }
         }
         await tx.employee.update({ where: { id: existingId }, data });
-        if (!data.active)
-          await tx.session.deleteMany({ where: { user: { employeeId: existingId } } });
+        if (!data.active) await revokeAuthentication(tx, { employeeId: existingId });
       });
     } else {
       await getPrisma().$transaction(async (tx) => {
