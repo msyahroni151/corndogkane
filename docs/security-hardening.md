@@ -71,3 +71,7 @@ Akun Owner tetap memakai password yang dipilih pengguna. MFA authenticator menam
 Pratinjau portal karyawan lain dibatasi khusus systemKey OWNER. Izin melihat/mengelola menu Role tidak memberikan hak untuk membaca gaji atau kasbon pribadi karyawan lain melalui parameter employee. Pengujian memakai pinjaman privat milik karyawan lain untuk memastikan parameter tidak melewati batas ini.
 
 Izin Lihat Monitoring tidak memberi hak untuk menimpa penugasan crew/outlet pada POS. Kebebasan pengelolaan lintas penugasan memerlukan izin Edit Monitoring; kasir lain tetap mengikuti identitas karyawan dan jadwal yang diverifikasi server.
+
+Perbaikan 6 November 2026: tugas backup menjalankan run-security-backup.ps1 secara tersembunyi untuk menyalakan cluster PostgreSQL lokal yang sudah ada sebelum backup dan uji restore online. Tidak melakukan inisialisasi ulang atau mengubah data bisnis. Backup ulang lokal dan online lulus validasi pemulihan 56 tabel.
+
+Kebijakan saldo bonus 6 November 2026: rekap, riwayat aktif, sinkronisasi, pencairan, saldo lanjutan dan bonus payroll hanya menghitung tanggal mulai 1 November 2026. Bonus sebelumnya sudah diselesaikan di luar sistem; data historis tetap disimpan tanpa pembaruan massal atau penghapusan. Pencairan bertanggal sebelum periode ditolak dan draft payroll lama diperiksa ulang terhadap saldo periode baru.

@@ -1,3 +1,4 @@
+import { bonusStartDate } from "@/lib/bonus-period";
 import SearchForm from "next/form";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
@@ -22,7 +23,10 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
       orderBy: { fullName: "asc" },
     }),
     db.moneyEntry.findMany({
-      where: { kind: { in: ["BONUS_EARNED", "BONUS_WITHDRAWAL"] } },
+      where: {
+        kind: { in: ["BONUS_EARNED", "BONUS_WITHDRAWAL"] },
+        date: { gte: bonusStartDate() },
+      },
       select: {
         employeeId: true,
         employeeName: true,
@@ -33,7 +37,12 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
       },
     }),
     db.outletOperation.count({
-      where: { bonusAmount: null, hasManual: true, salesPending: false },
+      where: {
+        bonusAmount: null,
+        hasManual: true,
+        salesPending: false,
+        date: { gte: bonusStartDate() },
+      },
     }),
   ]);
   const balances = bonusBalances(employees, entries, today).filter(
@@ -55,7 +64,7 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
             <p className="text-xs text-slate-500">{c.label}</p>
             <p className="mt-3 text-xl font-bold">{rupiah(c.value)}</p>
             <p className="mt-2 text-[10px] text-slate-400">
-              Sesuai filter karyawan · sampai hari ini
+              Mulai 1 November 2026 · sampai hari ini
             </p>
           </section>
         ))}
@@ -145,9 +154,10 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
         </div>
       </section>
       <p className="text-xs leading-6 text-slate-500">
-        Bonus otomatis dari rekap langsung menambah saldo crew. Pencairan dana dan bonus yang
-        dibayar melalui payroll masuk ke Sudah Diambil. Rekap lama perlu disinkronkan; penyesuaian
-        manual yang belum disetujui belum memengaruhi saldo.
+        Bonus sebelum 1 November 2026 sudah diselesaikan dan tidak dihitung dalam saldo ini. Bonus
+        otomatis dari rekap mulai November 2026 langsung menambah saldo crew. Pencairan dana dan
+        bonus yang dibayar melalui payroll masuk ke Sudah Diambil. Rekap lama perlu disinkronkan;
+        penyesuaian manual yang belum disetujui belum memengaruhi saldo.
       </p>
     </div>
   );

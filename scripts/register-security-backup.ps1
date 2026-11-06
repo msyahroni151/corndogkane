@@ -1,12 +1,12 @@
 param([Parameter(Mandatory=$true)][string]$NodePath,[Parameter(Mandatory=$true)][string]$ConfigPath)
 $ErrorActionPreference='Stop'
 $appDirectory=Split-Path -Parent $PSScriptRoot
-$backupScript=Join-Path $PSScriptRoot 'security-backup.cjs'
+$backupScript=Join-Path $PSScriptRoot 'run-security-backup.ps1'
 $nodeResolved=(Resolve-Path -LiteralPath $NodePath).Path
 $configResolved=(Resolve-Path -LiteralPath $ConfigPath).Path
 $identity=[System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-$argument='"'+$backupScript+'" "'+$configResolved+'"'
-$taskAction=New-ScheduledTaskAction -Execute $nodeResolved -Argument $argument -WorkingDirectory $appDirectory
+$argument='-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "'+$backupScript+'" -NodePath "'+$nodeResolved+'" -ConfigPath "'+$configResolved+'"'
+$taskAction=New-ScheduledTaskAction -Execute (Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe') -Argument $argument -WorkingDirectory $appDirectory
 $dailyTrigger=New-ScheduledTaskTrigger -Daily -At '02:15'
 $logonTrigger=New-ScheduledTaskTrigger -AtLogOn -User $identity
 $taskPrincipal=New-ScheduledTaskPrincipal -UserId $identity -LogonType Interactive -RunLevel Limited

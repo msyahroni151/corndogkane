@@ -1,3 +1,4 @@
+import { bonusStartDate } from "@/lib/bonus-period";
 import "server-only";
 import type { PrismaClient } from "@/generated/prisma/client";
 import { isPaymentAccount } from "@/lib/operational-expenses";
@@ -589,7 +590,7 @@ export async function loadBusinessSnapshot(
         const rows = await db.moneyEntry.groupBy({
           by: ["kind"],
           where: {
-            date: period,
+            date: { ...period, gte: period.gte > bonusStartDate() ? period.gte : bonusStartDate() },
             status: "APPROVED",
             kind: { in: ["BONUS_EARNED", "BONUS_WITHDRAWAL"] },
           },

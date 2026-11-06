@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { APP_TIME_ZONE } from "@/lib/local-date";
 import { getPrisma } from "@/lib/db";
 import { SidebarShell, SidebarToggle } from "@/components/sidebar-shell";
 import "@/components/sidebar.css";
@@ -84,7 +85,15 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
         </header>
         <main className="mx-auto max-w-[1600px] p-5 sm:p-7 lg:p-8">
           <DemoNotice />
-          <SectionNavigation permissions={user.permissions} />
+          <SectionNavigation
+            permissions={user.permissions}
+            dateLabel={new Intl.DateTimeFormat("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+              timeZone: APP_TIME_ZONE,
+            }).format(new Date())}
+          />
           {children}
         </main>
       </div>

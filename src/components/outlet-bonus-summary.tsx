@@ -1,3 +1,4 @@
+import { bonusStartDate } from "@/lib/bonus-period";
 import { getPrisma } from "@/lib/db";
 import { outletBonus, outletBonusRate } from "@/lib/outlet-bonus";
 import { SortableTable } from "@/components/sortable-table";
@@ -6,7 +7,7 @@ import { rupiah } from "@/lib/money";
 import { displayDate } from "@/lib/placements";
 export async function OutletBonusSummary({ employee }: { employee?: string }) {
   const rows = await getPrisma().outletOperation.findMany({
-    where: employee ? { crewId: employee } : {},
+    where: { date: { gte: bonusStartDate() }, ...(employee ? { crewId: employee } : {}) },
     include: { outlet: true, crew: { select: { employeeCode: true } } },
     orderBy: [{ date: "desc" }, { outletName: "asc" }],
     take: 10000,

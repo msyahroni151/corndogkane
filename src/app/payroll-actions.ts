@@ -1,4 +1,5 @@
 "use server";
+import { isCurrentLedgerEntry } from "@/lib/bonus-period";
 import { dateFromDisplay } from "@/lib/local-date";
 import { allocateBusinessId } from "@/lib/business-id";
 import { createHash } from "node:crypto";
@@ -71,7 +72,7 @@ async function sources(
     )
     .digest("hex");
   const bonus = ledger
-    .filter((e) => e.date <= endDate)
+    .filter((e) => e.date <= endDate && isCurrentLedgerEntry(e))
     .reduce(
       (sum, e) =>
         sum +
@@ -284,6 +285,8 @@ export async function decidePayroll(_: FormState, form: FormData): Promise<FormS
             invalid(
               "Absensi atau saldo berubah sejak draft dibuat. Batalkan draft dan hitung ulang sebelum pembayaran.",
             );
+          if (row.bonusPaid > Math.max(0, source.bonus))
+            invalid("Bonus pada draft melebihi saldo mulai 1 November 2026. Batalkan draft dan hitung ulang sebelum pembayaran.");
           const settlementPayments = (row.settlementPayments ?? {}) as Record<string, number>;
           const settlementError = validateSettlementPayments(
             settlementPayments,

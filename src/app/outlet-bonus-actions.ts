@@ -1,4 +1,5 @@
 "use server";
+import { bonusStartDate } from "@/lib/bonus-period";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { outletBonus, outletBonusRate } from "@/lib/outlet-bonus";
@@ -10,7 +11,12 @@ export async function syncLegacyOutletBonuses(_: FormState): Promise<FormState> 
   const user = await requireAccess("bonus"),
     db = getPrisma();
   const rows = await db.outletOperation.findMany({
-    where: { bonusAmount: null, hasManual: true, salesPending: false },
+    where: {
+      bonusAmount: null,
+      hasManual: true,
+      salesPending: false,
+      date: { gte: bonusStartDate() },
+    },
     select: { id: true, outletId: true, date: true },
     orderBy: [{ date: "asc" }, { id: "asc" }],
     take: 100,

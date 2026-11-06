@@ -1,3 +1,4 @@
+import { isCurrentBonusDate } from "@/lib/bonus-period";
 export type BonusBalanceEntry = {
   employeeId: string;
   employeeName: string;
@@ -12,6 +13,7 @@ export function bonusBalances(
   today: string,
 ) {
   const end = new Date(today + "T00:00:00.000Z");
+  entries = entries.filter((e) => isCurrentBonusDate(e.date));
   const involved = new Set(entries.map((e) => e.employeeId));
   return employees
     .filter((e) => involved.has(e.id))

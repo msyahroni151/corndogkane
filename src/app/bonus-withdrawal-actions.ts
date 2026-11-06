@@ -1,4 +1,5 @@
 "use server";
+import { bonusStartDate, isCurrentBonusDate } from "@/lib/bonus-period";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { allocateBusinessId } from "@/lib/business-id";
@@ -31,6 +32,11 @@ export async function withdrawBonus(_: FormState, form: FormData): Promise<FormS
   let date: Date;
   try {
     date = parseCivilDate(get("date"));
+    if (!isCurrentBonusDate(date))
+      return {
+        error:
+          "Bonus sebelum 1 November 2026 sudah diselesaikan. Pilih tanggal mulai 1 November 2026.",
+      };
     if (get("date") > todayWib())
       return { error: "Tanggal pencairan tidak boleh melebihi hari ini." };
   } catch {
@@ -62,6 +68,7 @@ export async function withdrawBonus(_: FormState, form: FormData): Promise<FormS
             employeeId,
             status: "APPROVED",
             kind: { in: ["BONUS_EARNED", "BONUS_WITHDRAWAL"] },
+            date: { gte: bonusStartDate() },
           },
         });
         const candidate = {

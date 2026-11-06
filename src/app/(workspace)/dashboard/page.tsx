@@ -1,5 +1,4 @@
 import { SortableTable } from "@/components/sortable-table";
-import { APP_TIME_ZONE } from "@/lib/local-date";
 import Link from "next/link";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
@@ -41,12 +40,6 @@ async function Content() {
   const covered = eligible.filter((e) => assigned.has(e.id)).length;
   const coverage = eligible.length ? Math.round((covered / eligible.length) * 100) : 0;
   const activePercent = total ? Math.round((active / total) * 100) : 0;
-  const dateLabel = new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: APP_TIME_ZONE,
-  }).format(new Date());
   const maxDepartment = Math.max(1, ...departments.map((d) => d._count));
   const cards: { label: string; value: number; detail: string; icon: IconName }[] = [
     { label: "Total karyawan", value: total, detail: "Seluruh biodata terdaftar", icon: "people" },
@@ -71,12 +64,6 @@ async function Content() {
   ];
   return (
     <>
-      <div className="flex flex-wrap items-center justify-end gap-4">
-        <div className="flex items-center gap-2 rounded-xl border border-[#e4ebe6] bg-white px-3.5 py-2.5 text-xs text-slate-500">
-          <UiIcon name="calendar" size={16} />
-          {dateLabel}
-        </div>
-      </div>
       <div className="dashboard-columns">
         <div className="min-w-0">
           <section aria-label="Ringkasan HRIS" className="metric-grid">

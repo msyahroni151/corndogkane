@@ -1,3 +1,4 @@
+import { isCurrentBonusDate } from "@/lib/bonus-period";
 import type { Prisma } from "@/generated/prisma/client";
 import { allocateBusinessId } from "@/lib/business-id";
 export class BonusSyncError extends Error {}
@@ -15,7 +16,7 @@ export async function syncOutletBonus(
   userId: string,
   reservedInitialId?: string,
 ) {
-  if (row.bonusAmount == null) return;
+  if (row.bonusAmount == null || !isCurrentBonusDate(row.date)) return;
   const current = await tx.outletOperation.findUnique({
     where: { id: row.id },
     select: { salesPending: true },

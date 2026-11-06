@@ -60,6 +60,7 @@ async function packageDemo() {
     "scripts/start-secure.cjs",
     "scripts/security-backup.cjs",
     "scripts/register-security-backup.ps1",
+    "scripts/run-security-backup.ps1",
     "scripts/database-runtime-policies.sql",
     "scripts/database-runtime-role-bootstrap.sql",
     "scripts/package-demo.cjs",

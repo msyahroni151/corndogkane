@@ -1,3 +1,4 @@
+import { isCurrentLedgerEntry } from "@/lib/bonus-period";
 import { settlementLeft } from "@/lib/settlements";
 import { SortableTable } from "@/components/sortable-table";
 import { requireAccess } from "@/lib/auth";
@@ -58,16 +59,18 @@ export default async function BalanceSummaryPage() {
           <tbody>
             {employees.map((e) => {
               const entries = ledger.filter((l) => l.employeeId === e.id),
-                bonus = entries.reduce(
-                  (s, l) =>
-                    s +
-                    (l.kind === "BONUS_EARNED"
-                      ? l.amount
-                      : l.kind === "BONUS_WITHDRAWAL"
-                        ? -l.amount
-                        : 0),
-                  0,
-                ),
+                bonus = entries
+                  .filter(isCurrentLedgerEntry)
+                  .reduce(
+                    (s, l) =>
+                      s +
+                      (l.kind === "BONUS_EARNED"
+                        ? l.amount
+                        : l.kind === "BONUS_WITHDRAWAL"
+                          ? -l.amount
+                          : 0),
+                    0,
+                  ),
                 loan = loans.filter((l) => l.employeeId === e.id).reduce((s, l) => s + l.left, 0),
                 fine = Math.max(
                   0,

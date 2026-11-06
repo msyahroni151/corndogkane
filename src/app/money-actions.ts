@@ -1,4 +1,5 @@
 "use server";
+import { isCurrentBonusDate } from "@/lib/bonus-period";
 import { hasAction } from "@/lib/permission-actions";
 import { hasPermission } from "@/lib/permissions";
 import { allocateBusinessId } from "@/lib/business-id";
@@ -40,6 +41,10 @@ export async function createMoneyEntry(_: FormState, form: FormData): Promise<Fo
   let date: Date;
   try {
     date = parseCivilDate(get("date"));
+    if (["BONUS_EARNED", "BONUS_WITHDRAWAL"].includes(kind) && !isCurrentBonusDate(date))
+      return {
+        error: "Bonus sebelum 1 November 2026 sudah diselesaikan dan tidak dapat dicatat ulang.",
+      };
   } catch (e) {
     return { error: (e as Error).message };
   }
@@ -131,6 +136,12 @@ export async function decideMoneyEntry(_: FormState, form: FormData): Promise<Fo
         if (!candidate) invalid("Catatan tidak ditemukan.");
         await tx.$executeRaw`SELECT id FROM employees WHERE id=${candidate.employeeId} FOR UPDATE`;
         const row = await tx.moneyEntry.findUnique({ where: { id } });
+        if (
+          row &&
+          ["BONUS_EARNED", "BONUS_WITHDRAWAL"].includes(row.kind) &&
+          !isCurrentBonusDate(row.date)
+        )
+          invalid("Bonus sebelum 1 November 2026 sudah diselesaikan dan tidak diproses ulang.");
         if (!row || row.status !== "PENDING")
           invalid("Catatan ini sudah diproses. Muat ulang untuk melihat status terbaru.");
         if (

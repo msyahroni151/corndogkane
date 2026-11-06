@@ -1,3 +1,4 @@
+import { isCurrentLedgerEntry } from "@/lib/bonus-period";
 export const moneyLabels = {
   LOAN: "Kasbon baru",
   REPAYMENT: "Pembayaran kasbon",
@@ -17,12 +18,14 @@ export function validateLedger(entries: Entry[]) {
   let bonus = 0;
   const loans = new Map<string, number>();
   const credit = (kind: string) => kind === "LOAN" || kind === "BONUS_EARNED";
-  for (const e of [...entries].sort(
-    (a, b) =>
-      a.date.getTime() - b.date.getTime() ||
-      Number(credit(b.kind)) - Number(credit(a.kind)) ||
-      a.id.localeCompare(b.id),
-  )) {
+  for (const e of entries
+    .filter(isCurrentLedgerEntry)
+    .sort(
+      (a, b) =>
+        a.date.getTime() - b.date.getTime() ||
+        Number(credit(b.kind)) - Number(credit(a.kind)) ||
+        a.id.localeCompare(b.id),
+    )) {
     if (e.kind === "LOAN") loans.set(e.id, e.amount);
     if (e.kind === "REPAYMENT") {
       const left = loans.get(e.sourceId || "");

@@ -1,3 +1,4 @@
+import { bonusStartDate } from "@/lib/bonus-period";
 import SearchForm from "next/form";
 import { OutletBonusSummary } from "@/components/outlet-bonus-summary";
 import { SortableTable } from "@/components/sortable-table";
@@ -29,7 +30,10 @@ export async function MoneyPage({
       select: { id: true, fullName: true, employeeCode: true, active: true },
     }),
     db.moneyEntry.findMany({
-      where: { kind: { in: kinds } },
+      where: {
+        kind: { in: kinds },
+        ...(mode === "bonus" ? { date: { gte: bonusStartDate() } } : {}),
+      },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       include: { createdBy: { select: { name: true } }, decidedBy: { select: { name: true } } },
     }),

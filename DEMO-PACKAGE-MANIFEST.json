@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-11-05T14:31:30.045Z",
+  "createdAt": "2026-11-06T07:36:54.664Z",
   "containsRealData": false,
   "files": [
     {
@@ -40,7 +40,7 @@
     },
     {
       "path": "docs/security-hardening.md",
-      "sha256": "aee724e54f76b33ad3d725052bf9d5db5687d9e54668642f0b3adc0990368913"
+      "sha256": "8a9ae7ee7c9e74d7fcd67b11171175c3b6aafcbf3e3645a7c0d0fff9d33f33fb"
     },
     {
       "path": "eslint.config.mjs",
@@ -356,11 +356,15 @@
     },
     {
       "path": "scripts/package-demo.cjs",
-      "sha256": "eb01ddacb539df99af11a06ab2d22697d92c7afdab2f841aef61a5715d3c5ba1"
+      "sha256": "ad42a0bdcf81ac1471bb3ef0e223811452d798df28344a2567c3535ede288b30"
     },
     {
       "path": "scripts/register-security-backup.ps1",
-      "sha256": "e5767f5a1a75b58da99a0409686e3544fcbcb5e1a02813666cd92465aa025a94"
+      "sha256": "ae667061ded457c332c96b5ea58d0bd815564bad431a5b0e845ed57b6d6d95c6"
+    },
+    {
+      "path": "scripts/run-security-backup.ps1",
+      "sha256": "5aca208558d72f2bba2224b9a3c68856a885760df47de1834cf09ecc537c5eda"
     },
     {
       "path": "scripts/security-backup.cjs",
@@ -416,7 +420,7 @@
     },
     {
       "path": "src/app/(workspace)/dashboard/page.tsx",
-      "sha256": "074be1749ef53e6f7f9354c2e9c99b5027937b9a88497ef675c9366fe900d8c3"
+      "sha256": "994aaa5bbc09d4a5b74187041ff977bc112fd5380bca03061f81780c99390497"
     },
     {
       "path": "src/app/(workspace)/error.tsx",
@@ -472,7 +476,7 @@
     },
     {
       "path": "src/app/(workspace)/layout.tsx",
-      "sha256": "4ff28c5c590bfadd38a245868e7159aedc92149dc82011b645f65f7110e55659"
+      "sha256": "f866036e971f26cc9940ad840f2c3d72effd8223a0d5bee5c7c9b8e290de2570"
     },
     {
       "path": "src/app/(workspace)/master-area/page.tsx",
@@ -524,7 +528,7 @@
     },
     {
       "path": "src/app/(workspace)/rekap-saldo/page.tsx",
-      "sha256": "2d3987a89f977883b1096433786820e9fcdf5a53ca6caa7a5614736b712426f0"
+      "sha256": "580b9da440c9b5f46d92cc698a0c155f4df0d376f3db11df3e600bd368748573"
     },
     {
       "path": "src/app/(workspace)/retur-pembeli/page.tsx",
@@ -612,7 +616,7 @@
     },
     {
       "path": "src/app/bonus-withdrawal-actions.ts",
-      "sha256": "5f002c83ab4325a0a224e3762785fbeba489fe3304746aa29c44a876a90aba59"
+      "sha256": "435d727835b96d46be7390aa513c7cff2520d9c42e17fa6657f0c9af33b628d0"
     },
     {
       "path": "src/app/employee-actions.ts",
@@ -668,7 +672,7 @@
     },
     {
       "path": "src/app/money-actions.ts",
-      "sha256": "26cb046c908bab97dfaa057ba15576bb6a2c628d1db24c17adf6f32d8b97f2bf"
+      "sha256": "f2304cd754ab347ac1490d7d8872cea4ad5651050ff26661086261d8209cfa51"
     },
     {
       "path": "src/app/operational-expense-actions.ts",
@@ -676,7 +680,7 @@
     },
     {
       "path": "src/app/outlet-bonus-actions.ts",
-      "sha256": "bb162aa857bdb3573a720a234266ccae428231dbba5d09369addceb82ec0dabf"
+      "sha256": "87abfa74d49a5e3252d34752fb382101c1cfed55c628567949fcc54545974722"
     },
     {
       "path": "src/app/outlet-stock-actions.ts",
@@ -692,7 +696,7 @@
     },
     {
       "path": "src/app/payroll-actions.ts",
-      "sha256": "2f752f6127729c5a8a0335fc261f5edebfc76c33cce66bbceed0d630e10fda10"
+      "sha256": "f1e868670656292a8f66e0fa7ea8ea9af59f5a8f7a40529af53be2cc367b49f8"
     },
     {
       "path": "src/app/placement-actions.ts",
@@ -772,7 +776,7 @@
     },
     {
       "path": "src/components/bonus-page.tsx",
-      "sha256": "7484e8c19f17ddccff7741e4a5ea8a2028b897fad8d356de329f6996b9845dc6"
+      "sha256": "5e6890adcbc01c4ab7f3f94dc096fe908092b563df644c7cfcdfc46ca88ae5ba"
     },
     {
       "path": "src/components/bonus-view.css",
@@ -916,7 +920,7 @@
     },
     {
       "path": "src/components/money-page.tsx",
-      "sha256": "fd1210bc932c67787152b5e212809f7842a4c0675afd3663017a04c7e470dbdc"
+      "sha256": "4b3abd1b485598b8daf1256960823f0f01d6e51f21c46cc5ee2e1fb1a4ba2a33"
     },
     {
       "path": "src/components/navigation-link.tsx",
@@ -940,7 +944,7 @@
     },
     {
       "path": "src/components/outlet-bonus-summary.tsx",
-      "sha256": "dd18d3a91bd2d2640b27fcb566d24225e3effa912e372dd80fd8b39c4584e6ca"
+      "sha256": "056a1d6db2a378d3e263703548e4da7e4480d7ea1b772b227976d2ba2432a329"
     },
     {
       "path": "src/components/outlet-cash-flow.tsx",
@@ -1136,7 +1140,7 @@
     },
     {
       "path": "src/components/section-navigation.tsx",
-      "sha256": "bdc13c83b364b0357c0d6da43c60620dc9c9141d2cc0ddefcbf279f33c864e7c"
+      "sha256": "1271b7d674c43970e48a6eaa35e15388c2e871617930c4121ced288bee880108"
     },
     {
       "path": "src/components/security-retention-form.tsx",
@@ -1236,11 +1240,15 @@
     },
     {
       "path": "src/lib/bonus-balance.ts",
-      "sha256": "c2d7d63ca2492632fbe5f3fb818c8093524a743b41534985d20b675aa0808383"
+      "sha256": "bcddee8e65f2880c3c2a723852bd92b26ac1b90ddf832c3da2e0e93d89e89c67"
+    },
+    {
+      "path": "src/lib/bonus-period.ts",
+      "sha256": "ffdf32a05b6d1806040cd7da31789f1dd7eafac5757f81476dc06667781fd242"
     },
     {
       "path": "src/lib/business-dashboard-data.ts",
-      "sha256": "91815d331ed28cb87cc06e6435d7132d6c71e0da3ef20a38b0a91b0412e341e4"
+      "sha256": "dac579df863c26918a394f09ea41e09c2e6b2a5be3c2ebff61fd7c8cd81755ae"
     },
     {
       "path": "src/lib/business-dashboard.ts",
@@ -1332,7 +1340,7 @@
     },
     {
       "path": "src/lib/money.ts",
-      "sha256": "62cec91a31461f70a76b6b0616f4ea3e914dfcb0d808d46a71b20bbd0402187f"
+      "sha256": "3972109e7cfcddd0894c30085bdf7d4ad689c763473a436258d0e64d09c63f33"
     },
     {
       "path": "src/lib/navigation.ts",
@@ -1344,7 +1352,7 @@
     },
     {
       "path": "src/lib/outlet-bonus-ledger.ts",
-      "sha256": "47e3b18ef5a38be82253b45c7fd53687b5241138670ed8b13ab9324084b57ef5"
+      "sha256": "a5d24d231044a2658884cd235cc5ecb70549709c14ffb3d356e0cb8715e8a477"
     },
     {
       "path": "src/lib/outlet-bonus.ts",
