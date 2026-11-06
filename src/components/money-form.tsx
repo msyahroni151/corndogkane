@@ -1,5 +1,6 @@
 "use client";
 import { notifySuccess } from "@/components/notification-toasts";
+import { RupiahInput } from "@/components/rupiah-input";
 import { LocalInput } from "@/components/local-input";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -155,14 +156,12 @@ export function MoneyForm({
             </label>
             <label className="field">
               Nominal (Rp) *
-              <LocalInput
+              <RupiahInput
                 name="amount"
-                type="number"
                 min={1}
                 max={1000000000}
-                step={1}
                 value={draft.amount}
-                onChange={(e) => change("amount", e.target.value)}
+                onValueChange={(value) => change("amount", value)}
                 required
               />
             </label>

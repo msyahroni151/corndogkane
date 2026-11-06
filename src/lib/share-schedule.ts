@@ -17,7 +17,7 @@ export type ShareRow = {
 export type ShareScheduleData = {
   from: string;
   to: string;
-  areas: { id: string; name: string }[];
+  areas: { id: string; name: string; active?: boolean }[];
   outlets: { id: string; name: string; areaId: string }[];
   rows: ShareRow[];
   areaNotes?: { areaId: string; note: string; version: string }[];

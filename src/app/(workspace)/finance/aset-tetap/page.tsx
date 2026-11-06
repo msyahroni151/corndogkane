@@ -132,7 +132,7 @@ export default async function AssetsPage({
         orderBy: { code: "asc" },
       }),
       db.outlet.findMany({
-        where: { active: true, closed: false },
+        where: { active: true, closed: false, area: { active: true } },
         select: { id: true, name: true },
         orderBy: { name: "asc" },
       }),
@@ -267,11 +267,13 @@ export default async function AssetsPage({
               Kategori
               <select name="category" aria-label="Filter kategori" defaultValue={categoryId}>
                 <option value="">Semua kategori</option>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
+                {accounts
+                  .filter((a) => a.active)
+                  .map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
               </select>
             </label>
             <label className="field">

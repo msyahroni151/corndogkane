@@ -33,6 +33,7 @@ export default async function SettlementDifferencePage({
   }
   const [employees, records] = await Promise.all([
     db.employee.findMany({
+      where: { active: true },
       select: { id: true, fullName: true, employeeCode: true },
       orderBy: { fullName: "asc" },
     }),

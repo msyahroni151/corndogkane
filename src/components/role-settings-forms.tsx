@@ -267,7 +267,7 @@ export function LoginAccountForm({
             {roles
               .filter((role) => role.active || role.id === values?.roleId)
               .map((role) => (
-                <option key={role.id} value={role.id}>
+                <option key={role.id} value={role.id} hidden={!role.active}>
                   {role.name}
                   {role.active ? "" : " (tidak aktif)"}
                 </option>

@@ -83,13 +83,22 @@ export default async function ReportPage({
   } catch {
     error = "Pilih rentang tanggal yang valid, maksimal 366 hari.";
   }
-  const [outlets, accounts] = await Promise.all([db.outlet.findMany({
-    where: { OR: [{ active: true }, { operations: { some: {} } }] },
-    select: { id: true, name: true, active: true, closed: true, area: { select: { name: true } } },
-    orderBy: { name: "asc" },
-  }), db.financialAccount.findMany({ orderBy: { code: "asc" } })]);
+  const [outlets, accounts] = await Promise.all([
+    db.outlet.findMany({
+      where: { OR: [{ active: true }, { operations: { some: {} } }] },
+      select: {
+        id: true,
+        name: true,
+        active: true,
+        closed: true,
+        area: { select: { name: true, active: true } },
+      },
+      orderBy: { name: "asc" },
+    }),
+    db.financialAccount.findMany({ orderBy: { code: "asc" } }),
+  ]);
   const outletId =
-      param("outlet") || outlets.find((o) => o.active && !o.closed)?.id || outlets[0]?.id || "",
+      param("outlet") || outlets.find((o) => o.active && !o.closed && o.area.active)?.id || "",
     outlet = outlets.find((o) => o.id === outletId);
   if (outletId && !outlet) error = "Outlet tidak ditemukan. Pilih outlet yang terdaftar.";
   const href = (changes: Record<string, string>) =>
@@ -218,12 +227,14 @@ export default async function ReportPage({
             Daftar akun bersama untuk seluruh outlet. Pilihan outlet tidak mengubah master COA.
           </p>
           <CoaTable
-            accounts={accounts.map((a) => ({
-              ...a,
-              version: a.updatedAt.toISOString(),
-              createdAt: undefined,
-              updatedAt: undefined,
-            }))}
+            accounts={accounts
+              .filter((a) => a.active)
+              .map((a) => ({
+                ...a,
+                version: a.updatedAt.toISOString(),
+                createdAt: undefined,
+                updatedAt: undefined,
+              }))}
           />
           <p className="text-xs text-slate-500">
             Sumber COA:{" "}
@@ -250,12 +261,14 @@ export default async function ReportPage({
               <select name="outlet" defaultValue={outletId} required>
                 {!outlets.length && <option value="">Belum ada outlet</option>}
                 {outletId && !outlet && <option value={outletId}>Outlet tidak ditemukan</option>}
-                {outlets.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.name}
-                    {!o.active || o.closed ? " · Arsip / tutup" : ""}
-                  </option>
-                ))}
+                {outlets
+                  .filter((o) => o.active && !o.closed && o.area.active)
+                  .map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.name}
+                      {!o.active || o.closed ? " · Arsip / tutup" : ""}
+                    </option>
+                  ))}
               </select>
             </label>
             <label>
@@ -451,11 +464,13 @@ export default async function ReportPage({
                       Pilih nomor akun
                       <select name="account" defaultValue={param("account")}>
                         <option value="">Pilih nomor akun…</option>
-                        {accounts.map((a) => (
-                          <option value={a.code} key={a.id}>
-                            {a.code} — {a.name}
-                          </option>
-                        ))}
+                        {accounts
+                          .filter((a) => a.active)
+                          .map((a) => (
+                            <option value={a.code} key={a.id}>
+                              {a.code} — {a.name}
+                            </option>
+                          ))}
                       </select>
                     </label>
                     <button className="button-secondary" type="submit">

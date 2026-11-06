@@ -41,7 +41,16 @@ export async function StockReturnsWorkspace({
       },
     };
   const [outlets, stocks, open, closed] = await Promise.all([
-    db.outlet.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    db.outlet.findMany({
+      select: {
+        id: true,
+        name: true,
+        active: true,
+        closed: true,
+        area: { select: { active: true } },
+      },
+      orderBy: { name: "asc" },
+    }),
     db.outletStock.findMany({
       where: { quantity: { gt: 0 }, item: { kind: { in: ["RAW", "SUB", "FINISHED"] } } },
       include: { item: { select: { name: true, active: true, baseUnit: true } } },
@@ -66,7 +75,7 @@ export async function StockReturnsWorkspace({
       </p>
     );
   const options: ReturnOptions = {
-    outlets,
+    outlets: outlets.filter((o) => o.active && !o.closed && o.area.active),
     stocks: stocks
       .filter((s) => s.unit === s.item.baseUnit)
       .map((s) => ({
@@ -143,11 +152,13 @@ export async function StockReturnsWorkspace({
             Outlet
             <select name="outlet" defaultValue={outletId}>
               <option value="">Semua outlet</option>
-              {outlets.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
+              {outlets
+                .filter((o) => o.active && !o.closed && o.area.active)
+                .map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
             </select>
           </label>
           <label className="field min-w-48 flex-1">

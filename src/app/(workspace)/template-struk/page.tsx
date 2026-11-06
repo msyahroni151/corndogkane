@@ -7,7 +7,7 @@ export default async function Page() {
   const [records, outlets] = await Promise.all([
     loadReceiptTemplates(),
     getPrisma().outlet.findMany({
-      where: { active: true },
+      where: { active: true, closed: false, area: { active: true } },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),

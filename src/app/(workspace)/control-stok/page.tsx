@@ -70,7 +70,7 @@ export default async function Page({
   const [outlets, items, balances, recentOrders, openOrders, events, warehouseTotal] =
     await Promise.all([
       db.outlet.findMany({
-        include: { area: { select: { name: true } } },
+        include: { area: { select: { name: true, active: true } } },
         orderBy: { name: "asc" },
       }),
       db.inventoryItem.findMany({
@@ -121,7 +121,7 @@ export default async function Page({
   const orders = [...openOrders, ...recentOrders].sort(
     (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
   );
-  const activeOutlets = outlets.filter((o) => o.active),
+  const activeOutlets = outlets.filter((o) => o.active && !o.closed && o.area.active),
     activeItems = items.filter((i) => i.active),
     stockKey = (outlet: string, item: string, unit: string) => JSON.stringify([outlet, item, unit]),
     stockMap = new Map(balances.map((b) => [stockKey(b.outletId, b.itemId, b.unit), b])),
@@ -180,10 +180,16 @@ export default async function Page({
         <p className="text-sm text-slate-500">Pantau stok sebelum memproses permintaan crew.</p>
         <div className="flex flex-wrap gap-2">
           <FormDialog title="Catat Permintaan Crew" trigger="+ Permintaan Barang" wide>
-            <OutletRequestForm options={options} outletId={selected?.active ? outletId : ""} />
+            <OutletRequestForm
+              options={options}
+              outletId={activeOutlets.some((o) => o.id === outletId) ? outletId : ""}
+            />
           </FormDialog>
           <FormDialog title="Pencatatan Stok Outlet" trigger="Catat Stok / Pemakaian">
-            <OutletPhysicalForm options={options} outletId={selected?.active ? outletId : ""} />
+            <OutletPhysicalForm
+              options={options}
+              outletId={activeOutlets.some((o) => o.id === outletId) ? outletId : ""}
+            />
           </FormDialog>
         </div>
       </div>

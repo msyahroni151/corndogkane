@@ -48,7 +48,11 @@ export default async function NightOperationsDashboard({
   }
   const db = getPrisma();
   const [areas, allOutlets] = await Promise.all([
-    db.area.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    db.area.findMany({
+      where: { active: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
     db.outlet.findMany({
       select: {
         id: true,
@@ -59,7 +63,7 @@ export default async function NightOperationsDashboard({
         address: true,
         latitude: true,
         longitude: true,
-        area: { select: { name: true } },
+        area: { select: { name: true, active: true } },
       },
       orderBy: { name: "asc" },
     }),
@@ -159,7 +163,9 @@ export default async function NightOperationsDashboard({
       area={area}
       outlet={outlet}
       areas={areas}
-      outlets={allOutlets.map((o) => ({ id: o.id, name: o.name, areaId: o.areaId }))}
+      outlets={allOutlets
+        .filter((o) => o.active && !o.closed && o.area.active)
+        .map((o) => ({ id: o.id, name: o.name, areaId: o.areaId }))}
       compare={compare}
       period={period}
       today={today}

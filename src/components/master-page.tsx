@@ -76,7 +76,7 @@ export async function MasterPage({
                 "AREA 2",
                 "AREA 3",
                 "AREA 4",
-                ...areas.map((area) => area.name),
+                ...areas.filter((area) => area.active).map((area) => area.name),
               ]),
             ],
             help: "Pilih Area 1–4 atau ketik nama area baru, lalu simpan.",
@@ -90,10 +90,12 @@ export async function MasterPage({
             required: true,
             options: [
               { value: "", label: "Pilih area…" },
-              ...areas.map((area) => ({
-                value: area.id,
-                label: area.name + (area.active ? "" : " · tidak aktif"),
-              })),
+              ...areas
+                .filter((area) => area.active)
+                .map((area) => ({
+                  value: area.id,
+                  label: area.name + (area.active ? "" : " · tidak aktif"),
+                })),
             ],
           },
         ]),

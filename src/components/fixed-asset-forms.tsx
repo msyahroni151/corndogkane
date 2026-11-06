@@ -72,6 +72,11 @@ function LocationFields({ choices, record }: { choices: AssetChoices; record?: A
             defaultValue={record?.outletId || ""}
           >
             <option value="">Pilih outlet...</option>
+            {record?.outletId && !choices.outlets.some((o) => o.id === record.outletId) && (
+              <option value={record.outletId} hidden>
+                {record.locationName} (tersimpan)
+              </option>
+            )}
             {choices.outlets.map((o) => (
               <option value={o.id} key={o.id}>
                 {o.name}
@@ -206,7 +211,7 @@ export function FixedAssetForm({
             >
               <option value="">Pilih kategori...</option>
               {record && !choices.accounts.some((a) => a.id === record.categoryAccountId) && (
-                <option value={record.categoryAccountId}>
+                <option value={record.categoryAccountId} hidden>
                   {record.categoryCode} · {record.categoryName} (tersimpan)
                 </option>
               )}

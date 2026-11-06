@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-11-06T08:45:17.498Z",
+  "createdAt": "2026-11-06T09:35:41.666Z",
   "containsRealData": false,
   "files": [
     {
@@ -392,7 +392,7 @@
     },
     {
       "path": "src/app/(workspace)/absensi/page.tsx",
-      "sha256": "088d2b4e0e955597998aed83106e17a2ac6716aab4b06be3de079ca48eec5fe4"
+      "sha256": "babb25ec533c07835e59ca7c5a34d7ed885470a303d1acc81af2665a13b6f6b1"
     },
     {
       "path": "src/app/(workspace)/admin-malam/master-akun/page.tsx",
@@ -400,7 +400,7 @@
     },
     {
       "path": "src/app/(workspace)/admin-malam/monitoring-outlet/page.tsx",
-      "sha256": "ba9e40a60fe39b7002199b7499c1a148af6d22a4fbab502e3fba2d58f56659c4"
+      "sha256": "8234ac1db74d97743d89ca323126d19df5f8799c9ff0044fce4485d636a88d77"
     },
     {
       "path": "src/app/(workspace)/akses-ditolak/page.tsx",
@@ -416,7 +416,7 @@
     },
     {
       "path": "src/app/(workspace)/control-stok/page.tsx",
-      "sha256": "4b8a689856291d5ce006e2e6f37fe2a1c222cf51eb98dccfdbdf70c23ff6f324"
+      "sha256": "2665328ade27494950571fe747797590582b27931dbf16f3251cea119f09e45c"
     },
     {
       "path": "src/app/(workspace)/dashboard/page.tsx",
@@ -428,7 +428,7 @@
     },
     {
       "path": "src/app/(workspace)/finance/aset-tetap/page.tsx",
-      "sha256": "63fb57a23d31636300c54bdbbcee5a416a76b5909a580d209597436174df58d1"
+      "sha256": "9e99c43d7a8c1f5a3757f5282743199e97bce687759662a9ac2dc42396b9b141"
     },
     {
       "path": "src/app/(workspace)/finance/budgeting-rab/page.tsx",
@@ -436,7 +436,7 @@
     },
     {
       "path": "src/app/(workspace)/finance/finance-ledger/page.tsx",
-      "sha256": "7ac6cbdc68f32c79123ef737535efbe5bb6232be2709117c22216490b0b4efa9"
+      "sha256": "cbaf6250046f2857f4593547d2ef7b28e56b160992a0fa40696c16ed8c43f66e"
     },
     {
       "path": "src/app/(workspace)/finance/jurnal-umum/page.tsx",
@@ -444,7 +444,7 @@
     },
     {
       "path": "src/app/(workspace)/finance/laporan-akuntansi/page.tsx",
-      "sha256": "5d2b9a4fa4b562dad2525547266a3ae4be2dee299ada7524f752289f62a3a332"
+      "sha256": "33b93fac9a2f511f3b6ba3b7538de431f9733e186d8d4df36c8cd9d187eb845f"
     },
     {
       "path": "src/app/(workspace)/finance/pengeluaran-operasional/page.tsx",
@@ -452,7 +452,7 @@
     },
     {
       "path": "src/app/(workspace)/jadwal/page.tsx",
-      "sha256": "8df6024e164aebc1d3365d2313028a76086fbe9a8e35d0b463d44d4eee8a7fb9"
+      "sha256": "e000d4bc3ffe0e4bd4ad03449256d2ddb205f8086b08e3e6426159d88db868bb"
     },
     {
       "path": "src/app/(workspace)/karyawan/[id]/page.tsx",
@@ -492,7 +492,7 @@
     },
     {
       "path": "src/app/(workspace)/menu-utama/dashboard/page.tsx",
-      "sha256": "d3594723fdf83bebb8f73e34e3384e411aba38d4737ab25de55a2b0d8554b843"
+      "sha256": "c2c5957d10edb6a5b36cb9d8b7670feacc34158b74e19676dfe20977990b63a1"
     },
     {
       "path": "src/app/(workspace)/open-transaction/page.tsx",
@@ -500,7 +500,7 @@
     },
     {
       "path": "src/app/(workspace)/payroll/page.tsx",
-      "sha256": "4c118e116827d6a0fdf2a317d408c93f31263083128eab9d05b26cd6ab722cf8"
+      "sha256": "db7bda9e38c365554e68ab0b9d30d466ab753c981eaa388902733a4e01be63bf"
     },
     {
       "path": "src/app/(workspace)/pelanggan/page.tsx",
@@ -540,7 +540,7 @@
     },
     {
       "path": "src/app/(workspace)/selisih-setor/page.tsx",
-      "sha256": "6561d223d0ff14ec334bc8cbcbb6b21f874bccb8503ccfcaea3bc239a1dee0aa"
+      "sha256": "4810dee187c081f472eabadf6f3b4cd2f838a0b16ccec37413acb1ff75f5a42b"
     },
     {
       "path": "src/app/(workspace)/setting-menu/page.tsx",
@@ -556,7 +556,7 @@
     },
     {
       "path": "src/app/(workspace)/template-struk/page.tsx",
-      "sha256": "c4c19983ca8b0cf6a1fab1f5e766df0d7affd0a28188f4ede2f6da205cf455d3"
+      "sha256": "3a04d8fbdd25d3c0776febfef2b586078b2ec8d3ee83accf1d73f7d4f2e634b5"
     },
     {
       "path": "src/app/api/health/database/route.ts",
@@ -604,7 +604,7 @@
     },
     {
       "path": "src/app/api/schedules/share/route.ts",
-      "sha256": "14d68b32cc28ca56ac25281efaab832f06276dbb03fda10d6e86783976885673"
+      "sha256": "05c70c2ad6a40fe976fb3ad45940cc39a316ebe82e89d155f0b2ec5859d06961"
     },
     {
       "path": "src/app/attendance-actions.ts",
@@ -776,7 +776,7 @@
     },
     {
       "path": "src/components/bonus-page.tsx",
-      "sha256": "5e6890adcbc01c4ab7f3f94dc096fe908092b563df644c7cfcdfc46ca88ae5ba"
+      "sha256": "41f41b94487bc326d75d497a558914e9daf3fda8dae38689bb03ef1a066e4ad9"
     },
     {
       "path": "src/components/bonus-view.css",
@@ -868,7 +868,7 @@
     },
     {
       "path": "src/components/fixed-asset-forms.tsx",
-      "sha256": "7ff36f3589e880e409a95b27cdd7cdaf77ff90a0866ae8de1ad912da9253ab0a"
+      "sha256": "853b17ec3c2f7d859ec1d55c6c3a1f3d74852a7fad79b745cd3fde65d0ff3acd"
     },
     {
       "path": "src/components/fixed-assets.css",
@@ -908,7 +908,7 @@
     },
     {
       "path": "src/components/master-page.tsx",
-      "sha256": "3f42dd2c0a2d3044535abe4c84d296a51b1975521676b98f59a58085d3749aa4"
+      "sha256": "de1bb864a0c2d708973f2ade883f587d90216a5912e08d6247517379ab68cc69"
     },
     {
       "path": "src/components/mfa-form.tsx",
@@ -916,11 +916,11 @@
     },
     {
       "path": "src/components/money-form.tsx",
-      "sha256": "6cdaa9e2729c1b5ac988d73aa49d32ccb112cdd1da75cb807987ba989b9c9b6e"
+      "sha256": "32533fa013022779a9186a0a957baaf001187fd1e2448f4d3de3124a1a438bfb"
     },
     {
       "path": "src/components/money-page.tsx",
-      "sha256": "4b3abd1b485598b8daf1256960823f0f01d6e51f21c46cc5ee2e1fb1a4ba2a33"
+      "sha256": "03ac7bc1416de53d38689e11a97b25759a41e2f0dc593dc773c7a1a52f2e4079"
     },
     {
       "path": "src/components/navigation-link.tsx",
@@ -968,7 +968,7 @@
     },
     {
       "path": "src/components/outlet-form.tsx",
-      "sha256": "f3107f7ab2a6c064270683297c331ef3b718c37c5eb5af3db855e84e7d1ddeb0"
+      "sha256": "bcc6de4aba99c94a85c4c6ae0a76962299ce9a1265b9b6311def163b61885ef5"
     },
     {
       "path": "src/components/outlet-income-dashboard.css",
@@ -1000,7 +1000,7 @@
     },
     {
       "path": "src/components/outlet-operation-dialog.tsx",
-      "sha256": "e6a98666c13edce649d168b5927622b22f6342e70e1ef6324dec5157f467d5a9"
+      "sha256": "66b2f7070a0ae6a792ce3ec710c0264fee9dc5ccabdbd1381b3e48cdc95de702"
     },
     {
       "path": "src/components/outlet-owner-insights.tsx",
@@ -1124,7 +1124,11 @@
     },
     {
       "path": "src/components/role-settings-forms.tsx",
-      "sha256": "61d52b8587052cb6703333b7b172866f90b48555a3d44773303dc7dde1ac2690"
+      "sha256": "3fa7f3e3676378be2a6d40bb69b71e1bebca672d14ff75408be1a548dcf3daa9"
+    },
+    {
+      "path": "src/components/rupiah-input.tsx",
+      "sha256": "68333ee0c4d8e1ae9b98c74fbd2027aa7681dd81c618ca1fc88327a796764905"
     },
     {
       "path": "src/components/sales-reconciliation.tsx",
@@ -1160,7 +1164,7 @@
     },
     {
       "path": "src/components/share-schedule.tsx",
-      "sha256": "2f56008be0cda6939ba8b78e19417cddd40f75ad04c7b512b7b2f689d707eaba"
+      "sha256": "b9d00b28203a4008de7ea94e4993fe6f6a6302385a8ca60cbc22a9d1385128e1"
     },
     {
       "path": "src/components/share-warehouse-schedule.tsx",
@@ -1184,11 +1188,11 @@
     },
     {
       "path": "src/components/stock-return-forms.tsx",
-      "sha256": "f63a6290bcbfd9c8c1e4f85fd590dc8be6e63169ffeda8b8c8afe67146fb2326"
+      "sha256": "421ea2a176abdee2945a869871c43cad25d9621fd60365df4e492165cd6495de"
     },
     {
       "path": "src/components/stock-returns-workspace.tsx",
-      "sha256": "f9ccfa3ec6b8fb1b6f7a7c37f01f7aa4015c5ef18d51fe8766c8163527ea2d95"
+      "sha256": "30e743b53e4543764e21c8ea86a32489b360a1b2a55f57337621f8b81a1e4501"
     },
     {
       "path": "src/components/stock-unit-input.tsx",
@@ -1544,7 +1548,7 @@
     },
     {
       "path": "src/lib/share-schedule.ts",
-      "sha256": "fa81fe7fed772ebd6893d2202a159c085d3795c83ddf9d7f4197b1e1f62e4e6b"
+      "sha256": "54450e343bc90f2af79c23c7ea573b2729b9cbfa49d57501beeb5df29494bd6a"
     },
     {
       "path": "src/lib/stock-return-service.ts",

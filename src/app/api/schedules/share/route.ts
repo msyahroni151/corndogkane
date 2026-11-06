@@ -71,7 +71,7 @@ export async function GET(request: Request) {
     to: to.toISOString().slice(0, 10),
     areas: areas
       .filter((a) => a.active || referencedAreas.has(a.id))
-      .map((a) => ({ id: a.id, name: a.name })),
+      .map((a) => ({ id: a.id, name: a.name, active: a.active })),
     outlets: visibleOutlets.map((o) => ({ id: o.id, name: o.name, areaId: o.areaId })),
     areaNotes: areaNotes.map((n) => ({
       areaId: n.areaId,

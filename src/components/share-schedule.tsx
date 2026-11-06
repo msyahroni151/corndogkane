@@ -207,11 +207,13 @@ function SchedulePreview({
           Cakupan
           <select value={scope} onChange={(e) => setScope(e.target.value)}>
             <option value="">SEMUA AREA</option>
-            {data?.areas.map((a) => (
-              <option value={a.id} key={a.id}>
-                {a.name}
-              </option>
-            ))}
+            {data?.areas
+              .filter((a) => a.active !== false)
+              .map((a) => (
+                <option value={a.id} key={a.id}>
+                  {a.name}
+                </option>
+              ))}
           </select>
         </label>
         <div className="flex items-end">

@@ -92,11 +92,13 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
               Karyawan
               <select name="employee" defaultValue={query.employee || ""}>
                 <option value="">Semua karyawan</option>
-                {employees.map((e) => (
-                  <option value={e.id} key={e.id}>
-                    {e.employeeCode || e.fullName}
-                  </option>
-                ))}
+                {employees
+                  .filter((e) => e.active)
+                  .map((e) => (
+                    <option value={e.id} key={e.id}>
+                      {e.employeeCode || e.fullName}
+                    </option>
+                  ))}
               </select>
             </label>
             <button className="button-secondary">Terapkan</button>

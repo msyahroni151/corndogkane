@@ -7,7 +7,7 @@ import { OutletMonitoringCards } from "@/components/outlet-monitoring-cards";
 export default async function OutletMonitoring() {
   await requireAccess("monitoring-outlet");
   const outlets = await getPrisma().outlet.findMany({
-    where: { active: true, closed: false },
+    where: { active: true, closed: false, area: { active: true } },
     select: {
       id: true,
       name: true,

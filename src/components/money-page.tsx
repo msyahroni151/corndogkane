@@ -74,10 +74,12 @@ export async function MoneyPage({
       : [{ title: "Riwayat", rows }];
   const today = todayWib(),
     title = mode === "kasbon" ? "Kasbon" : "Bonus";
-  const choices = employees.map((e) => ({
-    id: e.id,
-    name: (e.employeeCode || e.fullName) + (e.active ? "" : " · tidak aktif"),
-  }));
+  const choices = employees
+    .filter((e) => e.active)
+    .map((e) => ({
+      id: e.id,
+      name: e.employeeCode || e.fullName,
+    }));
   const loans = approved
     .filter((e) => e.kind === "LOAN" && loanLeft(e.id, e.amount) > 0)
     .map((e) => ({

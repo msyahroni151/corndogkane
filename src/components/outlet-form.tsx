@@ -88,12 +88,14 @@ export function OutletForm({
             Area outlet *
             <select name="areaId" value={area} onChange={(e) => setArea(e.target.value)} required>
               <option value="">Pilih area…</option>
-              {areas.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                  {a.active ? "" : " · tidak aktif"}
-                </option>
-              ))}
+              {areas
+                .filter((a) => a.active || a.id === area)
+                .map((a) => (
+                  <option key={a.id} value={a.id} hidden={!a.active}>
+                    {a.name}
+                    {a.active ? "" : " · tidak aktif"}
+                  </option>
+                ))}
             </select>
           </label>
           <label className="field">

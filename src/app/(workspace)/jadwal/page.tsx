@@ -73,7 +73,7 @@ export default async function Schedules({
   const [crew, outlets, rows, groups, employees, areas] = await Promise.all([
     db.employee.findMany({ where: { active: true }, orderBy: { fullName: "asc" } }),
     db.outlet.findMany({
-      where: { active: true, area: { active: true } },
+      where: { active: true, closed: false, area: { active: true } },
       orderBy: { name: "asc" },
     }),
     valid
@@ -92,10 +92,15 @@ export default async function Schedules({
         })
       : [],
     db.employee.findMany({
+      where: { active: true },
       select: { id: true, employeeCode: true, fullName: true },
       orderBy: { fullName: "asc" },
     }),
-    db.area.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    db.area.findMany({
+      where: { active: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
   const count = groups.reduce((sum, g) => sum + g._count._all, 0);
   const metrics = [

@@ -85,11 +85,13 @@ export default async function LedgerPage({
           Akun
           <select name="account" defaultValue={query.account || ""}>
             <option value="">Semua akun</option>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.code} · {a.name}
-              </option>
-            ))}
+            {accounts
+              .filter((a) => a.active)
+              .map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.code} · {a.name}
+                </option>
+              ))}
           </select>
         </label>
         <button className="button-secondary">Terapkan</button>

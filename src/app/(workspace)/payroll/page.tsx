@@ -43,7 +43,9 @@ export default async function PayrollPage() {
       <div className="flex flex-wrap items-center justify-end gap-4">
         <FormDialog title="Hitung payroll" trigger="+ Buat payroll" wide>
           <PayrollForm
-            employees={employees.map((e) => ({ id: e.id, name: e.employeeCode || e.fullName }))}
+            employees={employees
+              .filter((e) => e.active)
+              .map((e) => ({ id: e.id, name: e.employeeCode || e.fullName }))}
             loans={loans}
             settlements={settlementRows.map((s) => ({
               id: s.id,

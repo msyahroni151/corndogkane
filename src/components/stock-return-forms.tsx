@@ -82,7 +82,7 @@ export function CreateReturnForm({
 }) {
   const [outlet, setOutlet] = useState(outletId),
     [rows, setRows] = useState([{ key: "first", itemId: "", quantity: "" }]);
-  const stocks = options.stocks.filter((s) => s.outletId === outlet),
+  const stocks = options.stocks.filter((s) => s.active && s.outletId === outlet),
     patch = (key: string, data: Partial<(typeof rows)[number]>) =>
       setRows((old) => old.map((row) => (row.key === key ? { ...row, ...data } : row)));
   return (

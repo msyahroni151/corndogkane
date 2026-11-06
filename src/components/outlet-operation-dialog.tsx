@@ -418,7 +418,9 @@ function OperationFields({
               type="text"
               aria-label="Nama Crew"
               aria-autocomplete="list"
-              options={loaded.employees.map((employee) => employee.name)}
+              options={loaded.employees
+                .filter((employee) => employee.active)
+                .map((employee) => employee.name)}
               required
               autoComplete="off"
               placeholder="Ketik untuk mencari kode crew..."

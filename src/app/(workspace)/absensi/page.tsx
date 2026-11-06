@@ -69,13 +69,15 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
         })
       : [],
     valid ? db.schedule.count({ where }) : 0,
-    db.schedule.findMany({
-      where: { areaName: { not: null } },
-      select: { areaName: true },
-      distinct: ["areaName"],
-      orderBy: { areaName: "asc" },
-    }),
+    db.area
+      .findMany({
+        where: { active: true },
+        select: { name: true },
+        orderBy: { name: "asc" },
+      })
+      .then((areas) => areas.map((area) => ({ areaName: area.name }))),
     db.employee.findMany({
+      where: { active: true },
       select: { id: true, employeeCode: true, fullName: true },
       orderBy: { fullName: "asc" },
     }),
