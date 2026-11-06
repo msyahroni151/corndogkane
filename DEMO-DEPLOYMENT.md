@@ -57,3 +57,7 @@ Jika layanan dibuat langsung melalui Dashboard/CLI, konfigurasi aktif berada pad
 ## Koneksi saat pergantian versi
 
 Pool aplikasi dibatasi 10 koneksi per proses. Role server `corndog_demo_app` memakai batas 24 koneksi agar instance lama dan baru dapat berjalan bersamaan saat deploy, dengan kapasitas database saat ini 60. Pengaturan ini tidak mengubah hak akses tabel atau data aplikasi. Jangan menambahkan cache autentikasi lintas request; izin tetap diperiksa pada setiap request.
+
+## Memastikan versi yang disajikan online
+
+Field release di /api/health berasal dari RENDER_GIT_COMMIT yang ditanam saat build. Cocokkan nilainya dengan commit deploy yang berstatus Live; status deploy saja tidak cukup untuk memastikan respons yang diterima browser. Next.js deploymentId memakai commit yang sama untuk memisahkan URL aset dan mendeteksi navigasi antarversi. Saat menyelidiki tampilan online yang tertinggal, deploy ulang menggunakan --clear-cache tanpa mengubah database atau menjalankan seed.

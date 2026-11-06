@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
+const deploymentId = process.env.RENDER_GIT_COMMIT || process.env.NEXT_DEPLOYMENT_ID;
+
 const nextConfig: NextConfig = {
+  deploymentId,
+  env: { NEXT_PUBLIC_APP_RELEASE: deploymentId || "local" },
   async redirects() {
     return [
       { source: "/admin-malam/dashboard", destination: "/menu-utama/dashboard", permanent: true },
