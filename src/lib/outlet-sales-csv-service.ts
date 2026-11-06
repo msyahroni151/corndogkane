@@ -2,10 +2,9 @@ import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { parseSalesCsv, type SalesCsvRow } from "@/lib/outlet-sales-csv";
 import { getPrisma } from "@/lib/db";
 import { canImportOutletCrew } from "@/lib/outlet-operations";
-import { InputError, saveOutletOperation, saveOutletClosure } from "@/lib/outlet-operation-write";
-import { BonusSyncError } from "@/lib/outlet-bonus-ledger";
-import { SaleError } from "@/lib/sale-input";
-type Resolved = SalesCsvRow & {
+import { InputError } from "@/lib/outlet-operation-write";
+import { writeSalesImportBatch } from "@/lib/outlet-sales-csv-write";
+export type ResolvedSalesCsvRow = SalesCsvRow & {
   outletId: string;
   crewId: string;
   outletName: string;
@@ -32,7 +31,7 @@ function match<T extends { id: string }>(
     );
   return found[0];
 }
-type HistoricalImportOptions = {
+export type HistoricalImportOptions = {
   historicalCrewIds?: ReadonlySet<string>;
   historicalOutletIds?: ReadonlySet<string>;
 };
@@ -69,7 +68,7 @@ export async function prepareSalesImport(
         canImportOutletCrew(employee) ||
         (!!employee.employeeCode?.trim() && options.historicalCrewIds?.has(employee.id)),
     ),
-    rows: Resolved[] = [],
+    rows: ResolvedSalesCsvRow[] = [],
     seen = new Set<string>();
   for (const row of parsed.rows)
     try {
@@ -170,53 +169,19 @@ export async function importSalesCsv(
       if (plan.errors.length)
         throw new InputError("CSV masih memiliki kesalahan. Periksa pratinjau sebelum impor.");
       // Match the manual/POS writer's lock; an import can never overwrite a concurrent save.
-      for (const identity of plan.rows.map((row) => row.outletId + "|" + row.date).sort())
-        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${identity},0))`;
+      const identities = plan.rows.map((row) => row.outletId + "|" + row.date).sort();
+      if (identities.length)
+        await tx.$executeRaw(Prisma.sql`
+          SELECT pg_advisory_xact_lock(hashtextextended(lock_key,0))
+          FROM (SELECT lock_key FROM (VALUES ${Prisma.join(identities.map((id) => Prisma.sql`(${id})`))}) AS keys(lock_key) ORDER BY lock_key) AS ordered_locks
+        `);
       const current = await prepareSalesImport(tx, csv, options);
       if (current.errors.length)
         throw new InputError("Referensi berubah saat impor. Periksa pratinjau kembali.");
       const employees = [...new Set(current.fresh.map((row) => row.crewId).filter(Boolean))].sort();
       if (employees.length)
         await tx.$executeRaw`SELECT id FROM employees WHERE id IN (${Prisma.join(employees)}) ORDER BY id FOR UPDATE`;
-      for (const row of current.fresh.sort((a, b) =>
-        (a.outletId + a.date).localeCompare(b.outletId + b.date),
-      )) {
-        try {
-          if (row.operationalStatus === "TUTUP") {
-            await saveOutletClosure(
-              {
-                outletId: row.outletId,
-                date: row.date,
-                operationalStatus: "TUTUP",
-                operationalNotes: row.operationalNotes,
-              },
-              userId,
-              tx,
-              true,
-              options.historicalOutletIds,
-            );
-          } else
-            await saveOutletOperation(
-              { ...row, date: row.date, version: null, salesMode: "TOTAL" },
-              userId,
-              tx,
-              {
-                createOnly: true,
-                allowInactiveCrew: true,
-                historicalCrewIds: options.historicalCrewIds,
-                historicalOutletIds: options.historicalOutletIds,
-              },
-            );
-        } catch (error) {
-          if (
-            error instanceof InputError ||
-            error instanceof BonusSyncError ||
-            error instanceof SaleError
-          )
-            throw new InputError("Baris " + row.row + ": " + error.message);
-          throw error;
-        }
-      }
+      await writeSalesImportBatch(tx, current.fresh, userId, options);
       return { imported: current.fresh.length, skipped: current.skipped };
     },
     { timeout: 120000, maxWait: 10000 },

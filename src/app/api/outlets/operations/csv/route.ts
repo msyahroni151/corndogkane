@@ -216,12 +216,23 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof RequestBodyError)
       return Response.json({ error: error.message }, { status: error.status });
+    if (!(error instanceof InputError)) {
+      const code = error instanceof Error && "code" in error ? String(error.code) : "UNKNOWN";
+      console.error(
+        JSON.stringify({
+          event: "outlet_csv_import_failed",
+          code: /^P[0-9]{4}$/.test(code) ? code : "UNKNOWN",
+        }),
+      );
+    }
     return json(
       {
         error:
           error instanceof InputError
             ? error.message
-            : "CSV belum tersimpan. Seluruh baris baru dibatalkan; periksa data dan coba kembali.",
+            : error instanceof Error && "code" in error && error.code === "P2028"
+              ? "Impor melewati batas waktu. Seluruh baris baru dibatalkan dan data lama tidak berubah. Coba kembali setelah koneksi stabil."
+              : "CSV belum tersimpan. Seluruh baris baru dibatalkan; periksa data dan coba kembali.",
       },
       error instanceof InputError ? error.status : 500,
     );
