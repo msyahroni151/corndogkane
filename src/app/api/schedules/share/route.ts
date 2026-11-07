@@ -5,7 +5,12 @@ import { hasPermission } from "@/lib/permissions";
 import { currentUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { parseCivilDate } from "@/lib/placements";
-import type { ShareScheduleData } from "@/lib/share-schedule";
+import {
+  isShareArea,
+  resolveShareHomeAreas,
+  shareWeekStart,
+  type ShareScheduleData,
+} from "@/lib/share-schedule";
 class ScheduleInputError extends Error {}
 export async function GET(request: Request) {
   const user = await currentUser();
@@ -35,7 +40,13 @@ export async function GET(request: Request) {
       select: { id: true, name: true, areaId: true, active: true },
     }),
     db.schedule.findMany({
-      where: { date: { gte: from, lte: to }, role: { in: ["REGULER", "BACKUP"] } },
+      where: {
+        date: {
+          gte: shareWeekStart(from),
+          lte: new Date(shareWeekStart(to).getTime() + 6 * 86400000),
+        },
+        role: { in: ["REGULER", "BACKUP"] },
+      },
       orderBy: [{ date: "asc" }, { employeeName: "asc" }],
       select: {
         id: true,
@@ -57,27 +68,29 @@ export async function GET(request: Request) {
       select: { areaId: true, note: true, updatedAt: true },
     }),
   ]);
-  const referencedOutlets = new Set(rows.map((r) => r.outletId).filter(Boolean));
-  const activeAreas = new Set(areas.filter((a) => a.active).map((a) => a.id));
-  const visibleOutlets = outlets.filter(
-    (o) => (o.active && activeAreas.has(o.areaId)) || referencedOutlets.has(o.id),
+  const referencedOutlets = new Set(
+    rows.filter((row) => row.date >= from && row.date <= to).map((row) => row.outletId),
   );
-  const referencedAreas = new Set([
-    ...visibleOutlets.map((o) => o.areaId),
-    ...rows.map((r) => r.placement.areaId),
-  ]);
+  const shareAreas = areas.filter(isShareArea);
+  const activeAreas = new Set(shareAreas.map((a) => a.id));
+  const archivedOutlets = new Set(
+    outlets.filter((o) => !activeAreas.has(o.areaId)).map((o) => o.id),
+  );
+  const visibleOutlets = outlets.filter(
+    (o) => activeAreas.has(o.areaId) && (o.active || referencedOutlets.has(o.id)),
+  );
   const data: ShareScheduleData = {
     from: from.toISOString().slice(0, 10),
     to: to.toISOString().slice(0, 10),
-    areas: areas
-      .filter((a) => a.active || referencedAreas.has(a.id))
-      .map((a) => ({ id: a.id, name: a.name, active: a.active })),
+    areas: shareAreas,
     outlets: visibleOutlets.map((o) => ({ id: o.id, name: o.name, areaId: o.areaId })),
-    areaNotes: areaNotes.map((n) => ({
-      areaId: n.areaId,
-      note: n.note,
-      version: n.updatedAt.toISOString(),
-    })),
+    areaNotes: areaNotes
+      .filter((n) => activeAreas.has(n.areaId))
+      .map((n) => ({
+        areaId: n.areaId,
+        note: n.note,
+        version: n.updatedAt.toISOString(),
+      })),
     rows: rows.map((r) => ({
       id: r.id,
       employeeId: r.employeeId,
@@ -93,6 +106,10 @@ export async function GET(request: Request) {
       endMinutes: r.endMinutes,
     })),
   };
+  data.rows = resolveShareHomeAreas({ ...data, outlets }).filter(
+    (row) =>
+      row.date >= data.from && row.date <= data.to && !archivedOutlets.has(row.outletId || ""),
+  );
   return Response.json(data, { headers: { "Cache-Control": "private, no-store" } });
 }
 

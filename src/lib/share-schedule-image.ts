@@ -52,7 +52,7 @@ function wrap(value: string, width: number): string[] {
   }
   return result.length ? result : ["—"];
 }
-function panelHeight(p: SharePanel, note: string) {
+function panelHeight(p: SharePanel, noteHeight: number) {
   const dw = (PW - NO - OUTLET) / p.days.length;
   return (
     58 +
@@ -82,7 +82,7 @@ function panelHeight(p: SharePanel, note: string) {
         sum + Math.max(28, ...cells.map((names) => wrap(names.join("\n"), dw).length * LH + 10)),
       0,
     ) +
-    Math.max(28, wrap(note || "—", PW - NO - OUTLET).length * LH + 10) +
+    noteHeight +
     (p.unassigned.some((c) => c.length)
       ? Math.max(32, ...p.unassigned.map((c) => wrap(c.join("\n"), dw).length * LH + 10))
       : 0)
@@ -92,9 +92,23 @@ export function scheduleSvg(
   data: ShareScheduleData,
   scope: string,
   notes: Record<string, string> | string,
+  editable = false,
 ) {
   const noteFor = (panel: SharePanel) =>
     typeof notes === "string" ? notes : notes[panel.id] || "";
+  const editablePanel = (panel: SharePanel) => editable && panel.id !== "unassigned";
+  const noteHeight = (panel: SharePanel) =>
+    editablePanel(panel)
+      ? 96
+      : Math.max(28, wrap(noteFor(panel) || "—", PW - NO - OUTLET).length * LH + 10);
+  const noteSlots: {
+    areaId: string;
+    name: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }[] = [];
   const W = scope ? PW + M * 2 : 1600;
   const weeks = shareWeeks(data, scope);
   let y = 94;
@@ -216,11 +230,20 @@ export function scheduleSvg(
     footer("Nama Crew Libur", p.leave, "#f0f1f0");
     footer("Nama Crew Stanby", p.standby, "#f0f1f0");
     if (p.unassigned.some((c) => c.length)) footer("Belum ada outlet", p.unassigned, "#fff1d6");
-    const nh = Math.max(28, wrap(note || "—", PW - NO - OUTLET).length * LH + 10);
+    const nh = noteHeight(p);
     rect(x, py, NO + OUTLET, nh, C.pale);
     label(["Catatan"], x, py, NO + OUTLET, nh, true);
     rect(x + NO + OUTLET, py, PW - NO - OUTLET, nh, "#ffffff");
-    label(wrap(note || "—", PW - NO - OUTLET), x + NO + OUTLET, py, PW - NO - OUTLET, nh);
+    if (editablePanel(p))
+      noteSlots.push({
+        areaId: p.id,
+        name: p.name,
+        x: x + NO + OUTLET,
+        y: py,
+        width: PW - NO - OUTLET,
+        height: nh,
+      });
+    else label(wrap(note || "—", PW - NO - OUTLET), x + NO + OUTLET, py, PW - NO - OUTLET, nh);
   }
   for (const week of weeks) {
     if (weeks.length > 1) {
@@ -240,8 +263,8 @@ export function scheduleSvg(
       if (week.panels[i + 1]) panel(week.panels[i + 1], M + PW + GAP, y);
       y +=
         Math.max(
-          panelHeight(week.panels[i], noteFor(week.panels[i])),
-          week.panels[i + 1] ? panelHeight(week.panels[i + 1], noteFor(week.panels[i + 1])) : 0,
+          panelHeight(week.panels[i], noteHeight(week.panels[i])),
+          week.panels[i + 1] ? panelHeight(week.panels[i + 1], noteHeight(week.panels[i + 1])) : 0,
         ) + GAP;
     }
   }
@@ -263,10 +286,13 @@ export function scheduleSvg(
   return {
     width: W,
     height: y,
+    noteSlots,
     svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${y}" viewBox="0 0 ${W} ${y}" role="img"><title>Jadwal operasional ${escape(dateToDisplay(data.from))} – ${escape(dateToDisplay(data.to))}</title><rect width="100%" height="100%" fill="#ffffff"/>${parts.join("")}</svg>`,
   };
 }
-export async function schedulePng(image: ReturnType<typeof scheduleSvg>) {
+type ScheduleImage = Pick<ReturnType<typeof scheduleSvg>, "svg" | "width" | "height">;
+
+export async function schedulePng(image: ScheduleImage) {
   const scale = Math.min(
     2,
     Math.sqrt(40000000 / (image.width * image.height)),
@@ -300,7 +326,7 @@ export async function schedulePng(image: ReturnType<typeof scheduleSvg>) {
   }
 }
 
-export async function schedulePdf(image: ReturnType<typeof scheduleSvg>) {
+export async function schedulePdf(image: ScheduleImage) {
   const png = await schedulePng(image),
     bytes = new Uint8Array(await png.arrayBuffer());
   const { jsPDF } = await import("jspdf");

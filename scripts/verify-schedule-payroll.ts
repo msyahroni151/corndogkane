@@ -5,7 +5,12 @@ import { payrollLines, type PayrollDay } from "../src/lib/payroll";
 import { attendanceSummary } from "../src/lib/attendance";
 import { portalWindow } from "../src/lib/employee-portal";
 import { outletSchedulePeriods } from "../src/lib/outlet-schedule-status";
-import { shareWeeks } from "../src/lib/share-schedule";
+import {
+  resolveShareHomeAreas,
+  shareWeeks,
+  type ShareScheduleData,
+} from "../src/lib/share-schedule";
+import { scheduleSvg } from "../src/lib/share-schedule-image";
 const regular = new FormData();
 for (const [key, value] of Object.entries({
   regularOutletId: "",
@@ -118,6 +123,111 @@ assert.match(
     "",
   )[0].panels[0].outlets[0].cells[0][0].name,
   /Openingan/,
+);
+const shareData: ShareScheduleData = {
+  from: "2026-11-12",
+  to: "2026-11-15",
+  areas: [
+    { id: "A2", name: "AREA 2" },
+    { id: "A4", name: "AREA 4" },
+    { id: "archive", name: "ARSIP HISTORIS", active: false },
+  ],
+  outlets: [
+    { id: "C", name: "CIPAMOKOLAN", areaId: "A2" },
+    { id: "P", name: "PAHLAWAN", areaId: "A4" },
+    { id: "old", name: "CIJAMBE", areaId: "archive" },
+  ],
+  rows: [
+    {
+      ...row,
+      id: "1",
+      role: "BACKUP",
+      employeeId: "D",
+      name: "DADAN",
+      date: "2026-11-09",
+      status: "KERJA",
+      outletId: "P",
+      homeAreaId: "A4",
+    },
+    {
+      ...row,
+      id: "2",
+      role: "BACKUP",
+      employeeId: "D",
+      name: "DADAN",
+      date: "2026-11-12",
+      status: "STANBY",
+      outletId: null,
+      homeAreaId: null,
+    },
+    {
+      ...row,
+      id: "3",
+      role: "BACKUP",
+      employeeId: "D",
+      name: "DADAN",
+      date: "2026-11-13",
+      status: "LIBUR",
+      outletId: null,
+      homeAreaId: null,
+    },
+    {
+      ...row,
+      id: "4",
+      role: "BACKUP",
+      employeeId: "Z",
+      name: "AZI",
+      date: "2026-11-10",
+      status: "KERJA",
+      outletId: "C",
+      homeAreaId: "A2",
+    },
+    {
+      ...row,
+      id: "5",
+      role: "BACKUP",
+      employeeId: "Z",
+      name: "AZI",
+      date: "2026-11-14",
+      status: "STANBY",
+      outletId: null,
+      homeAreaId: null,
+    },
+    {
+      ...row,
+      id: "6",
+      date: "2026-11-13",
+      status: "KERJA",
+      outletId: "old",
+      homeAreaId: "archive",
+    },
+  ],
+};
+const resolved = { ...shareData, rows: resolveShareHomeAreas(shareData) };
+const panels = shareWeeks(resolved, "")[0].panels;
+assert.deepEqual(
+  panels.map((panel) => panel.id),
+  ["A2", "A4"],
+);
+assert.deepEqual(panels[0].standby[2], ["AZI"]);
+assert.deepEqual(panels[1].standby[0], ["DADAN"]);
+assert.deepEqual(panels[1].leave[1], ["DADAN"]);
+const crossArea = resolveShareHomeAreas({
+  ...shareData,
+  rows: [...shareData.rows, { ...shareData.rows[0], id: "7", date: "2026-11-11", outletId: "C" }],
+});
+assert.equal(crossArea.find((entry) => entry.id === "2")?.homeAreaId, null);
+const preview = scheduleSvg(resolved, "", {}, true);
+assert.deepEqual(
+  preview.noteSlots.map((slot) => slot.areaId),
+  ["A2", "A4"],
+);
+const exported = scheduleSvg(resolved, "A4", { A4: "Cek stok sebelum buka" });
+assert.match(exported.svg, /Cek stok sebelum buka/);
+assert.doesNotMatch(exported.svg, /ARSIP HISTORIS|CIJAMBE|AZI/);
+assert.equal(exported.noteSlots.length, 0);
+console.log(
+  "PASS: area archive exclusion, backup area inference, ambiguous backup, and per-area note preview/export.",
 );
 console.log(
   "PASS: standby without outlet (regular/backup), required work outlets, Openingan attendance/portal/monitoring/share, standby Rp50.000, conversion pays outlet rate without double standby, absence/holiday/warehouse pay guards.",

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LocalInput } from "@/components/local-input";
 import { FormDialog } from "@/components/form-dialog";
 import type { ShareScheduleData } from "@/lib/share-schedule";
@@ -27,7 +27,7 @@ function SchedulePreview({
   const [data, setData] = useState<ShareScheduleData | null>(null),
     [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(true),
-    [saving, setSaving] = useState(false),
+    [saving, setSaving] = useState<string | null>(null),
     [exporting, setExporting] = useState(false),
     [error, setError] = useState(""),
     [info, setInfo] = useState("");
@@ -36,8 +36,6 @@ function SchedulePreview({
     controller.current?.abort();
     const request = new AbortController();
     controller.current = request;
-    setBusy(true);
-    setError("");
     try {
       const response = await fetch(
           "/api/schedules/share?" + new URLSearchParams({ from: start, to: end }),
@@ -63,19 +61,23 @@ function SchedulePreview({
     }
   }
   useEffect(() => {
-    void load(initialFrom, initialTo);
-    return () => controller.current?.abort();
+    const timer = setTimeout(() => void load(initialFrom, initialTo), 0);
+    return () => {
+      clearTimeout(timer);
+      controller.current?.abort();
+    };
   }, [initialFrom, initialTo]);
-  const image = data ? scheduleSvg(data, scope, notes) : null,
-    ready = !!data && data.from === from && data.to === to && !busy && !saving && !exporting;
-  const changed =
-    data?.areas.filter(
-      (a) => (notes[a.id] || "") !== (data.areaNotes?.find((n) => n.areaId === a.id)?.note || ""),
-    ) || [];
-  async function saveNotes() {
-    if (!data || !changed.length) return;
-    setSaving(true);
+  const preview = useMemo(() => (data ? scheduleSvg(data, scope, {}, true) : null), [data, scope]);
+  const ready = !!data && data.from === from && data.to === to && !busy && !saving && !exporting;
+  const savedNotes = data?.areaNotes;
+  const isChanged = (areaId: string) =>
+    (notes[areaId] || "") !== (savedNotes?.find((note) => note.areaId === areaId)?.note || "");
+  const hasChanges = data?.areas.some((area) => isChanged(area.id));
+  async function saveNote(areaId: string, areaName: string) {
+    if (!data || saving || busy || !isChanged(areaId)) return;
+    setSaving(areaId);
     setError("");
+    setInfo("");
     try {
       const response = await fetch("/api/schedules/share", {
           method: "PUT",
@@ -83,11 +85,13 @@ function SchedulePreview({
           body: JSON.stringify({
             from: data.from,
             to: data.to,
-            notes: changed.map((a) => ({
-              areaId: a.id,
-              note: notes[a.id] || "",
-              version: data.areaNotes?.find((n) => n.areaId === a.id)?.version || null,
-            })),
+            notes: [
+              {
+                areaId,
+                note: notes[areaId] || "",
+                version: savedNotes?.find((note) => note.areaId === areaId)?.version || null,
+              },
+            ],
           }),
         }),
         result = await response.json();
@@ -111,11 +115,11 @@ function SchedulePreview({
           result.notes.map((n: { areaId: string; note: string }) => [n.areaId, n.note]),
         ),
       }));
-      setInfo("Catatan per area berhasil disimpan.");
+      setInfo(`Catatan ${areaName} berhasil disimpan.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Catatan belum tersimpan.");
     } finally {
-      setSaving(false);
+      setSaving(null);
     }
   }
   function downloadFile(file: File) {
@@ -129,11 +133,12 @@ function SchedulePreview({
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   async function exportFile(share = false) {
-    if (!image || !data || !ready) return;
+    if (!data || !ready) return;
     setExporting(true);
     setError("");
     setInfo("");
     try {
+      const image = scheduleSvg(data, scope, notes);
       const blob = format === "pdf" ? await schedulePdf(image) : await schedulePng(image),
         file = new File(
           [blob],
@@ -176,10 +181,14 @@ function SchedulePreview({
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
         onSubmit={(e) => {
           e.preventDefault();
-          if (changed.length) {
+          if (busy || saving) return;
+          if (hasChanges) {
             setError("Simpan catatan yang berubah sebelum mengganti periode.");
             return;
           }
+          setBusy(true);
+          setError("");
+          setInfo("");
           void load(from, to);
         }}
       >
@@ -217,7 +226,7 @@ function SchedulePreview({
           </select>
         </label>
         <div className="flex items-end">
-          <button className="button-primary" disabled={busy}>
+          <button className="button-primary" disabled={busy || !!saving}>
             {busy ? "Memuat jadwal…" : "Tampilkan jadwal"}
           </button>
         </div>
@@ -225,37 +234,7 @@ function SchedulePreview({
       <p className="mt-3 text-xs text-slate-500">
         Periode maksimal 31 hari. Catatan disimpan untuk masing-masing area dan periode jadwal.
       </p>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {data?.areas
-          .filter((a) => !scope || a.id === scope)
-          .map((a) => (
-            <label key={a.id} className="field">
-              Catatan {a.name}
-              <textarea
-                aria-label={`Catatan ${a.name}`}
-                rows={2}
-                maxLength={500}
-                value={notes[a.id] || ""}
-                onChange={(e) => setNotes((old) => ({ ...old, [a.id]: e.target.value }))}
-                placeholder={`Catatan khusus ${a.name}…`}
-              />
-            </label>
-          ))}
-      </div>
-      {!!data?.areas.length && (
-        <div className="mt-3 flex items-center gap-3">
-          <button
-            className="button-secondary"
-            onClick={() => void saveNotes()}
-            disabled={!changed.length || busy || saving || data.from !== from || data.to !== to}
-          >
-            {saving ? "Menyimpan…" : "Simpan catatan"}
-          </button>
-          {!!changed.length && (
-            <span className="text-xs text-amber-700">Ada catatan belum disimpan.</span>
-          )}
-        </div>
-      )}
+      {hasChanges && <p className="mt-3 text-xs text-amber-700">Ada catatan belum disimpan.</p>}
       {error && (
         <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
           {error}
@@ -298,11 +277,41 @@ function SchedulePreview({
         aria-label="Pratinjau share jadwal"
         aria-busy={busy}
       >
-        {image ? (
-          <div
-            className={busy ? "opacity-50" : ""}
-            dangerouslySetInnerHTML={{ __html: image.svg }}
-          />
+        {preview ? (
+          <div className={`relative min-w-[1000px] ${busy ? "opacity-50" : ""}`}>
+            <div dangerouslySetInnerHTML={{ __html: preview.svg }} />
+            {preview.noteSlots.map(({ areaId, name, x, y, width, height }) => (
+              <div
+                key={`${areaId}-${y}`}
+                className="absolute flex items-center gap-2 p-1.5"
+                style={{
+                  left: `${(x / preview.width) * 100}%`,
+                  top: `${(y / preview.height) * 100}%`,
+                  width: `${(width / preview.width) * 100}%`,
+                  height: `${(height / preview.height) * 100}%`,
+                }}
+              >
+                <textarea
+                  aria-label={`Catatan ${name}`}
+                  className="h-full min-w-0 flex-1 resize-none rounded-md border border-slate-200 px-2 py-1 text-xs"
+                  maxLength={500}
+                  value={notes[areaId] || ""}
+                  onChange={(e) => setNotes((old) => ({ ...old, [areaId]: e.target.value }))}
+                  placeholder={`Catatan khusus ${name}…`}
+                  disabled={busy || saving === areaId}
+                />
+                <button
+                  type="button"
+                  aria-label={`Simpan catatan ${name}`}
+                  className="button-secondary shrink-0 whitespace-nowrap"
+                  onClick={() => void saveNote(areaId, name)}
+                  disabled={!isChanged(areaId) || busy || !!saving}
+                >
+                  {saving === areaId ? "Menyimpan…" : "Simpan"}
+                </button>
+              </div>
+            ))}
+          </div>
         ) : (
           <p className="p-10 text-center text-sm text-slate-500">
             {busy ? "Menyiapkan pratinjau jadwal…" : "Belum ada pratinjau."}

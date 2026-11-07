@@ -33,6 +33,43 @@ export type SharePanel = {
   unassigned: string[][];
 };
 export type ShareWeek = { from: string; to: string; panels: SharePanel[] };
+const DAY_MS = 86_400_000;
+
+export function shareWeekStart(date: Date) {
+  return new Date(date.getTime() - ((date.getUTCDay() + 6) % 7) * DAY_MS);
+}
+
+export function isShareArea(area: ShareScheduleData["areas"][number]) {
+  return area.active !== false && area.name.trim().toUpperCase() !== "ARSIP HISTORIS";
+}
+
+export function resolveShareHomeAreas(data: ShareScheduleData) {
+  const areas = new Map(data.areas.filter(isShareArea).map((area) => [area.id, area]));
+  const outletAreas = new Map(data.outlets.map((outlet) => [outlet.id, outlet.areaId]));
+  const weekAreas = new Map<string, Set<string>>();
+  const key = (row: ShareRow) =>
+    row.employeeId + ":" + shareWeekStart(new Date(row.date + "T00:00:00Z")).toISOString();
+
+  for (const row of data.rows) {
+    const areaId = outletAreas.get(row.outletId || "");
+    if (!areaId || !areas.has(areaId) || !isWorkingSchedule(row.status)) continue;
+    const week = key(row);
+    const candidates = weekAreas.get(week) ?? new Set<string>();
+    candidates.add(areaId);
+    weekAreas.set(week, candidates);
+  }
+  return data.rows.map((row) => {
+    if (row.homeAreaId) return row;
+    const candidates = weekAreas.get(key(row));
+    const areaId =
+      outletAreas.get(row.outletId || "") ??
+      (candidates?.size === 1 ? [...candidates][0] : undefined);
+    return areaId
+      ? { ...row, homeAreaId: areaId, homeAreaName: areas.get(areaId)?.name ?? null }
+      : row;
+  });
+}
+
 export function shareDayLabel(iso: string) {
   return new Intl.DateTimeFormat("id-ID", {
     weekday: "short",
@@ -44,15 +81,13 @@ export function shareDayLabel(iso: string) {
     .replaceAll(",", "");
 }
 export function shareWeeks(data: ShareScheduleData, scope: string): ShareWeek[] {
-  const areas = [...data.areas],
+  const areas = data.areas.filter(isShareArea),
     outlets = [...data.outlets];
-  // Preserve orphaned historical assignments instead of silently omitting them.
   for (const row of data.rows) {
-    if (row.homeAreaId && !areas.some((a) => a.id === row.homeAreaId))
-      areas.push({ id: row.homeAreaId, name: row.homeAreaName || "Area sebelumnya" });
     if (
       isWorkingSchedule(row.status) &&
       row.outletId &&
+      (!row.homeAreaId || areas.some((a) => a.id === row.homeAreaId)) &&
       !outlets.some((o) => o.id === row.outletId)
     )
       outlets.push({
