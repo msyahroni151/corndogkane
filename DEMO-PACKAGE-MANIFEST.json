@@ -408,7 +408,7 @@
     },
     {
       "path": "src/app/(workspace)/barang-masuk/page.tsx",
-      "sha256": "f0855681bc24c95704788ee4080756372a7f2e772e6133750a6c50321d3bfa08"
+      "sha256": "3e61f9325bcaca81f6de4573788f9be7863a420e90c1a7d8581b4f7f8dc20e13"
     },
     {
       "path": "src/app/(workspace)/bonus/page.tsx",
@@ -880,7 +880,7 @@
     },
     {
       "path": "src/components/goods-receipt-form.tsx",
-      "sha256": "dec0c2d57e69c194943b5d70c7f7f23535125566ddf10a29578c0a272776bce7"
+      "sha256": "3cb5dbdf7cac85bd5dce64f069b5a57220f48a675c2ffe0747ff7e1d05cb517a"
     },
     {
       "path": "src/components/goods-receipts.css",

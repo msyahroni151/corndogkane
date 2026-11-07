@@ -8,6 +8,7 @@ import { getPrisma } from "@/lib/db";
 import { displayDate, parseCivilDate, todayWib } from "@/lib/placements";
 
 import { quantityLabel } from "@/lib/goods-receipts";
+import { warehouseKinds, warehouseResetKind } from "@/lib/inventory";
 
 import { rupiah } from "@/lib/money";
 
@@ -98,12 +99,25 @@ export default async function Page({
       orderBy: { name: "asc" },
     }),
 
-    db.inventoryItem.findMany({
-      where: { active: true, kind: { in: ["RAW", "SUB", "FINISHED"] } },
-      select: { name: true, packagingUnit: true, baseUnit: true },
-
-      orderBy: { name: "asc" },
-    }),
+    db.inventoryOperation
+      .findFirst({
+        where: { kind: warehouseResetKind },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
+      })
+      .then((reset) =>
+        db.inventoryItem.findMany({
+          where: {
+            active: true,
+            kind: { in: [...warehouseKinds] },
+            lines: {
+              some: reset ? { receipt: { createdAt: { gte: reset.createdAt } } } : {},
+            },
+          },
+          select: { name: true, packagingUnit: true, baseUnit: true },
+          orderBy: { name: "asc" },
+        }),
+      ),
 
     valid
       ? db.goodsReceipt.findMany({

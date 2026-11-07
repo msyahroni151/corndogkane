@@ -271,35 +271,46 @@ export function GoodsReceiptForm({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="field sm:col-span-2">
                     Nama Barang *
-                    <EditableCombobox
-                      options={[
-                        ...items.map((item) => item.name),
-                        ...(isNewName
-                          ? [{ value: newName, label: `Gunakan nama baru: ${newName}` }]
-                          : []),
-                      ]}
-                      required
-                      maxLength={150}
-                      placeholder="Cari / pilih barang, atau ketik nama baru..."
-                      value={row.name}
-                      onValueChange={(name) => {
-                        const match = items.find((item) => itemKey(item.name) === itemKey(name));
+                    {items.length ? (
+                      <EditableCombobox
+                        options={[
+                          ...items.map((item) => item.name),
+                          ...(isNewName
+                            ? [{ value: newName, label: `Gunakan nama baru: ${newName}` }]
+                            : []),
+                        ]}
+                        required
+                        maxLength={150}
+                        placeholder="Cari / pilih barang, atau ketik nama baru..."
+                        value={row.name}
+                        onValueChange={(name) => {
+                          const match = items.find((item) => itemKey(item.name) === itemKey(name));
 
-                        update(row.key, {
-                          name,
+                          update(row.key, {
+                            name,
 
-                          ...(match
-                            ? {
-                                packagingUnit: match.packagingUnit,
-                                inputUnit: match.baseUnit || row.inputUnit,
+                            ...(match
+                              ? {
+                                  packagingUnit: match.packagingUnit,
+                                  inputUnit: match.baseUnit || row.inputUnit,
 
-                                quantityPerPack:
-                                  match.packagingUnit === "PCS" ? "1" : row.quantityPerPack,
-                              }
-                            : {}),
-                        });
-                      }}
-                    />
+                                  quantityPerPack:
+                                    match.packagingUnit === "PCS" ? "1" : row.quantityPerPack,
+                                }
+                              : {}),
+                          });
+                        }}
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        required
+                        maxLength={150}
+                        placeholder="Ketik nama barang..."
+                        value={row.name}
+                        onChange={(event) => update(row.key, { name: event.target.value })}
+                      />
+                    )}
                     <span className="text-xs font-normal text-slate-500">
                       Ketik nama baru atau pilih barang yang sudah terdaftar. Saat Barang Masuk
                       disimpan, barang dan batch otomatis masuk ke Stok & Batch.
