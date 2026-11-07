@@ -253,6 +253,9 @@ export function GoodsReceiptForm({
           </h3>
 
           {lines.map((row, index) => {
+            const newName = row.name.trim().replace(/\s+/g, " ");
+            const isNewName =
+              newName && !items.some((item) => itemKey(item.name) === itemKey(newName));
             const normalized = normalizedQuantity(
               Number(row.packCount),
 
@@ -269,7 +272,12 @@ export function GoodsReceiptForm({
                   <label className="field sm:col-span-2">
                     Nama Barang *
                     <EditableCombobox
-                      options={items.map((item) => item.name)}
+                      options={[
+                        ...items.map((item) => item.name),
+                        ...(isNewName
+                          ? [{ value: newName, label: `Gunakan nama baru: ${newName}` }]
+                          : []),
+                      ]}
                       required
                       maxLength={150}
                       placeholder="Cari / pilih barang, atau ketik nama baru..."
@@ -293,7 +301,8 @@ export function GoodsReceiptForm({
                       }}
                     />
                     <span className="text-xs font-normal text-slate-500">
-                      Nama barang baru otomatis ditambahkan ke daftar saat disimpan.
+                      Ketik nama baru atau pilih barang yang sudah terdaftar. Saat Barang Masuk
+                      disimpan, barang dan batch otomatis masuk ke Stok & Batch.
                     </span>
                   </label>
 

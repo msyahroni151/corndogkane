@@ -13,6 +13,8 @@ import {
   inventoryTabs,
   warehouseKinds,
   warehouseKindNames,
+  warehouseResetKind,
+  visibleWarehouseStock,
   settingMenuTabs,
   inventoryRound,
   type BatchOption,
@@ -122,7 +124,7 @@ export default async function InventoryWorkspace({
     valid = false;
   }
   const db = getPrisma();
-  const [items, operations, lastOpname] = await Promise.all([
+  const [items, operations, lastOpname, stockReset] = await Promise.all([
     db.inventoryItem.findMany({
       include: {
         _count: { select: lifecycleCounts },
@@ -169,6 +171,13 @@ export default async function InventoryWorkspace({
       include: { movements: true },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     }),
+    tab === "stock"
+      ? db.inventoryOperation.findFirst({
+          where: { kind: warehouseResetKind },
+          orderBy: { createdAt: "desc" },
+          select: { createdAt: true },
+        })
+      : null,
   ]);
   const savedUnits = [...new Set(items.map((item) => item.baseUnit))].sort();
   const ingredients = items
@@ -224,7 +233,10 @@ export default async function InventoryWorkspace({
       ...patch,
     });
   const raw = items.filter((i) => warehouseKinds.some((k) => k === i.kind)),
-    activeRaw = raw.filter((i) => i.active),
+    warehouseList = raw.filter(
+      (item) => !item.active || visibleWarehouseStock(item, stockReset?.createdAt),
+    ),
+    activeRaw = warehouseList.filter((i) => i.active),
     products = items.filter((i) => i.kind === "PRODUCT"),
     subItems = items.filter((i) => i.kind === "SUB"),
     allRawBatches = raw.flatMap((i) => i.batches),
@@ -244,7 +256,9 @@ export default async function InventoryWorkspace({
           .reduce((s, m) => s + Math.max(0, Number(m.valueBefore) - Number(m.valueAfter)), 0),
       0,
     );
-  const legacyStocks = products.filter((item) => item.batches.length > 0);
+  const legacyStocks = products.filter(
+    (item) => item.batches.length > 0 && visibleWarehouseStock(item, stockReset?.createdAt),
+  );
   const legacyValue = legacyStocks
     .flatMap((item) => item.batches)
     .reduce((sum, b) => sum + Number(b.remainingValue), 0);
@@ -252,7 +266,7 @@ export default async function InventoryWorkspace({
       legacyValue + allRawBatches.reduce((sum, b) => sum + Number(b.remainingValue), 0),
     isAvailable = (item: (typeof items)[number]) =>
       item.batches.some((b) => Number(b.remainingQuantity) > 0),
-    stockItems = raw.filter(
+    stockItems = warehouseList.filter(
       (i) =>
         (status === "inactive" ? !i.active : i.active) &&
         (!stage || i.kind === stage) &&
@@ -472,7 +486,7 @@ export default async function InventoryWorkspace({
             <Metric
               label="ITEM GUDANG AKTIF"
               value={activeRaw.length + " item"}
-              note={`dari ${raw.length} total barang gudang`}
+              note={`dari ${warehouseList.length} barang di Stok & Batch`}
               icon="boxes"
             />
             <Metric
@@ -1092,7 +1106,7 @@ export default async function InventoryWorkspace({
                 </thead>
                 <tbody>
                   {operations
-                    .filter((o) => ["OPNAME", "ADJUST"].includes(o.kind))
+                    .filter((o) => ["OPNAME", "ADJUST", warehouseResetKind].includes(o.kind))
                     .map((o) => (
                       <tr key={o.id}>
                         <td className="whitespace-nowrap p-4">{displayDate(o.date)}</td>
@@ -1116,9 +1130,11 @@ export default async function InventoryWorkspace({
                         <td className="min-w-64 p-4">
                           <details>
                             <summary className="cursor-pointer text-sm font-semibold text-emerald-700">
-                              {o.kind === "OPNAME"
-                                ? "Selesai - lihat detail"
-                                : "Koreksi jumlah - lihat detail"}
+                              {o.kind === warehouseResetKind
+                                ? "Pengosongan stok - lihat detail"
+                                : o.kind === "OPNAME"
+                                  ? "Selesai - lihat detail"
+                                  : "Koreksi jumlah - lihat detail"}
                             </summary>
                             <p className="mt-2 whitespace-pre-wrap text-xs">{o.notes}</p>
                             <ul className="mt-2 space-y-1 text-xs">
@@ -1134,7 +1150,9 @@ export default async function InventoryWorkspace({
                         </td>
                       </tr>
                     ))}
-                  {!operations.some((o) => ["OPNAME", "ADJUST"].includes(o.kind)) && (
+                  {!operations.some((o) =>
+                    ["OPNAME", "ADJUST", warehouseResetKind].includes(o.kind),
+                  ) && (
                     <tr>
                       <td colSpan={6} className="p-8 text-center text-slate-400">
                         Belum ada riwayat hitung stok.

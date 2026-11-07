@@ -640,7 +640,7 @@
     },
     {
       "path": "src/app/goods-receipt-actions.ts",
-      "sha256": "cee322c8c57bd473666f9e3e11e69c169e1ae308279c72d178029232e855cc55"
+      "sha256": "00b0d60ad4cbef18557d6b967748d929561b184dddcfb8f84033d009acb2a94e"
     },
     {
       "path": "src/app/icon.png",
@@ -880,7 +880,7 @@
     },
     {
       "path": "src/components/goods-receipt-form.tsx",
-      "sha256": "d04b39e6954e3b908b5d7f082d4399b0fbd9c93cd7b9c925338efeff93e13d4e"
+      "sha256": "dec0c2d57e69c194943b5d70c7f7f23535125566ddf10a29578c0a272776bce7"
     },
     {
       "path": "src/components/goods-receipts.css",
@@ -892,7 +892,7 @@
     },
     {
       "path": "src/components/inventory-workspace.tsx",
-      "sha256": "c01212032b995946d59cac3bccbb974bba6a4c9ef6bb11068044078fef07718f"
+      "sha256": "ef1d089c5397990d520768fc7d88933457a6e8d0a859b5fd97f8c90469c484ca"
     },
     {
       "path": "src/components/inventory.css",
@@ -1324,7 +1324,7 @@
     },
     {
       "path": "src/lib/inventory.ts",
-      "sha256": "5f83440df4abf7811b78ab3458de671b574b1ca3413b2560e2e9b154679990cb"
+      "sha256": "c1600f7bc4acb9295f5f22c2c0f606143c88ed36bf9f2d3e0ddd43b9eada6fb5"
     },
     {
       "path": "src/lib/local-date.ts",

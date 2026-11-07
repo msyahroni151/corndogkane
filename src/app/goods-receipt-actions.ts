@@ -30,6 +30,7 @@ export async function createGoodsReceipt(_: FormState, form: FormData): Promise<
   try {
     await getPrisma().$transaction(
       async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"inventory-write"}))`;
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"GOODS:" + data.postingKey}))`;
         const existing = await tx.goodsReceipt.findUnique({
           where: { postingKey: data.postingKey },
@@ -46,12 +47,12 @@ export async function createGoodsReceipt(_: FormState, form: FormData): Promise<
           : null;
         if (data.supplierId && (!supplier || supplier.kind !== "SUPPLIER"))
           invalid("Supplier tidak ditemukan. Pilih supplier yang terdaftar.");
-        const itemIds = new Map<string, string>();
+        const receiptItems = new Map<string, { id: string; name: string }>();
         for (const line of [...data.lines].sort((a, b) =>
           itemKey(a.name).localeCompare(itemKey(b.name)),
         )) {
           const key = itemKey(line.name);
-          if (itemIds.has(key)) continue;
+          if (receiptItems.has(key)) continue;
           await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${"inventory-item:" + key}))`;
           const item = await tx.inventoryItem.upsert({
             where: { key },
@@ -59,22 +60,21 @@ export async function createGoodsReceipt(_: FormState, form: FormData): Promise<
             create: {
               key,
               name: line.name,
+              kind: "RAW",
               category: "Persediaan Gudang",
               packagingUnit: line.packagingUnit,
               baseUnit: line.baseUnit,
             },
           });
           if (!warehouseKinds.some((k) => k === item.kind))
-            invalid(
-              "Barang ini merupakan menu jual. Pilih atau buat barang stok gudang terlebih dahulu.",
-            );
+            invalid("Nama ini sudah dipakai menu jual. Ketik nama khusus untuk barang gudang.");
           if (!item.active)
             invalid(
               "Barang " +
                 item.name +
                 " berada di Sampah. Kembalikan melalui Stok & Inventori terlebih dahulu.",
             );
-          itemIds.set(key, item.id);
+          receiptItems.set(key, item);
         }
         const receipt = await tx.goodsReceipt.create({
           data: {
@@ -91,8 +91,8 @@ export async function createGoodsReceipt(_: FormState, form: FormData): Promise<
             createdById: user.id,
             lines: {
               create: data.lines.map((line) => ({
-                itemId: itemIds.get(itemKey(line.name))!,
-                itemName: line.name,
+                itemId: receiptItems.get(itemKey(line.name))!.id,
+                itemName: receiptItems.get(itemKey(line.name))!.name,
                 packCount: line.packCount,
                 packagingUnit: line.packagingUnit,
                 quantityPerPack: line.quantityPerPack,

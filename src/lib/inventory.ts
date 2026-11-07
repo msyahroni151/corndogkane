@@ -10,6 +10,18 @@ export const settingMenuTabs = [
 ] as const;
 export { defaultStockUnits as stockUnits } from "@/lib/stock-units";
 export const warehouseKinds = ["RAW", "SUB", "FINISHED"] as const;
+export const warehouseResetKind = "WAREHOUSE_RESET";
+
+export function visibleWarehouseStock(
+  item: { createdAt: Date; batches: readonly { createdAt: Date; remainingQuantity: unknown }[] },
+  resetAt: Date | undefined,
+) {
+  return (
+    !resetAt ||
+    item.createdAt >= resetAt ||
+    item.batches.some((batch) => batch.createdAt >= resetAt || Number(batch.remainingQuantity) > 0)
+  );
+}
 export const warehouseKindNames: Record<string, string> = {
   RAW: "Bahan Mentah",
   SUB: "Bahan Setengah Jadi",
