@@ -1,5 +1,4 @@
 "use server";
-import { warehouseKinds } from "@/lib/inventory";
 import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireAccess } from "@/lib/auth";
@@ -66,8 +65,10 @@ export async function createGoodsReceipt(_: FormState, form: FormData): Promise<
               baseUnit: line.baseUnit,
             },
           });
-          if (!warehouseKinds.some((k) => k === item.kind))
-            invalid("Nama ini sudah dipakai menu jual. Ketik nama khusus untuk barang gudang.");
+          if (item.kind !== "RAW")
+            invalid(
+              `Nama "${item.name}" sudah terdaftar dengan jenis lain. Ketik nama khusus untuk bahan mentah.`,
+            );
           if (!item.active)
             invalid(
               "Barang " +

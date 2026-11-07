@@ -8,7 +8,7 @@ import { getPrisma } from "@/lib/db";
 import { displayDate, parseCivilDate, todayWib } from "@/lib/placements";
 
 import { quantityLabel } from "@/lib/goods-receipts";
-import { warehouseKinds, warehouseResetKind } from "@/lib/inventory";
+import { warehouseResetKind } from "@/lib/inventory";
 
 import { rupiah } from "@/lib/money";
 
@@ -109,7 +109,7 @@ export default async function Page({
         db.inventoryItem.findMany({
           where: {
             active: true,
-            kind: { in: [...warehouseKinds] },
+            kind: "RAW",
             lines: {
               some: reset ? { receipt: { createdAt: { gte: reset.createdAt } } } : {},
             },

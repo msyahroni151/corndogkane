@@ -408,7 +408,7 @@
     },
     {
       "path": "src/app/(workspace)/barang-masuk/page.tsx",
-      "sha256": "3e61f9325bcaca81f6de4573788f9be7863a420e90c1a7d8581b4f7f8dc20e13"
+      "sha256": "8ca814bd5e23ee4f4d0b7707c54dcb777aaf639856036c6a9658b3799f2bb813"
     },
     {
       "path": "src/app/(workspace)/bonus/page.tsx",
@@ -640,7 +640,7 @@
     },
     {
       "path": "src/app/goods-receipt-actions.ts",
-      "sha256": "00b0d60ad4cbef18557d6b967748d929561b184dddcfb8f84033d009acb2a94e"
+      "sha256": "d16fcc376b371562cd4cc376f70ad281744ba378febcd2337aa4619bd27b2ff2"
     },
     {
       "path": "src/app/icon.png",
@@ -880,7 +880,7 @@
     },
     {
       "path": "src/components/goods-receipt-form.tsx",
-      "sha256": "3cb5dbdf7cac85bd5dce64f069b5a57220f48a675c2ffe0747ff7e1d05cb517a"
+      "sha256": "9bf51b3c48234f3087a0368d13860e403ed79119ae150129512ff329788e0756"
     },
     {
       "path": "src/components/goods-receipts.css",
@@ -892,7 +892,7 @@
     },
     {
       "path": "src/components/inventory-workspace.tsx",
-      "sha256": "ef1d089c5397990d520768fc7d88933457a6e8d0a859b5fd97f8c90469c484ca"
+      "sha256": "4c983a53906d979b6edf9735fdb70ba6fec61541df59cb693de1d4550d0fa80c"
     },
     {
       "path": "src/components/inventory.css",

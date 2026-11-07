@@ -312,8 +312,8 @@ export function GoodsReceiptForm({
                       />
                     )}
                     <span className="text-xs font-normal text-slate-500">
-                      Ketik nama baru atau pilih barang yang sudah terdaftar. Saat Barang Masuk
-                      disimpan, barang dan batch otomatis masuk ke Stok & Batch.
+                      Ketik nama baru atau pilih bahan mentah yang sudah terdaftar. Saat Barang
+                      Masuk disimpan, batch otomatis tercatat sebagai Bahan Mentah di Stok & Batch.
                     </span>
                   </label>
 

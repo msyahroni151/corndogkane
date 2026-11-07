@@ -106,7 +106,7 @@ export default async function InventoryWorkspace({
     mode = query.mode === "harian" ? "harian" : "prep",
     q = typeof query.q === "string" ? query.q.trim().slice(0, 150) : "",
     status = typeof query.status === "string" ? query.status : "",
-    stage = warehouseKinds.some((k) => k === query.stage) ? query.stage! : "",
+    stage = warehouseKinds.find((kind) => kind === query.stage) ?? "RAW",
     productGroup =
       tab === "produk"
         ? (productGroups.find((g) => g.key === query.group) ?? productGroups[0])
@@ -225,7 +225,7 @@ export default async function InventoryWorkspace({
       tab: nextTab,
       ...(nextTab === "susut" ? { mode } : {}),
       ...(q ? { q } : {}),
-      ...(nextTab === "stock" && stage ? { stage } : {}),
+      ...(nextTab === "stock" ? { stage } : {}),
       ...(status ? { status } : {}),
       ...(nextTab === "produk" && productGroup.key ? { group: productGroup.key } : {}),
       from,
@@ -234,7 +234,10 @@ export default async function InventoryWorkspace({
     });
   const raw = items.filter((i) => warehouseKinds.some((k) => k === i.kind)),
     warehouseList = raw.filter(
-      (item) => !item.active || visibleWarehouseStock(item, stockReset?.createdAt),
+      (item) =>
+        !item.active ||
+        ((item.kind === "RAW" || item.batches.length > 0) &&
+          visibleWarehouseStock(item, stockReset?.createdAt)),
     ),
     activeRaw = warehouseList.filter((i) => i.active),
     products = items.filter((i) => i.kind === "PRODUCT"),
@@ -269,7 +272,7 @@ export default async function InventoryWorkspace({
     stockItems = warehouseList.filter(
       (i) =>
         (status === "inactive" ? !i.active : i.active) &&
-        (!stage || i.kind === stage) &&
+        i.kind === stage &&
         i.name.toLowerCase().includes(q.toLowerCase()) &&
         (status !== "available" || isAvailable(i)) &&
         (status !== "empty" || !isAvailable(i)),
@@ -392,89 +395,88 @@ export default async function InventoryWorkspace({
       </div>
     </section>
   );
+  const actions = (
+    <div className="ml-auto flex flex-wrap justify-end gap-2">
+      {tab === "stock" && (
+        <>
+          <InventorySyncButton />
+          <FormDialog title="Catat Koreksi Stok" trigger="Catat Koreksi">
+            <InventoryAdjustmentForm batches={batchOptions} today={today} />
+          </FormDialog>
+        </>
+      )}
+      {tab === "susut" && mode === "prep" && (
+        <FormDialog title="Catat Susut Prep" trigger="Catat Susut">
+          <InventoryAdjustmentForm
+            batches={batchOptions.filter((b) => b.quantity > 0)}
+            today={today}
+            initialKind="PREP"
+          />
+        </FormDialog>
+      )}
+      {tab === "susut" && mode === "harian" && (
+        <FormDialog
+          key={String(query.saved || "initial")}
+          title="Catat Susut Harian"
+          trigger="+ Catat Susut Harian"
+          wide
+        >
+          <InventoryCountForm
+            batches={batchOptions.filter((b) => b.quantity > 0)}
+            today={today}
+            kind="DAILY"
+          />
+        </FormDialog>
+      )}
+      {tab === "opname" && (
+        <FormDialog title="Hitung Stok Fisik (Opname)" trigger="Mulai Hitung Stok" wide>
+          <InventoryCountForm batches={batchOptions} today={today} kind="OPNAME" />
+        </FormDialog>
+      )}
+      {tab === "produk" && (
+        <FormDialog title="Tambah Produk Baru" trigger="+ Tambah Produk">
+          <InventoryCatalogForm kind="PRODUCT" ingredients={ingredients} units={savedUnits} />
+        </FormDialog>
+      )}
+      {tab === "subproduk" && (
+        <FormDialog title="Tambah Sub Produk" trigger="+ Tambah Sub Produk">
+          <InventoryCatalogForm kind="SUB" ingredients={ingredients} units={savedUnits} />
+        </FormDialog>
+      )}
+    </div>
+  );
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-slate-500">
-          {menuSettings ? "Setting Menu" : "Inventori"} /{" "}
-          <strong className="text-slate-800">{title}</strong>
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {tab === "stock" && (
-            <>
-              <InventorySyncButton />
-              <FormDialog title="Tambah Barang Gudang" trigger="+ Tambah Barang Gudang">
-                <InventoryCatalogForm
-                  kind={stage || "RAW"}
-                  warehouse
-                  ingredients={ingredients}
-                  units={savedUnits}
-                />
-              </FormDialog>
-              <FormDialog title="Catat Koreksi Stok" trigger="Catat Koreksi">
-                <InventoryAdjustmentForm batches={batchOptions} today={today} />
-              </FormDialog>
-            </>
-          )}
-          {tab === "susut" && mode === "prep" && (
-            <FormDialog title="Catat Susut Prep" trigger="Catat Susut">
-              <InventoryAdjustmentForm
-                batches={batchOptions.filter((b) => b.quantity > 0)}
-                today={today}
-                initialKind="PREP"
-              />
-            </FormDialog>
-          )}
-          {tab === "susut" && mode === "harian" && (
-            <FormDialog
-              key={String(query.saved || "initial")}
-              title="Catat Susut Harian"
-              trigger="+ Catat Susut Harian"
-              wide
-            >
-              <InventoryCountForm
-                batches={batchOptions.filter((b) => b.quantity > 0)}
-                today={today}
-                kind="DAILY"
-              />
-            </FormDialog>
-          )}
-          {tab === "opname" && (
-            <FormDialog title="Hitung Stok Fisik (Opname)" trigger="Mulai Hitung Stok" wide>
-              <InventoryCountForm batches={batchOptions} today={today} kind="OPNAME" />
-            </FormDialog>
-          )}
-          {tab === "produk" && (
-            <FormDialog title="Tambah Produk Baru" trigger="+ Tambah Produk">
-              <InventoryCatalogForm kind="PRODUCT" ingredients={ingredients} units={savedUnits} />
-            </FormDialog>
-          )}
-          {tab === "subproduk" && (
-            <FormDialog title="Tambah Sub Produk" trigger="+ Tambah Sub Produk">
-              <InventoryCatalogForm kind="SUB" ingredients={ingredients} units={savedUnits} />
-            </FormDialog>
-          )}
+      {menuSettings && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate-500">
+            Setting Menu / <strong className="text-slate-800">{title}</strong>
+          </p>
+          {actions}
         </div>
+      )}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-[#dbe7df]">
+        <nav
+          aria-label={menuSettings ? "Submenu Setting Menu" : "Submenu Stok & Inventori"}
+          className={`min-w-0 ${menuSettings ? "w-full" : "w-full lg:w-auto lg:flex-auto"}`}
+        >
+          <div className="flex gap-1 overflow-x-auto pb-px">
+            {tabs.map((t) => (
+              <Link
+                key={t.key}
+                href={href(t.key, { status: "", q: "" })}
+                prefetch={false}
+                aria-current={tab === t.key ? "page" : undefined}
+                className={`flex shrink-0 items-center gap-2 rounded-t-xl border-b-2 px-4 py-3 text-xs font-semibold transition-colors ${tab === t.key ? "border-[#44785a] bg-[#e4f0e7] text-[#244c3a]" : "border-transparent text-slate-500 hover:bg-[#edf4ef] hover:text-[#244c3a]"}`}
+              >
+                <UiIcon name={t.icon} size={17} />
+                {t.name}
+              </Link>
+            ))}
+          </div>
+        </nav>
+        {!menuSettings && actions}
       </div>
-      <nav
-        aria-label={menuSettings ? "Submenu Setting Menu" : "Submenu Stok & Inventori"}
-        className="min-w-0 border-b border-[#dbe7df]"
-      >
-        <div className="flex gap-1 overflow-x-auto pb-px">
-          {tabs.map((t) => (
-            <Link
-              key={t.key}
-              href={href(t.key, { status: "", q: "" })}
-              prefetch={false}
-              aria-current={tab === t.key ? "page" : undefined}
-              className={`flex shrink-0 items-center gap-2 rounded-t-xl border-b-2 px-4 py-3 text-xs font-semibold transition-colors ${tab === t.key ? "border-[#44785a] bg-[#e4f0e7] text-[#244c3a]" : "border-transparent text-slate-500 hover:bg-[#edf4ef] hover:text-[#244c3a]"}`}
-            >
-              <UiIcon name={t.icon} size={17} />
-              {t.name}
-            </Link>
-          ))}
-        </div>
-      </nav>
       {query.saved && (
         <p role="status" className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
           {menuSettings ? "Data menu berhasil disimpan." : "Data inventori berhasil disimpan."}
@@ -606,10 +608,7 @@ export default async function InventoryWorkspace({
               />
             </SearchForm>
             <nav aria-label="Jenis stok gudang" className="flex flex-wrap items-center gap-1.5">
-              {[
-                ["", "Semua Jenis"],
-                ...warehouseKinds.map((kind) => [kind, warehouseKindNames[kind]]),
-              ].map(([key, label]) => (
+              {warehouseKinds.map((key) => (
                 <Link
                   key={key}
                   href={href("stock", { stage: key })}
@@ -617,7 +616,7 @@ export default async function InventoryWorkspace({
                   aria-current={stage === key ? "page" : undefined}
                   className={`inline-flex shrink-0 items-center justify-center rounded-lg px-3 py-2.5 text-[11px] transition-colors ${stage === key ? "bg-[#5c9b58] font-semibold text-white" : "bg-[#edf3ef] text-[#335c48] hover:bg-[#e0ece3]"}`}
                 >
-                  {label}
+                  {warehouseKindNames[key]}
                 </Link>
               ))}
             </nav>
@@ -841,7 +840,9 @@ export default async function InventoryWorkspace({
             })}
             {!stockItems.length && (
               <div className="panel p-10 text-center text-sm text-slate-400">
-                Tidak ada bahan yang sesuai filter.
+                {stage !== "RAW" && !q && !status
+                  ? "Belum ada batch untuk jenis ini. Simpan hasil melalui Catat Produksi di Produksi Gudang."
+                  : "Tidak ada bahan yang sesuai filter."}
               </div>
             )}
           </div>
