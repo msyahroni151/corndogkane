@@ -7,8 +7,8 @@ export const operationalProducts = [
   { key: "mie", label: "Mie", group: "Balutan", price: 2000 },
   { key: "kentang", label: "Kentang", group: "Balutan", price: 3000 },
   { key: "cornflakes", label: "Cornflakes", group: "Balutan", price: 3000 },
+  { key: "katushobushi", label: "Katsuobushi", group: "Topping", price: 2000 },
   { key: "manis", label: "Manis", group: "Topping", price: 2000 },
-  { key: "katushobushi", label: "Katushobushi", group: "Topping", price: 2000 },
 ] as const;
 export const operationalPayments = [
   { key: "qris", label: "QRIS" },

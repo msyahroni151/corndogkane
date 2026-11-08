@@ -1392,7 +1392,7 @@
     },
     {
       "path": "src/lib/outlet-operations.ts",
-      "sha256": "462755e14cb7eb7d201357f75e81dc4f1d8c40a18a8a166237de26ac70068384"
+      "sha256": "98c22da3b7888fba8aa222ae6f8148d014523fa63a0b5e54238c426ad78e90b5"
     },
     {
       "path": "src/lib/outlet-recap-image.ts",
@@ -1400,7 +1400,7 @@
     },
     {
       "path": "src/lib/outlet-recap.ts",
-      "sha256": "b7dd6e46e0efe439c9000bb31557e93744d453c6f72d6b77e89e19da5c967be4"
+      "sha256": "602e2918eb27ca32b407d23e854acb3283ddf8a65df904393ac95755d4c8b4a7"
     },
     {
       "path": "src/lib/outlet-sales-csv-service.ts",
