@@ -25,6 +25,7 @@ export async function manageStockReturn(_: FormState, form: FormData): Promise<F
   for (const path of [
     "/control-stok",
     "/stok-inventory",
+    "/dashboard-inventory",
     "/menu-utama/dashboard",
     "/produksi-gudang",
   ])

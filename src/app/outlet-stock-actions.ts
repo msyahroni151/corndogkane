@@ -27,6 +27,7 @@ export async function manageOutletStock(_: FormState, form: FormData): Promise<F
           : "Perubahan stok belum tersimpan. Muat ulang dan coba lagi.",
     };
   }
-  for (const path of ["/control-stok", "/stok-inventory", "/setting-menu"]) revalidatePath(path);
+  for (const path of ["/control-stok", "/stok-inventory", "/setting-menu", "/dashboard-inventory"])
+    revalidatePath(path);
   return { success: "Pencatatan stok outlet berhasil disimpan." };
 }

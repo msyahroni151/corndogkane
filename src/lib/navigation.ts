@@ -39,6 +39,7 @@ export const mainMenu: MenuItem[] = [
 ];
 export const relationMenu: MenuItem[] = [{ href: "/pelanggan", name: "Pelanggan", icon: "people" }];
 export const inventoryMenu: MenuItem[] = [
+  { href: "/dashboard-inventory", name: "Dashboard", icon: "dashboard" },
   { href: "/supplier", name: "Supplier", icon: "truck" },
   { href: "/barang-masuk", name: "Barang Masuk", icon: "package-in" },
   { href: "/stok-inventory", name: "Stok & Inventori", icon: "boxes" },

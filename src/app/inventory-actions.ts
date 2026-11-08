@@ -32,6 +32,7 @@ function failure(e: unknown): FormState {
   };
 }
 function refresh() {
+  revalidatePath("/dashboard-inventory");
   revalidatePath("/stok-inventory");
   revalidatePath("/setting-menu");
   revalidatePath("/produksi-gudang");

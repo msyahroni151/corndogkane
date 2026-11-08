@@ -5,7 +5,7 @@ export function ControlStockTabs({ tab, outletId }: { tab: string; outletId: str
       <div className="flex gap-1 overflow-x-auto">
         {[
           ["stock", "Stok Outlet"],
-          ["requests", "Permintaan & Pengiriman"],
+          ["requests", "Permintaan Outlet"],
           ["returns", "Retur Barang"],
           ["history", "Riwayat Mutasi"],
         ].map(([key, label]) => (

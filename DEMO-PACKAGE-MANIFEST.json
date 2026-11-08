@@ -419,6 +419,10 @@
       "sha256": "2665328ade27494950571fe747797590582b27931dbf16f3251cea119f09e45c"
     },
     {
+      "path": "src/app/(workspace)/dashboard-inventory/page.tsx",
+      "sha256": "4e85446dcd54d2b95160fc3047313e41feffcfb46121d2411ec4cdcdf64c6862"
+    },
+    {
       "path": "src/app/(workspace)/dashboard/page.tsx",
       "sha256": "994aaa5bbc09d4a5b74187041ff977bc112fd5380bca03061f81780c99390497"
     },
@@ -592,7 +596,7 @@
     },
     {
       "path": "src/app/api/pos/reconcile/route.ts",
-      "sha256": "a9e3d91b629d7fe1f98d466fd5a5eea078d17d91809c43ccee7235d73cb532d1"
+      "sha256": "3893bdd260a178f15b2b8149d6f857dc68d5f745f9fd916bad5da81e0b86ebc9"
     },
     {
       "path": "src/app/api/pos/sales/route.ts",
@@ -640,7 +644,7 @@
     },
     {
       "path": "src/app/goods-receipt-actions.ts",
-      "sha256": "d16fcc376b371562cd4cc376f70ad281744ba378febcd2337aa4619bd27b2ff2"
+      "sha256": "97a4f7ccaefa35d41fc38f691b606d568390ad7d589a02cd0faf523ec79006ae"
     },
     {
       "path": "src/app/icon.png",
@@ -648,7 +652,7 @@
     },
     {
       "path": "src/app/inventory-actions.ts",
-      "sha256": "c39b0eba5e0cf264c48d130a1c1eba7b084f4a9526ed4b0c7a7782282c406fc5"
+      "sha256": "ae209bf74c2c61c1657db13a3575b7ae906dcdf38e0431c90043674f650b9788"
     },
     {
       "path": "src/app/journal-actions.ts",
@@ -684,7 +688,7 @@
     },
     {
       "path": "src/app/outlet-stock-actions.ts",
-      "sha256": "76044a3f8232d971082d5b3cadc267608db3a86f3c95991606eb80ef51f8f354"
+      "sha256": "644158349c8fa0f2d4673a1ece3e768992dae4970c918c06e693359081e16517"
     },
     {
       "path": "src/app/page.tsx",
@@ -748,7 +752,7 @@
     },
     {
       "path": "src/app/stock-return-actions.ts",
-      "sha256": "3ecdc9cd95107bc495d03ab0e05340940342e3a26f546e4084197782a9a9e4fe"
+      "sha256": "90bf65a29217b719ce186875b8d4acb16b1ab71e72d75c4ca7256c7e531e351b"
     },
     {
       "path": "src/app/verifikasi-keamanan/page.tsx",
@@ -832,7 +836,7 @@
     },
     {
       "path": "src/components/control-stock-tabs.tsx",
-      "sha256": "7a91373b7fb6ef396aa6887eef74a9ef0d7cc92b6f2012cbb4d2bb9915d0f146"
+      "sha256": "8ea2f7c17ca425934307bd5f2df245dd1ea759f361162b3320e92298f5c59663"
     },
     {
       "path": "src/components/delete-area-form.tsx",
@@ -885,6 +889,10 @@
     {
       "path": "src/components/goods-receipts.css",
       "sha256": "250b08790d784c33462905304b9b370ba0fc882edc0d9f2f9de80008a2490b09"
+    },
+    {
+      "path": "src/components/inventory-distribution.tsx",
+      "sha256": "a7fb668f69632e104aedb9a6be11a5e31ac7c7f3e39d2796b05afa9e18c68d03"
     },
     {
       "path": "src/components/inventory-forms.tsx",
@@ -1208,7 +1216,7 @@
     },
     {
       "path": "src/components/workspace-heading.tsx",
-      "sha256": "606ee757d143ec50d1099436ea593b92eeeccee0e97c09bd0279d5827f5fb0d2"
+      "sha256": "5438d1b7faa5ee00897614775f62dfc413bc54d785109050591083e07c602145"
     },
     {
       "path": "src/lib/asset-code.ts",
@@ -1319,6 +1327,10 @@
       "sha256": "dd983c9dd1b93c5b1294d71e42b6e5bc75c79d339cd5b62cf8e1156bff7325c5"
     },
     {
+      "path": "src/lib/inventory-dashboard-period.ts",
+      "sha256": "7eb89056e664c19930df166723b7d9d67aecfc8818991f2e6a022517ca167610"
+    },
+    {
       "path": "src/lib/inventory-item-lifecycle.ts",
       "sha256": "950b6f0fa8fe475ea0b076d9d1ccb04568932157c1ad45d5fa33db3afc3ea394"
     },
@@ -1348,7 +1360,7 @@
     },
     {
       "path": "src/lib/navigation.ts",
-      "sha256": "d250ba5db4196322acb1098e3e852ca22e4d3e4444d7981e6f839e2e538ab0f5"
+      "sha256": "7b196b4ea9b464176e8b049b0d2ad2f9a1c1139bedc50fc20b80b0466b6009f6"
     },
     {
       "path": "src/lib/operational-expenses.ts",
@@ -1356,7 +1368,7 @@
     },
     {
       "path": "src/lib/outlet-bonus-ledger.ts",
-      "sha256": "a5d24d231044a2658884cd235cc5ecb70549709c14ffb3d356e0cb8715e8a477"
+      "sha256": "2560a2c117a29368a12d07dc03a7024828815ac57607f60d3a5682c8ec45caef"
     },
     {
       "path": "src/lib/outlet-bonus.ts",
@@ -1440,7 +1452,7 @@
     },
     {
       "path": "src/lib/permissions.ts",
-      "sha256": "2c7c501f7e10f85591cb1fcf70bc260bc1f1d600d1b47a90eb50b4219981baa5"
+      "sha256": "70a3c9c47c2b2a885807c5d5390cc4e6b3367a09c004c5dc4531c8ea0f82c6da"
     },
     {
       "path": "src/lib/placements.ts",

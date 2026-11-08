@@ -51,6 +51,11 @@ export const permissionMenus = [
   { key: "selisih-setor", label: "Selisih Setoran - Payroll", href: "/selisih-setor" },
   { key: "master-area", label: "Master Area - SDM & Operasional", href: "/master-area" },
   { key: "master-outlet", label: "Master Outlet - SDM & Operasional", href: "/master-outlet" },
+  {
+    key: "dashboard-inventory",
+    label: "Dashboard - Inventory & Pembelian",
+    href: "/dashboard-inventory",
+  },
   { key: "supplier", label: "Supplier - Inventory & Pembelian", href: "/supplier" },
   { key: "pelanggan", label: "Pelanggan - Relasi", href: "/pelanggan" },
   { key: "barang-masuk", label: "Barang Masuk - Inventory & Pembelian", href: "/barang-masuk" },
@@ -89,6 +94,10 @@ export function rolePermissions(role: {
     .filter(
       (item) =>
         flags[item.key] === true ||
+        (item.key === "dashboard-inventory" &&
+          flags[item.key] === undefined &&
+          flags["barang-masuk"] === true &&
+          flags["stok-inventory"] === true) ||
         (item.key === "produksi-gudang" &&
           flags[item.key] === undefined &&
           (flags["setting-menu"] === true ||

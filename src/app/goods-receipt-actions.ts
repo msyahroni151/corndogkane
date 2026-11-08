@@ -137,6 +137,7 @@ export async function createGoodsReceipt(_: FormState, form: FormData): Promise<
           : "Barang masuk belum tersimpan. Periksa koneksi dan coba lagi.",
     };
   }
-  for (const path of ["/barang-masuk", "/stok-inventory", "/supplier"]) revalidatePath(path);
+  for (const path of ["/barang-masuk", "/stok-inventory", "/supplier", "/dashboard-inventory"])
+    revalidatePath(path);
   return { success: "Barang masuk berhasil disimpan." };
 }

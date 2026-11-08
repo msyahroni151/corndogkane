@@ -66,6 +66,8 @@ export async function POST(request: Request) {
       "/admin-malam/monitoring-outlet",
       "/finance/laporan-akuntansi",
       "/bonus",
+      "/payroll",
+      "/rekap-saldo",
       "/selisih-setor",
     ])
       revalidatePath(p);

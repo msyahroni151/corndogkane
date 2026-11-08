@@ -122,6 +122,11 @@ const headings: Record<string, { title: string; description: string; icon: IconN
     description: "Pengaturan akses menu akun Anda.",
     icon: "shield",
   },
+  "/dashboard-inventory": {
+    title: "Dashboard Inventori & Pembelian",
+    description: "Ringkasan pembelian, ketersediaan stok, dan hasil produksi gudang.",
+    icon: "dashboard",
+  },
   "/barang-masuk": {
     title: "Barang Masuk",
     description: "Penerimaan barang dari supplier dan pembelian.",
