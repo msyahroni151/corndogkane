@@ -1,9 +1,6 @@
 "use client";
-import { useActionState, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useActionState, useState } from "react";
 import { LocalInput } from "@/components/local-input";
-import { useCloseFormDialog } from "@/components/form-dialog";
-import { notifySuccess } from "@/components/notification-toasts";
 import { withdrawBonus } from "@/app/bonus-withdrawal-actions";
 import type { FormState } from "@/lib/form-state";
 import { rupiah } from "@/lib/money";
@@ -20,18 +17,7 @@ export function BonusWithdrawalForm({
 }) {
   const [requestId] = useState(() => crypto.randomUUID()),
     [amount, setAmount] = useState("");
-  const [state, action, pending] = useActionState(withdrawBonus, {} as FormState),
-    handled = useRef(false),
-    router = useRouter(),
-    close = useCloseFormDialog();
-  useEffect(() => {
-    if (state.success && !pending && !handled.current) {
-      handled.current = true;
-      notifySuccess(state.success);
-      close?.();
-      router.refresh();
-    }
-  }, [state, pending, router, close]);
+  const [state, action, pending] = useActionState(withdrawBonus, {} as FormState);
   return (
     <form action={action} aria-busy={pending} className="space-y-4 p-6">
       <input type="hidden" name="employeeId" value={employeeId} />
@@ -74,7 +60,7 @@ export function BonusWithdrawalForm({
       </label>
       <p className="text-xs leading-5 text-slate-500">
         Catat pencairan bonus yang sudah dilakukan. Nominal akan mengurangi saldo dan tersimpan di
-        Riwayat.
+        Riwayat. Slip langsung terbuka setelah pencairan disimpan.
       </p>
       {state.error && (
         <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -86,7 +72,7 @@ export function BonusWithdrawalForm({
           className="button-primary"
           disabled={pending || !amount || Number(amount) < 1 || Number(amount) > balance}
         >
-          {pending ? "Menyimpan…" : "Simpan pencairan"}
+          {pending ? "Menyimpan…" : "Simpan dan buka slip"}
         </button>
       </div>
     </form>

@@ -6,6 +6,7 @@ import { allocateBusinessId } from "@/lib/business-id";
 import { validateLedger } from "@/lib/money";
 import { parseCivilDate, todayWib } from "@/lib/placements";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import type { FormState } from "@/lib/form-state";
 class WithdrawalError extends Error {}
 export async function withdrawBonus(_: FormState, form: FormData): Promise<FormState> {
@@ -44,8 +45,9 @@ export async function withdrawBonus(_: FormState, form: FormData): Promise<FormS
   }
   const amount = Number(raw),
     postingKey = `BONUS-CASHOUT:${requestId}`;
+  let withdrawalId: string;
   try {
-    await getPrisma().$transaction(
+    withdrawalId = await getPrisma().$transaction(
       async (tx) => {
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${postingKey},0))`;
         await tx.$executeRaw`SELECT id FROM employees WHERE id=${employeeId} FOR UPDATE`;
@@ -61,7 +63,7 @@ export async function withdrawBonus(_: FormState, form: FormData): Promise<FormS
             throw new WithdrawalError(
               "Permintaan pencairan ini sudah tercatat. Muat ulang untuk melihat saldo terbaru.",
             );
-          return;
+          return existing.id;
         }
         const ledger = await tx.moneyEntry.findMany({
           where: {
@@ -83,7 +85,7 @@ export async function withdrawBonus(_: FormState, form: FormData): Promise<FormS
           throw new WithdrawalError(
             "Nominal pencairan melebihi saldo bonus yang tersedia pada tanggal tersebut.",
           );
-        await tx.moneyEntry.create({
+        const withdrawal = await tx.moneyEntry.create({
           data: {
             id: await allocateBusinessId(tx, "bonus"),
             postingKey,
@@ -99,7 +101,9 @@ export async function withdrawBonus(_: FormState, form: FormData): Promise<FormS
             decidedAt: new Date(),
             decisionNotes: "Pencairan dana dari saldo bonus.",
           },
+          select: { id: true },
         });
+        return withdrawal.id;
       },
       { timeout: 10000 },
     );
@@ -112,5 +116,5 @@ export async function withdrawBonus(_: FormState, form: FormData): Promise<FormS
     };
   }
   for (const path of ["/bonus", "/payroll", "/rekap-saldo"]) revalidatePath(path);
-  return { success: "Pencairan bonus tercatat dan saldo diperbarui." };
+  redirect(`/bonus/slip/${encodeURIComponent(withdrawalId)}`);
 }

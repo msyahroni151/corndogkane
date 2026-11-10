@@ -620,7 +620,15 @@
     },
     {
       "path": "src/app/bonus-withdrawal-actions.ts",
-      "sha256": "435d727835b96d46be7390aa513c7cff2520d9c42e17fa6657f0c9af33b628d0"
+      "sha256": "f37ef5379c9564221ac3f0564e4bac2f9d4ca22dad7c92a405354f352ba589ed"
+    },
+    {
+      "path": "src/app/bonus/slip/[id]/page.tsx",
+      "sha256": "a876f9b7687661b60433efd7ae99a52415bef44e021e6b4770e9301482bf9a34"
+    },
+    {
+      "path": "src/app/bonus/slip/[id]/slip.css",
+      "sha256": "b96b8d2c8462e63fa4b1734083bdf6287be3b95ef4fd34b8e4e10d43c8205ee9"
     },
     {
       "path": "src/app/employee-actions.ts",
@@ -783,6 +791,10 @@
       "sha256": "41f41b94487bc326d75d497a558914e9daf3fda8dae38689bb03ef1a066e4ad9"
     },
     {
+      "path": "src/components/bonus-slip-print.tsx",
+      "sha256": "b6358329f12fdc132280b7b7c33089b761032431ba8278fafec0479dc45ce2ec"
+    },
+    {
       "path": "src/components/bonus-view.css",
       "sha256": "dcf829133b652660e793beded511c044edb677c17fe4e6e92a4d215f6e369011"
     },
@@ -792,7 +804,7 @@
     },
     {
       "path": "src/components/bonus-withdrawal-form.tsx",
-      "sha256": "34f2da2a0bd0a9248d955541314291e9461c0572aa82f262d80a910d832b92bb"
+      "sha256": "bba8cfd85c600b4e18d15797f1a8bca32b55e4e38a399f4b679b1ca90d95e607"
     },
     {
       "path": "src/components/brand-logo.tsx",
@@ -928,7 +940,7 @@
     },
     {
       "path": "src/components/money-page.tsx",
-      "sha256": "03ac7bc1416de53d38689e11a97b25759a41e2f0dc593dc773c7a1a52f2e4079"
+      "sha256": "2fa00a7d1bac03ce885f9425fc343137a60ef7554efd766da3311afc0e47fd38"
     },
     {
       "path": "src/components/navigation-link.tsx",

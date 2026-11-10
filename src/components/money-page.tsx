@@ -1,5 +1,6 @@
 import { bonusStartDate } from "@/lib/bonus-period";
 import SearchForm from "next/form";
+import Link from "next/link";
 import { OutletBonusSummary } from "@/components/outlet-bonus-summary";
 import { SortableTable } from "@/components/sortable-table";
 import { APP_TIME_ZONE } from "@/lib/local-date";
@@ -63,12 +64,12 @@ export async function MoneyPage({
     mode === "bonus"
       ? [
           {
-            title: "Riwayat Pendapatan Bonus",
-            rows: rows.filter((e) => e.kind === "BONUS_EARNED"),
+            title: "Riwayat Pencairan Bonus",
+            rows: rows.filter((e) => e.kind === "BONUS_WITHDRAWAL"),
           },
           {
-            title: "Riwayat Pengambilan Bonus",
-            rows: rows.filter((e) => e.kind === "BONUS_WITHDRAWAL"),
+            title: "Riwayat Pendapatan Bonus",
+            rows: rows.filter((e) => e.kind === "BONUS_EARNED"),
           },
         ]
       : [{ title: "Riwayat", rows }];
@@ -208,7 +209,7 @@ export async function MoneyPage({
                 <thead>
                   <tr>
                     {[
-                      ...(mode === "kasbon" ? ["ID"] : []),
+                      ...(mode === "kasbon" || index === 0 ? ["ID"] : []),
                       "Tanggal",
                       "Karyawan",
                       "Jenis",
@@ -227,7 +228,9 @@ export async function MoneyPage({
                 <tbody>
                   {group.rows.map((e) => (
                     <tr key={e.id}>
-                      {mode === "kasbon" && <td className="whitespace-nowrap px-4 py-4">{e.id}</td>}
+                      {(mode === "kasbon" || index === 0) && (
+                        <td className="whitespace-nowrap px-4 py-4">{e.id}</td>
+                      )}
                       <td className="whitespace-nowrap px-4 py-4">{displayDate(e.date)}</td>
                       <td className="px-4 py-4">{e.employeeName}</td>
                       <td
@@ -284,6 +287,14 @@ export async function MoneyPage({
                               decisionEmployeeName={e.employeeName}
                             />
                           </FormDialog>
+                        ) : e.kind === "BONUS_WITHDRAWAL" && e.status === "APPROVED" ? (
+                          <Link
+                            href={`/bonus/slip/${encodeURIComponent(e.id)}`}
+                            prefetch={false}
+                            className="button-secondary whitespace-nowrap"
+                          >
+                            Lihat Slip
+                          </Link>
                         ) : (
                           "—"
                         )}
@@ -298,7 +309,7 @@ export async function MoneyPage({
               Belum ada catatan pada filter ini.
             </p>
           )}
-          {mode === "bonus" && index === 0 && (
+          {mode === "bonus" && index === 1 && (
             <details className="border-t border-slate-100 p-5">
               <summary className="cursor-pointer text-sm font-semibold text-emerald-700">
                 Rincian Bonus Operasional
@@ -314,8 +325,7 @@ export async function MoneyPage({
         {mode === "kasbon"
           ? "Pembayaran dicatat per ID kasbon; persetujuan tidak memotong payroll secara otomatis."
           : "Bonus otomatis dari rekap langsung menjadi saldo. Pencairan dana dan pembayaran bonus melalui payroll mengurangi saldo satu kali. Catatan penyesuaian manual tetap memerlukan persetujuan."}{" "}
-        Pembayaran melalui Payroll otomatis masuk ke riwayat setelah payroll dicatat dibayar. Slip
-        cetak akan dikembangkan pada tahap berikutnya.
+        Pembayaran melalui Payroll otomatis masuk ke riwayat setelah payroll dicatat dibayar.
       </p>
     </>
   );
