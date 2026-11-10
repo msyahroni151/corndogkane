@@ -15,7 +15,7 @@ export function BonusView({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-sm font-semibold">
-          {view === "saldo" ? "Saldo Bonus Karyawan" : "Riwayat Bonus"}
+          {view === "saldo" ? "Ringkasan Bonus" : "Riwayat Bonus"}
         </h2>
         <button
           type="button"

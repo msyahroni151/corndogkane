@@ -90,6 +90,11 @@
   color: #176335;
 }
 
+.money-slip-pending {
+  color: #92400e;
+  font-weight: 700;
+}
+
 .money-slip-notes {
   min-height: 66px;
   padding: 0.65rem 1rem;

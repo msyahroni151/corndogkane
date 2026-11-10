@@ -55,13 +55,6 @@ export async function MoneyPage({
     debit = approved
       .filter((e) => e.kind === "REPAYMENT" || e.kind === "BONUS_WITHDRAWAL")
       .reduce((sum, e) => sum + e.amount, 0);
-  const balances = new Map<string, { name: string; credit: number; debit: number }>();
-  for (const e of approved) {
-    const b = balances.get(e.employeeId) || { name: e.employeeName, credit: 0, debit: 0 };
-    if (e.kind === "LOAN" || e.kind === "BONUS_EARNED") b.credit += e.amount;
-    else b.debit += e.amount;
-    balances.set(e.employeeId, b);
-  }
   const loanLeft = (id: string, amount: number) =>
     amount - approved.filter((e) => e.sourceId === id).reduce((sum, e) => sum + e.amount, 0);
   const rows = entries.filter(
@@ -128,46 +121,6 @@ export async function MoneyPage({
               </section>
             ))}
           </div>
-          {balances.size > 0 && (
-            <section className="panel mt-6 overflow-hidden">
-              <h2 className="border-b border-slate-100 p-5 text-sm font-bold">
-                Saldo per karyawan
-              </h2>
-              <div className="overflow-x-auto">
-                <SortableTable className="w-full text-left text-xs">
-                  <thead>
-                    <tr>
-                      {[
-                        "Karyawan",
-                        mode === "kasbon" ? "Total kasbon" : "Bonus diperoleh",
-                        mode === "kasbon" ? "Pembayaran" : "Pengambilan",
-                        "Saldo",
-                      ].map((t) => (
-                        <th key={t} className="p-4">
-                          {t}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...balances]
-                      .filter(([id]) => !query.employee || id === query.employee)
-                      .map(([id, b]) => (
-                        <tr key={id}>
-                          <td className="p-4 font-semibold">
-                            {b.name}
-                            <p className="mt-1 text-[10px] font-normal text-slate-400">{id}</p>
-                          </td>
-                          <td className="p-4">{rupiah(b.credit)}</td>
-                          <td className="p-4">{rupiah(b.debit)}</td>
-                          <td className="p-4 font-semibold">{rupiah(b.credit - b.debit)}</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </SortableTable>
-              </div>
-            </section>
-          )}
         </>
       )}
       {historyGroups.map((group, index) => (

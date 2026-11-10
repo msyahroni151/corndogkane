@@ -8,6 +8,7 @@ import { getPrisma } from "@/lib/db";
 import { parseCivilDate } from "@/lib/placements";
 import { moneyLabels, validateLedger } from "@/lib/money";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import type { MoneyKind } from "@/generated/prisma/client";
 import type { FormState } from "@/lib/form-state";
 function invalid(message: string): never {
@@ -48,8 +49,9 @@ export async function createMoneyEntry(_: FormState, form: FormData): Promise<Fo
   } catch (e) {
     return { error: (e as Error).message };
   }
+  let entryId: string;
   try {
-    await getPrisma().$transaction(
+    entryId = await getPrisma().$transaction(
       async (tx) => {
         const employee = await tx.employee.findUnique({ where: { id: get("employeeId") } });
         if (!employee) invalid("Karyawan tidak ditemukan.");
@@ -102,6 +104,7 @@ export async function createMoneyEntry(_: FormState, form: FormData): Promise<Fo
             createdById: user.id,
           },
         });
+        return id;
       },
       { timeout: 10000 },
     );
@@ -112,6 +115,7 @@ export async function createMoneyEntry(_: FormState, form: FormData): Promise<Fo
   revalidatePath("/bonus");
   revalidatePath("/payroll");
   revalidatePath("/rekap-saldo");
+  if (kind === "LOAN") redirect(`/kasbon/slip/${encodeURIComponent(entryId)}`);
   return { success: "Catatan tersimpan dan menunggu persetujuan." };
 }
 export async function decideMoneyEntry(_: FormState, form: FormData): Promise<FormState> {

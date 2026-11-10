@@ -41,6 +41,7 @@ export function MoneyForm({
     decisionId ? decideMoneyEntry : createMoneyEntry,
     {},
   );
+  const opensSlip = !decisionId && mode === "kasbon" && draft.kind === "LOAN";
   const close = useCloseFormDialog(),
     router = useRouter(),
     handled = useRef(false);
@@ -199,6 +200,7 @@ export function MoneyForm({
           </div>
           <p className="mt-4 text-xs text-slate-500">
             ID dibuat otomatis. Saldo berubah setelah catatan disetujui.
+            {opensSlip && " Slip terbuka setelah kasbon disimpan."}
           </p>
         </>
       )}
@@ -209,7 +211,13 @@ export function MoneyForm({
       )}
       <div className="mt-6 flex justify-end">
         <button type="submit" disabled={pending} className="button-primary">
-          {pending ? "Menyimpan…" : decisionId ? "Simpan keputusan" : "Simpan catatan"}
+          {pending
+            ? "Menyimpan…"
+            : decisionId
+              ? "Simpan keputusan"
+              : opensSlip
+                ? "Simpan dan buka slip"
+                : "Simpan catatan"}
         </button>
       </div>
     </form>

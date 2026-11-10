@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { MoneySlip, slipDate, type SlipRow } from "@/components/money-slip";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
-import { rupiah } from "@/lib/money";
+import { moneyStatuses, rupiah } from "@/lib/money";
 
 export const metadata: Metadata = {
   title: "Slip Kasbon Karyawan · Corndog Kane",
@@ -14,12 +14,13 @@ export default async function KasbonSlipPage({ params }: { params: Promise<{ id:
   await requireAccess("kasbon");
   const { id } = await params;
   const entry = await getPrisma().moneyEntry.findFirst({
-    where: { id, kind: "LOAN", status: "APPROVED" },
+    where: { id, kind: "LOAN", status: { in: ["PENDING", "APPROVED"] } },
     select: {
       employeeId: true,
       amount: true,
       date: true,
       notes: true,
+      status: true,
       createdBy: { select: { name: true } },
       employee: {
         select: {
@@ -52,11 +53,10 @@ export default async function KasbonSlipPage({ params }: { params: Promise<{ id:
   }));
   const currentIndex = loans.findIndex((loan) => loan.id === id);
   const current = loans[currentIndex];
-  if (!current) notFound();
-  const payrollPayments = current.repayments.filter((payment) => payment.payrollId);
+  if (entry.status === "APPROVED" && !current) notFound();
+  const payrollPayments = current?.repayments.filter((payment) => payment.payrollId) ?? [];
   const payrollPaid = payrollPayments.reduce((total, payment) => total + payment.amount, 0);
-  const manualPaid = current.amount - current.remaining - payrollPaid;
-  const previousBalance = loans.slice(0, currentIndex).reduce((sum, loan) => sum + loan.remaining, 0);
+  const manualPaid = current ? current.amount - current.remaining - payrollPaid : 0;
   const totalBalance = loans.reduce((sum, loan) => sum + loan.remaining, 0);
   const latestPayroll = payrollPayments[0];
   const date = slipDate.format(entry.date);
@@ -66,10 +66,15 @@ export default async function KasbonSlipPage({ params }: { params: Promise<{ id:
     ["Sudah Dipotong", rupiah(payrollPaid)],
   ];
   if (manualPaid > 0) summary.push(["Pembayaran Manual", rupiah(manualPaid)]);
+  if (current) {
+    const previousBalance = loans.slice(0, currentIndex).reduce((sum, loan) => sum + loan.remaining, 0);
+    summary.push(["Kasbon Sebelumnya", rupiah(previousBalance), "highlight"]);
+  }
   summary.push(
-    ["Kasbon Sebelumnya", rupiah(previousBalance), "highlight"],
     ["Total Sisa Kasbon", rupiah(totalBalance), "highlight"],
-    ["Status Kasbon", current.remaining > 0 ? "AKTIF" : "LUNAS", "paid"],
+    current
+      ? ["Status Kasbon", current.remaining > 0 ? "AKTIF" : "LUNAS", "paid"]
+      : ["Status Kasbon", moneyStatuses.PENDING, "pending"],
   );
 
   return (

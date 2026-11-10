@@ -1,4 +1,5 @@
 import { isCurrentLedgerEntry } from "@/lib/bonus-period";
+import SearchForm from "next/form";
 import { settlementLeft } from "@/lib/settlements";
 import { SortableTable } from "@/components/sortable-table";
 import { requireAccess } from "@/lib/auth";
@@ -6,11 +7,28 @@ import { getPrisma } from "@/lib/db";
 import { attendanceSummary } from "@/lib/attendance";
 import { rupiah } from "@/lib/money";
 
-export default async function BalanceSummaryPage() {
+export default async function BalanceSummaryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string | string[] }>;
+}) {
   await requireAccess("rekap-saldo");
+  const { q } = await searchParams;
+  const search = (Array.isArray(q) ? q[0] : q)?.trim().slice(0, 150) ?? "";
+  const term = search.replace(/[\\%_]/g, "\\$&");
   const db = getPrisma();
   const [employees, ledger, days, paidTotals, settlementRows] = await Promise.all([
     db.employee.findMany({
+      ...(term
+        ? {
+            where: {
+              OR: [
+                { fullName: { contains: term, mode: "insensitive" as const } },
+                { employeeCode: { contains: term, mode: "insensitive" as const } },
+              ],
+            },
+          }
+        : {}),
       orderBy: { fullName: "asc" },
       select: { id: true, fullName: true, employeeCode: true },
     }),
@@ -36,9 +54,27 @@ export default async function BalanceSummaryPage() {
     }));
   return (
     <section className="panel overflow-hidden">
-      <h2 className="border-b border-slate-100 p-5 font-semibold">
-        Saldo untuk periode berikutnya
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-5">
+        <h2 className="font-semibold">Saldo untuk periode berikutnya</h2>
+        <SearchForm
+          action=""
+          prefetch={false}
+          scroll={false}
+          className="flex flex-wrap items-center gap-2"
+        >
+          <div className="field">
+            <input
+              name="q"
+              type="search"
+              defaultValue={search}
+              maxLength={150}
+              aria-label="Cari nama atau kode karyawan"
+              placeholder="Cari nama atau kode..."
+            />
+          </div>
+          <button className="button-secondary">Cari</button>
+        </SearchForm>
+      </div>
       <div className="overflow-x-auto">
         <SortableTable className="w-full text-left text-sm">
           <thead className="bg-slate-50">
@@ -98,7 +134,9 @@ export default async function BalanceSummaryPage() {
             {!employees.length && (
               <tr>
                 <td colSpan={5} className="p-8 text-center text-slate-500">
-                  Belum ada data karyawan untuk rekap saldo.
+                  {search
+                    ? "Tidak ada karyawan yang cocok dengan pencarian."
+                    : "Belum ada data karyawan untuk rekap saldo."}
                 </td>
               </tr>
             )}

@@ -12,7 +12,7 @@ export const slipDate = new Intl.DateTimeFormat("id-ID", {
   timeZone: APP_TIME_ZONE,
 });
 
-export type SlipRow = [label: string, value: string, tone?: "paid" | "highlight"];
+export type SlipRow = [label: string, value: string, tone?: "paid" | "highlight" | "pending"];
 
 function SlipDetails({ rows }: { rows: SlipRow[] }) {
   return (

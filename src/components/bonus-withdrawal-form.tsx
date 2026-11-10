@@ -5,28 +5,56 @@ import { withdrawBonus } from "@/app/bonus-withdrawal-actions";
 import type { FormState } from "@/lib/form-state";
 import { rupiah } from "@/lib/money";
 export function BonusWithdrawalForm({
-  employeeId,
-  name,
-  balance,
+  employees,
   today,
 }: {
-  employeeId: string;
-  name: string;
-  balance: number;
+  employees: {
+    id: string;
+    fullName: string;
+    employeeCode: string | null;
+    active: boolean;
+    left: number;
+  }[];
   today: string;
 }) {
   const [requestId] = useState(() => crypto.randomUUID()),
+    [employeeId, setEmployeeId] = useState(""),
     [amount, setAmount] = useState("");
   const [state, action, pending] = useActionState(withdrawBonus, {} as FormState);
+  const employee = employees.find((candidate) => candidate.id === employeeId);
   return (
     <form action={action} aria-busy={pending} className="space-y-4 p-6">
-      <input type="hidden" name="employeeId" value={employeeId} />
       <input type="hidden" name="requestId" value={requestId} />
       <input type="hidden" name="amount" value={amount} />
-      <p className="text-sm font-semibold">{name}</p>
-      <p className="rounded-xl bg-emerald-50 p-4 text-sm">
-        Sisa bonus: <strong>{rupiah(balance)}</strong>
-      </p>
+      <label className="field">
+        Karyawan
+        <select
+          name="employeeId"
+          value={employeeId}
+          onChange={(event) => {
+            setEmployeeId(event.target.value);
+            setAmount("");
+          }}
+          required
+          disabled={pending}
+        >
+          <option value="">Pilih karyawan…</option>
+          {employees.map((candidate) => (
+            <option key={candidate.id} value={candidate.id}>
+              {candidate.fullName}
+              {candidate.employeeCode && candidate.employeeCode !== candidate.fullName
+                ? ` - ${candidate.employeeCode}`
+                : ""}
+              {!candidate.active ? " (tidak aktif)" : ""}
+            </option>
+          ))}
+        </select>
+      </label>
+      {employee && (
+        <p className="rounded-xl bg-emerald-50 p-4 text-sm">
+          Sisa bonus: <strong>{rupiah(employee.left)}</strong>
+        </p>
+      )}
       <label className="field">
         Tanggal pencairan
         <LocalInput
@@ -70,7 +98,9 @@ export function BonusWithdrawalForm({
       <div className="flex justify-end">
         <button
           className="button-primary"
-          disabled={pending || !amount || Number(amount) < 1 || Number(amount) > balance}
+          disabled={
+            pending || !employee || !amount || Number(amount) < 1 || Number(amount) > employee.left
+          }
         >
           {pending ? "Menyimpan…" : "Simpan dan buka slip"}
         </button>
