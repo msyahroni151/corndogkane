@@ -76,7 +76,7 @@ export default async function BonusSlipPage({ params }: { params: Promise<{ id: 
     <MoneySlip
       title="SLIP PENGAMBILAN BONUS"
       date={`Tanggal Pengambilan ${date}`}
-      backHref="/bonus?view=history"
+      backHref="/bonus#riwayat-bonus"
       backLabel="Kembali ke Riwayat Bonus"
       identity={identity}
       amountLabel="NOMINAL BONUS"

@@ -624,7 +624,7 @@
     },
     {
       "path": "src/app/bonus/slip/[id]/page.tsx",
-      "sha256": "4bf06f6cee1f6b45ba056fd536e506878b635b917f622bbb70c9ef3adb0e86ba"
+      "sha256": "db4f584ffdd8183a83e3fb9785ab5c2bcdd72be71498a9e33131b65f076ada70"
     },
     {
       "path": "src/app/employee-actions.ts",
@@ -788,15 +788,7 @@
     },
     {
       "path": "src/components/bonus-page.tsx",
-      "sha256": "5f67dfb1b2d57d2e8847b2c349469c3882e21ca5960ecaab5097dc1f798d6e0b"
-    },
-    {
-      "path": "src/components/bonus-view.css",
-      "sha256": "dcf829133b652660e793beded511c044edb677c17fe4e6e92a4d215f6e369011"
-    },
-    {
-      "path": "src/components/bonus-view.tsx",
-      "sha256": "4c6fdc327469d7a20b7f50cd2bd839529afa00dd1fed474ae1229d99e78ab7d0"
+      "sha256": "242682061c13df8365122a70a842c586152adb2b34f8d412fc527074654fd107"
     },
     {
       "path": "src/components/bonus-withdrawal-form.tsx",
@@ -932,11 +924,11 @@
     },
     {
       "path": "src/components/money-form.tsx",
-      "sha256": "6ae922b2f64129e865a68ff3b929014564da7fb59c35277fafa2361c94b1ddc9"
+      "sha256": "9ea41485a589158435bf60464a1315457a217d8aa4b8ded68fb93c85f2d46db3"
     },
     {
       "path": "src/components/money-page.tsx",
-      "sha256": "cade5c357156098e747828c17697aa90db69f1e4bc4470107398e22af5a07556"
+      "sha256": "f35cda5e5c6d4e09db44f887c1c0832d05d27233638d67faf7c4ef6ddc697b1d"
     },
     {
       "path": "src/components/money-slip-print.tsx",

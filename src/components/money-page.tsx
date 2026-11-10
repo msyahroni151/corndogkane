@@ -26,7 +26,7 @@ export async function MoneyPage({
   historyOnly = false,
 }: {
   mode: "kasbon" | "bonus";
-  searchParams: Promise<{ employee?: string; status?: string; tersimpan?: string; view?: string }>;
+  searchParams: Promise<{ employee?: string; status?: string; tersimpan?: string }>;
   historyOnly?: boolean;
 }) {
   await requireAccess(mode);
@@ -136,7 +136,6 @@ export async function MoneyPage({
                 scroll={false}
                 className="flex flex-wrap gap-3"
               >
-                {historyOnly && <input type="hidden" name="view" value="history" />}
                 <select
                   name="employee"
                   defaultValue={query.employee || ""}

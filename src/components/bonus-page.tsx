@@ -4,12 +4,11 @@ import { getPrisma } from "@/lib/db";
 import { bonusBalances } from "@/lib/bonus-balance";
 import { todayWib } from "@/lib/placements";
 import { rupiah } from "@/lib/money";
-import { BonusView } from "@/components/bonus-view";
 import { MoneyPage } from "@/components/money-page";
 import { FormDialog } from "@/components/form-dialog";
 import { BonusWithdrawalForm } from "@/components/bonus-withdrawal-form";
 import { SyncOutletBonuses } from "@/components/sync-outlet-bonuses";
-export type BonusQuery = { employee?: string; status?: string; tersimpan?: string; view?: string };
+export type BonusQuery = { employee?: string; status?: string; tersimpan?: string };
 export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQuery> }) {
   await requireAccess("bonus");
   const query = await searchParams,
@@ -53,8 +52,9 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
     (s, e) => ({ earned: s.earned + e.earned, taken: s.taken + e.taken, left: s.left + e.left }),
     { earned: 0, taken: 0, left: 0 },
   );
-  const balance = (
+  return (
     <div className="space-y-6">
+      <h2 className="text-sm font-semibold">Ringkasan Bonus</h2>
       <div className="grid gap-4 sm:grid-cols-3">
         {[
           { label: "Bonus Diperoleh", value: totals.earned },
@@ -92,15 +92,9 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
         bonus yang dibayar melalui payroll masuk ke Sudah Diambil. Rekap lama perlu disinkronkan;
         penyesuaian manual yang belum disetujui belum memengaruhi saldo.
       </p>
+      <div id="riwayat-bonus" className="scroll-mt-48">
+        <MoneyPage mode="bonus" searchParams={Promise.resolve(query)} historyOnly />
+      </div>
     </div>
-  );
-  const initialView = query.view === "history" ? "history" : "saldo";
-  return (
-    <BonusView
-      key={initialView}
-      initialView={initialView}
-      balance={balance}
-      history={<MoneyPage mode="bonus" searchParams={Promise.resolve(query)} historyOnly />}
-    />
   );
 }

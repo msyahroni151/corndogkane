@@ -51,7 +51,7 @@ export function MoneyForm({
       close?.();
       if (mode === "bonus") {
         notifySuccess(state.success);
-        router.push("/bonus?view=history");
+        router.push("/bonus#riwayat-bonus");
       } else router.push(`/${mode}?tersimpan=1`);
     }
   }, [state.success, pending, close, router, mode]);
