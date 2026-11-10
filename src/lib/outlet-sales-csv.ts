@@ -23,6 +23,51 @@ export const csvHeaders = [
   "status_operasional",
   "keterangan_operasional",
 ];
+const salesExportColumns = [
+  ["Tanggal", "tanggal"],
+  ["Kode_Outlet", "outlet"],
+  ["Nama_Outlet", "nama_outlet"],
+  ["ID_Crew", "crew"],
+  ["Nama_Crew", "nama_crew"],
+  ["Crew_Training", "crew_training"],
+  ["Mozarella", "mozarella"],
+  ["Harga_mozarella", "harga_mozarella"],
+  ["Mix", "mix"],
+  ["Harga_Mix", "harga_mix"],
+  ["Sosis", "sosis"],
+  ["Harga_Sosis", "harga_sosis"],
+  ["Beng-beng", "bengbeng"],
+  ["Harga_Beng-beng", "harga_bengbeng"],
+  ["Crumble", "crumble"],
+  ["Harga_Crumble", "harga_crumble"],
+  ["Mie", "mie"],
+  ["Harga_Mie", "harga_mie"],
+  ["Kentang", "kentang"],
+  ["Harga_Kentang", "harga_kentang"],
+  ["Cornflakes", "cornflakes"],
+  ["Harga_Cornflakes", "harga_cornflakes"],
+  ["Katsuobushi", "katushobushi"],
+  ["Harga_Katsuobushi", "harga_katushobushi"],
+  ["Manis", "manis"],
+  ["Harga_Manis", "harga_manis"],
+  ["Adonan_Terpakai", "adonan_terpakai"],
+  ["Total_Omzet", "total_penjualan"],
+  ["Pengeluaran", "pengeluaran"],
+  ["Keterangan_Pengeluaran", "keterangan_pengeluaran"],
+  ["ShopeeFood", "shopeefood"],
+  ["GrabFood", "grabfood"],
+  ["GoFood", "gofood"],
+  ["QRIS", "qris"],
+  ["Setoran_Tunai", "setoran_tunai"],
+  ["sumber_penjualan", "sumber_penjualan"],
+  ["status_operasional", "status_operasional"],
+  ["keterangan_operasional", "keterangan_operasional"],
+] as const;
+export const salesExportHeaders = salesExportColumns.map(([label]) => label);
+const salesImportAliases = new Map<string, string>(
+  salesExportColumns.map(([label, key]) => [label.toLowerCase(), key]),
+);
+
 /** Excel delimiter hint makes columns independent of Windows list-separator settings. */
 export function encodeCsv(rows: (string | number | null | undefined)[][]) {
   return (
@@ -128,7 +173,10 @@ export type SalesCsvRow = {
 export function parseSalesCsv(text: string) {
   const [headers, ...records] = readCsv(text);
   if (!headers) throw Error("CSV kosong.");
-  const keys = headers.map((h) => h.trim().toLowerCase());
+  const keys = headers.map((h) => {
+    const key = h.trim().toLowerCase();
+    return salesImportAliases.get(key) ?? key;
+  });
   if (new Set(keys).size !== keys.length) throw Error("Judul kolom CSV tidak boleh berulang.");
   for (const key of keys)
     if (!csvHeaders.includes(key))
@@ -251,6 +299,9 @@ export function parseSalesCsv(text: string) {
 }
 export function salesCsvValues(row: Record<string, string | number | null | undefined>) {
   return csvHeaders.map((h) => row[h] ?? "");
+}
+export function salesExportValues(row: Record<string, string | number | null | undefined>) {
+  return salesExportColumns.map(([, key]) => row[key] ?? "");
 }
 export function salesCsvTemplate() {
   return encodeCsv([csvHeaders]);

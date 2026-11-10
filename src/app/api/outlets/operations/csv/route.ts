@@ -5,7 +5,12 @@ import { currentUser } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { getPrisma } from "@/lib/db";
 import { parseCivilDate } from "@/lib/placements";
-import { csvHeaders, encodeCsv, salesCsvTemplate, salesCsvValues } from "@/lib/outlet-sales-csv";
+import {
+  encodeCsv,
+  salesCsvTemplate,
+  salesExportHeaders,
+  salesExportValues,
+} from "@/lib/outlet-sales-csv";
 import { canImportOutletCrew, operationalProducts, snapshotItems } from "@/lib/outlet-operations";
 import { prepareSalesImport, importSalesCsv } from "@/lib/outlet-sales-csv-service";
 import { InputError } from "@/lib/outlet-operation-write";
@@ -95,23 +100,23 @@ export async function GET(request: Request) {
       where,
       orderBy: [{ date: "asc" }, { outletName: "asc" }],
       take: 10001,
-      include: { crew: { select: { employeeCode: true } } },
+      include: { outlet: { select: { nameCode: true } } },
     });
     const closures = await db.outletDailyStatus.findMany({
       where: { ...where, closed: true },
-      include: { outlet: { select: { name: true } } },
+      include: { outlet: { select: { name: true, nameCode: true } } },
       take: 10001,
     });
     if (entries.length + closures.length > 10000)
       throw new InputError("Lebih dari 10.000 baris. Persempit rentang ekspor.");
     const data = entries.map((row) => {
       const items = snapshotItems(row.items);
-      return salesCsvValues({
+      return salesExportValues({
         tanggal: row.date.toISOString().slice(0, 10),
-        outlet: row.outletId,
+        outlet: row.outlet.nameCode?.trim() || row.outletId,
         nama_outlet: row.outletName,
         crew: row.crewId,
-        nama_crew: row.crew.employeeCode || row.crewName,
+        nama_crew: row.crewName,
         crew_training: row.trainingCrewName,
         adonan_terpakai: row.doughUsed,
         ...Object.fromEntries(
@@ -133,9 +138,9 @@ export async function GET(request: Request) {
       });
     });
     const closedRows = closures.map((row) =>
-      salesCsvValues({
+      salesExportValues({
         tanggal: row.date.toISOString().slice(0, 10),
-        outlet: row.outletId,
+        outlet: row.outlet.nameCode?.trim() || row.outletId,
         nama_outlet: row.outlet.name,
         crew: "",
         nama_crew: "",
@@ -150,7 +155,10 @@ export async function GET(request: Request) {
       (a, b) =>
         String(a[0]).localeCompare(String(b[0])) || String(a[1]).localeCompare(String(b[1])),
     );
-    return download(encodeCsv([csvHeaders, ...combined]), `penjualan-outlet-${start}-${end}.csv`);
+    return download(
+      encodeCsv([salesExportHeaders, ...combined]),
+      `penjualan-outlet-${start}-${end}.csv`,
+    );
   } catch (error) {
     if (error instanceof RequestBodyError)
       return Response.json({ error: error.message }, { status: error.status });
