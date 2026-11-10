@@ -88,9 +88,8 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
             className="flex flex-wrap items-end gap-3"
           >
             <input type="hidden" name="view" value="saldo" />
-            <label className="field">
-              Karyawan
-              <select name="employee" defaultValue={query.employee || ""}>
+            <div className="field">
+              <select name="employee" aria-label="Filter karyawan" defaultValue={query.employee || ""}>
                 <option value="">Semua karyawan</option>
                 {employees
                   .filter((e) => e.active)
@@ -100,7 +99,7 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
                     </option>
                   ))}
               </select>
-            </label>
+            </div>
             <button className="button-secondary">Terapkan</button>
           </SearchForm>
         </div>

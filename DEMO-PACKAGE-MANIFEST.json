@@ -788,7 +788,7 @@
     },
     {
       "path": "src/components/bonus-page.tsx",
-      "sha256": "b9a96649a2ed50ffcab18b612d56f316939caf52a02f76282c649ff4e407ad48"
+      "sha256": "2eb5e59ba178dc81b4222c93679cf7a0e02efe7718bd9baa87c8a6697a3218c5"
     },
     {
       "path": "src/components/bonus-slip-print.tsx",
