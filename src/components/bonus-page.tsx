@@ -79,21 +79,19 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
           <SyncOutletBonuses />
         </div>
       )}
-      {eligible.length > 0 && (
-        <div className="flex justify-end">
-          <FormDialog title="Pencairan Dana Bonus" trigger="Pencairan Dana">
-            <BonusWithdrawalForm employees={eligible} today={today} />
-          </FormDialog>
-        </div>
-      )}
-      <p className="text-xs leading-6 text-slate-500">
-        Bonus sebelum 1 November 2026 sudah diselesaikan dan tidak dihitung dalam saldo ini. Bonus
-        otomatis dari rekap mulai November 2026 langsung menambah saldo crew. Pencairan dana dan
-        bonus yang dibayar melalui payroll masuk ke Sudah Diambil. Rekap lama perlu disinkronkan;
-        penyesuaian manual yang belum disetujui belum memengaruhi saldo.
-      </p>
       <div id="riwayat-bonus" className="scroll-mt-48">
-        <MoneyPage mode="bonus" searchParams={Promise.resolve(query)} historyOnly />
+        <MoneyPage
+          mode="bonus"
+          searchParams={Promise.resolve(query)}
+          historyOnly
+          withdrawalAction={
+            eligible.length > 0 && (
+              <FormDialog title="Pencairan Dana Bonus" trigger="Pencairan Dana">
+                <BonusWithdrawalForm employees={eligible} today={today} />
+              </FormDialog>
+            )
+          }
+        />
       </div>
     </div>
   );

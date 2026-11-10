@@ -788,7 +788,7 @@
     },
     {
       "path": "src/components/bonus-page.tsx",
-      "sha256": "242682061c13df8365122a70a842c586152adb2b34f8d412fc527074654fd107"
+      "sha256": "972e10a193c9f1fa22185e4fd97e54f5cb43bfc92f08400be5d39720f7bcf58f"
     },
     {
       "path": "src/components/bonus-withdrawal-form.tsx",
@@ -928,7 +928,7 @@
     },
     {
       "path": "src/components/money-page.tsx",
-      "sha256": "f35cda5e5c6d4e09db44f887c1c0832d05d27233638d67faf7c4ef6ddc697b1d"
+      "sha256": "28e55a0abd793bdebd487e1b0d9534f4d592f7d4c76f41eec6f3c3d198c43944"
     },
     {
       "path": "src/components/money-slip-print.tsx",

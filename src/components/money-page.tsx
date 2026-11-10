@@ -1,6 +1,7 @@
 import { bonusStartDate } from "@/lib/bonus-period";
 import SearchForm from "next/form";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { SortableTable } from "@/components/sortable-table";
 import { APP_TIME_ZONE } from "@/lib/local-date";
 import { requireAccess } from "@/lib/auth";
@@ -24,10 +25,12 @@ export async function MoneyPage({
   mode,
   searchParams,
   historyOnly = false,
+  withdrawalAction,
 }: {
   mode: "kasbon" | "bonus";
   searchParams: Promise<{ employee?: string; status?: string; tersimpan?: string }>;
   historyOnly?: boolean;
+  withdrawalAction?: ReactNode;
 }) {
   await requireAccess(mode);
   const query = await searchParams,
@@ -130,40 +133,43 @@ export async function MoneyPage({
               {group.title} · {group.rows.length} catatan
             </h2>
             {index === 0 && (
-              <SearchForm
-                action=""
-                prefetch={false}
-                scroll={false}
-                className="flex flex-wrap gap-3"
-              >
-                <select
-                  name="employee"
-                  defaultValue={query.employee || ""}
-                  aria-label="Filter karyawan"
-                  className="rounded-xl border border-slate-200 px-3 py-2 text-xs"
+              <div className="flex flex-wrap items-center gap-3">
+                <SearchForm
+                  action=""
+                  prefetch={false}
+                  scroll={false}
+                  className="flex flex-wrap gap-3"
                 >
-                  <option value="">Semua karyawan</option>
-                  {choices.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  name="status"
-                  defaultValue={query.status || ""}
-                  aria-label="Filter status"
-                  className="rounded-xl border border-slate-200 px-3 py-2 text-xs"
-                >
-                  <option value="">Semua status</option>
-                  {Object.entries(moneyStatuses).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-                <button className="button-secondary">Tampilkan</button>
-              </SearchForm>
+                  <select
+                    name="employee"
+                    defaultValue={query.employee || ""}
+                    aria-label="Filter karyawan"
+                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs"
+                  >
+                    <option value="">Semua karyawan</option>
+                    {choices.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    name="status"
+                    defaultValue={query.status || ""}
+                    aria-label="Filter status"
+                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs"
+                  >
+                    <option value="">Semua status</option>
+                    {Object.entries(moneyStatuses).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <button className="button-secondary">Tampilkan</button>
+                </SearchForm>
+                {mode === "bonus" && withdrawalAction}
+              </div>
             )}
           </div>
           {group.rows.length ? (
