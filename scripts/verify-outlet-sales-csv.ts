@@ -5,6 +5,9 @@ import {
   encodeCsv,
   parseSalesCsv,
   salesCsvValues,
+  salesCsvTemplate,
+  salesExportHeaders,
+  salesExportValues,
 } from "../src/lib/outlet-sales-csv";
 import {
   operationalProducts,
@@ -121,6 +124,33 @@ console.log(
 );
 
 assert.equal(csvHeaders.length, 38);
+assert.deepEqual(readCsv(salesCsvTemplate()), [salesExportHeaders]);
+assert.equal(salesExportHeaders.length, 36);
+assert.deepEqual(salesExportHeaders.slice(0, 4), [
+  "Tanggal",
+  "Nama_Outlet",
+  "kode_name",
+  "Crew_Training",
+]);
+assert.ok(!salesExportHeaders.some((header) => ["Kode_Outlet", "ID_Crew"].includes(header)));
+const namedExport = { ...raw, nama_outlet: "ANTAPANI", nama_crew: "YUDI" };
+const currentExport = parseSalesCsv(encodeCsv([salesExportHeaders, salesExportValues(namedExport)]));
+assert.deepEqual(currentExport.errors, []);
+assert.equal(currentExport.rows[0].outlet, "ANTAPANI");
+assert.equal(currentExport.rows[0].outletByName, true);
+assert.equal(currentExport.rows[0].crew, "YUDI");
+assert.equal(currentExport.rows[0].crewByCode, true);
+const oldExport = parseSalesCsv(
+  encodeCsv([
+    csvHeaders.map((header) =>
+      header === "outlet" ? "Kode_Outlet" : header === "crew" ? "ID_Crew" : header,
+    ),
+    salesCsvValues({ ...namedExport, outlet: "ATP", crew: "employee-id" }),
+  ]),
+);
+assert.deepEqual(oldExport.errors, []);
+assert.equal(oldExport.rows[0].outlet, "ATP");
+assert.equal(oldExport.rows[0].crew, "employee-id");
 const closed = {
   crew: "",
   status_operasional: "TUTUP",
@@ -154,5 +184,5 @@ for (const extra of [
 assert.equal(parseSalesCsv(make()).rows[0].operationalStatus, "BUKA");
 assert.ok(parseSalesCsv(make({ crew: "" })).errors.length);
 console.log(
-  "PASS: explicit/legacy daily closures, zero-activity validation, unknown statuses and conflicting crew/status rejected; 38-column template.",
+  "PASS: 36-column template, legacy references, and daily closure validation.",
 );

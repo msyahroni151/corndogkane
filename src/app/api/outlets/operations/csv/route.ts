@@ -100,11 +100,14 @@ export async function GET(request: Request) {
       where,
       orderBy: [{ date: "asc" }, { outletName: "asc" }],
       take: 10001,
-      include: { outlet: { select: { nameCode: true } } },
+      include: {
+        outlet: { select: { name: true } },
+        crew: { select: { employeeCode: true } },
+      },
     });
     const closures = await db.outletDailyStatus.findMany({
       where: { ...where, closed: true },
-      include: { outlet: { select: { name: true, nameCode: true } } },
+      include: { outlet: { select: { name: true } } },
       take: 10001,
     });
     if (entries.length + closures.length > 10000)
@@ -113,10 +116,8 @@ export async function GET(request: Request) {
       const items = snapshotItems(row.items);
       return salesExportValues({
         tanggal: row.date.toISOString().slice(0, 10),
-        outlet: row.outlet.nameCode?.trim() || row.outletId,
-        nama_outlet: row.outletName,
-        crew: row.crewId,
-        nama_crew: row.crewName,
+        nama_outlet: row.outlet.name,
+        nama_crew: row.crew.employeeCode?.trim() || "",
         crew_training: row.trainingCrewName,
         adonan_terpakai: row.doughUsed,
         ...Object.fromEntries(
@@ -140,9 +141,7 @@ export async function GET(request: Request) {
     const closedRows = closures.map((row) =>
       salesExportValues({
         tanggal: row.date.toISOString().slice(0, 10),
-        outlet: row.outlet.nameCode?.trim() || row.outletId,
         nama_outlet: row.outlet.name,
-        crew: "",
         nama_crew: "",
         status_operasional: "TUTUP",
         keterangan_operasional: row.notes,

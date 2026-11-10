@@ -110,8 +110,9 @@ function ImportSalesCsv({ onSaved }: { onSaved: () => void }) {
   return (
     <div className="space-y-4 p-5">
       <p className="text-sm text-slate-600">
-        Satu baris per outlet per tanggal. Gunakan ID, kode, atau nama outlet dan crew yang
-        terdaftar. Maksimal {csvImportLimit} baris per file.
+        Satu baris per outlet per tanggal. Isi Nama_Outlet dan kode_name crew sesuai Referensi
+        Outlet &amp; Crew. Untuk outlet TUTUP, kosongkan kode_name. Maksimal {csvImportLimit} baris
+        per file.
       </p>
       <p className="text-xs leading-5 text-slate-500">
         Impor historis menerima crew aktif maupun nonaktif yang sudah terdaftar. Status karyawan

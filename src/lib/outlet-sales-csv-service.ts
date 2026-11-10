@@ -18,11 +18,16 @@ function match<T extends { id: string }>(
   code: (item: T) => string | null,
   name: (item: T) => string,
   label: string,
+  field: "name" | "code" | "legacy" = "legacy",
 ): T {
-  const exact = items.find((item) => item.id === value);
+  const exact = field === "legacy" ? items.find((item) => item.id === value) : undefined;
   if (exact) return exact;
-  const codes = items.filter((item) => code(item) && key(code(item)!) === key(value));
-  const found = codes.length ? codes : items.filter((item) => key(name(item)) === key(value));
+  const reference = key(value);
+  const codes = field === "name" ? [] : items.filter((item) => key(code(item) ?? "") === reference);
+  const found =
+    field === "code" || codes.length
+      ? codes
+      : items.filter((item) => key(name(item)) === reference);
   if (found.length !== 1)
     throw Error(
       found.length
@@ -78,6 +83,7 @@ export async function prepareSalesImport(
           (o) => o.nameCode,
           (o) => o.name,
           "Outlet",
+          row.outletByName ? "name" : "legacy",
         ),
         employee =
           row.operationalStatus === "TUTUP"
@@ -88,6 +94,7 @@ export async function prepareSalesImport(
                 (e) => e.employeeCode,
                 (e) => e.fullName,
                 "Crew",
+                row.crewByCode ? "code" : "legacy",
               );
       const identity = outlet.id + "|" + row.date;
       if (seen.has(identity)) throw Error("Outlet dan tanggal berulang di dalam file.");

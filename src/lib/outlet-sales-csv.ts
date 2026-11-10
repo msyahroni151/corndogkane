@@ -25,10 +25,8 @@ export const csvHeaders = [
 ];
 const salesExportColumns = [
   ["Tanggal", "tanggal"],
-  ["Kode_Outlet", "outlet"],
   ["Nama_Outlet", "nama_outlet"],
-  ["ID_Crew", "crew"],
-  ["Nama_Crew", "nama_crew"],
+  ["kode_name", "nama_crew"],
   ["Crew_Training", "crew_training"],
   ["Mozarella", "mozarella"],
   ["Harga_mozarella", "harga_mozarella"],
@@ -64,9 +62,11 @@ const salesExportColumns = [
   ["keterangan_operasional", "keterangan_operasional"],
 ] as const;
 export const salesExportHeaders = salesExportColumns.map(([label]) => label);
-const salesImportAliases = new Map<string, string>(
-  salesExportColumns.map(([label, key]) => [label.toLowerCase(), key]),
-);
+const salesImportAliases = new Map<string, string>([
+  ...salesExportColumns.map(([label, key]): [string, string] => [label.toLowerCase(), key]),
+  ["kode_outlet", "outlet"],
+  ["id_crew", "crew"],
+]);
 
 /** Excel delimiter hint makes columns independent of Windows list-separator settings. */
 export function encodeCsv(rows: (string | number | null | undefined)[][]) {
@@ -151,6 +151,8 @@ export function csvNumber(value: string, label: string, max: number, blank: numb
   return n;
 }
 export type SalesCsvRow = {
+  outletByName: boolean;
+  crewByCode: boolean;
   row: number;
   date: string;
   outlet: string;
@@ -173,16 +175,18 @@ export type SalesCsvRow = {
 export function parseSalesCsv(text: string) {
   const [headers, ...records] = readCsv(text);
   if (!headers) throw Error("CSV kosong.");
-  const keys = headers.map((h) => {
-    const key = h.trim().toLowerCase();
-    return salesImportAliases.get(key) ?? key;
-  });
+  const labels = headers.map((header) => header.trim().toLowerCase());
+  const keys = labels.map((key) => salesImportAliases.get(key) ?? key);
   if (new Set(keys).size !== keys.length) throw Error("Judul kolom CSV tidak boleh berulang.");
   for (const key of keys)
     if (!csvHeaders.includes(key))
       throw Error("Kolom tidak dikenal: " + key + ". Gunakan template yang disediakan.");
-  for (const key of ["tanggal", "outlet", "crew", ...operationalProducts.map((p) => p.key)])
+  for (const key of ["tanggal", ...operationalProducts.map((p) => p.key)])
     if (!keys.includes(key)) throw Error("Kolom wajib belum ada: " + key + ".");
+  if (!keys.includes("outlet") && !keys.includes("nama_outlet"))
+    throw Error("Kolom wajib belum ada: Nama_Outlet.");
+  if (!keys.includes("crew") && !keys.includes("nama_crew"))
+    throw Error("Kolom wajib belum ada: kode_name.");
   if (!records.length || records.length > csvImportLimit)
     throw Error("Isi 1–" + csvImportLimit + " baris data per file.");
   const rows: SalesCsvRow[] = [],
@@ -200,16 +204,18 @@ export function parseSalesCsv(text: string) {
       if (date.includes("/")) date = dateFromDisplay(date);
       parseCivilDate(date);
       const legacyClosed = get("crew").toUpperCase() === "TUTUP";
+      const outlet = get("outlet") || get("nama_outlet");
+      const crew = get("crew") || get("nama_crew");
       const operationalStatus =
         get("status_operasional").toUpperCase() || (legacyClosed ? "TUTUP" : "BUKA");
       if (!["BUKA", "TUTUP"].includes(operationalStatus))
         throw Error("Status operasional harus BUKA atau TUTUP.");
       if (legacyClosed && operationalStatus !== "TUTUP")
         throw Error("Crew TUTUP bertentangan dengan status BUKA.");
-      if (!get("outlet")) throw Error("Outlet wajib diisi.");
-      if (operationalStatus === "BUKA" && !get("crew"))
+      if (!outlet) throw Error("Outlet wajib diisi.");
+      if (operationalStatus === "BUKA" && !crew)
         throw Error("Crew wajib diisi untuk outlet BUKA.");
-      if (operationalStatus === "TUTUP" && get("crew") && !legacyClosed)
+      if (operationalStatus === "TUTUP" && crew && !legacyClosed)
         throw Error("Kosongkan crew untuk outlet TUTUP.");
       if (operationalStatus === "BUKA" && get("keterangan_operasional"))
         throw Error(
@@ -224,8 +230,8 @@ export function parseSalesCsv(text: string) {
       if (
         get("crew_training").length > 100 ||
         get("keterangan_pengeluaran").length > 1000 ||
-        get("outlet").length > 200 ||
-        get("crew").length > 200
+        outlet.length > 200 ||
+        crew.length > 200
       )
         throw Error("Teks terlalu panjang.");
       const quantities = Object.fromEntries(
@@ -272,8 +278,10 @@ export function parseSalesCsv(text: string) {
       rows.push({
         row,
         date,
-        outlet: get("outlet"),
-        crew: operationalStatus === "TUTUP" ? "" : get("crew"),
+        outlet,
+        outletByName: !get("outlet"),
+        crew: operationalStatus === "TUTUP" ? "" : crew,
+        crewByCode: !get("crew") && labels.includes("kode_name"),
         operationalStatus: operationalStatus as "BUKA" | "TUTUP",
         operationalNotes:
           get("keterangan_operasional") ||
@@ -304,5 +312,5 @@ export function salesExportValues(row: Record<string, string | number | null | u
   return salesExportColumns.map(([, key]) => row[key] ?? "");
 }
 export function salesCsvTemplate() {
-  return encodeCsv([csvHeaders]);
+  return encodeCsv([salesExportHeaders]);
 }
