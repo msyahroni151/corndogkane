@@ -1,11 +1,11 @@
-.bonus-slip {
+.money-slip {
   box-sizing: border-box;
   width: min(100%, 660px);
   margin: 2rem auto;
   padding: 0 1rem;
 }
 
-.bonus-slip-toolbar {
+.money-slip-toolbar {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -13,7 +13,7 @@
   margin-bottom: 1rem;
 }
 
-.bonus-slip-paper {
+.money-slip-paper {
   border: 1px solid #3c554b;
   background: #fff;
   color: #17241c;
@@ -21,7 +21,7 @@
   overflow-wrap: anywhere;
 }
 
-.bonus-slip-header {
+.money-slip-header {
   display: grid;
   grid-template-columns: minmax(40px, 68px) minmax(0, 1fr) minmax(0, 68px);
   align-items: center;
@@ -32,53 +32,53 @@
   text-align: center;
 }
 
-.bonus-slip-header img {
+.money-slip-header img {
   max-width: 100%;
   height: auto;
   border-radius: 50%;
 }
 
-.bonus-slip-header p,
-.bonus-slip-header h1 {
+.money-slip-header p,
+.money-slip-header h1 {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
 }
 
-.bonus-slip-date,
-.bonus-slip-amount {
+.money-slip-date,
+.money-slip-amount {
   margin: 0;
   padding: 0.6rem 1rem;
   background: #dce8d3;
 }
 
-.bonus-slip-date {
+.money-slip-date {
   text-align: center;
 }
 
-.bonus-slip-details {
+.money-slip-details {
   margin: 0;
   padding: 1.25rem 1rem;
 }
 
-.bonus-slip-details > div {
+.money-slip-details > div {
   display: grid;
   grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
   gap: 0.75rem;
   padding: 0.15rem 0;
 }
 
-.bonus-slip-details dt,
-.bonus-slip-amount,
-.bonus-slip-paid {
+.money-slip-details dt,
+.money-slip-amount,
+.money-slip-paid {
   font-weight: 700;
 }
 
-.bonus-slip-details dd {
+.money-slip-details dd {
   margin: 0;
 }
 
-.bonus-slip-amount {
+.money-slip-amount {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -86,33 +86,33 @@
   font-size: 1rem;
 }
 
-.bonus-slip-paid {
+.money-slip-paid {
   color: #176335;
 }
 
-.bonus-slip-notes {
+.money-slip-notes {
   min-height: 66px;
   padding: 0.65rem 1rem;
   background: #f1f2f1;
 }
 
-.bonus-slip-notes h2,
-.bonus-slip-notes p,
-.bonus-slip-signatures p {
+.money-slip-notes h2,
+.money-slip-notes p,
+.money-slip-signatures p {
   margin: 0;
 }
 
-.bonus-slip-notes h2 {
+.money-slip-notes h2 {
   color: #a73330;
   font-size: 0.8rem;
   font-weight: 700;
 }
 
-.bonus-slip-notes p {
+.money-slip-notes p {
   white-space: pre-wrap;
 }
 
-.bonus-slip-signatures {
+.money-slip-signatures {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
@@ -121,26 +121,31 @@
   break-inside: avoid;
 }
 
-.bonus-slip-signatures strong {
+.money-slip-signatures strong {
   display: block;
   margin-top: 3.5rem;
 }
 
-@page bonus-slip {
+@page money-slip {
   size: A4;
   margin: 12mm;
 }
 
 @media print {
-  .bonus-slip {
-    page: bonus-slip;
+  .money-slip {
+    page: money-slip;
     margin: 0 auto;
     padding: 0;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
 
-  .bonus-slip-toolbar {
+  .money-slip-toolbar {
     display: none;
   }
+}
+
+.money-slip-highlight {
+  background: #dce8d3;
+  font-weight: 700;
 }

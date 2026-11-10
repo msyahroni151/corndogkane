@@ -300,9 +300,10 @@ export async function MoneyPage({
                               decisionEmployeeName={e.employeeName}
                             />
                           </FormDialog>
-                        ) : e.kind === "BONUS_WITHDRAWAL" && e.status === "APPROVED" ? (
+                        ) : e.status === "APPROVED" &&
+                          (e.kind === "LOAN" || e.kind === "BONUS_WITHDRAWAL") ? (
                           <Link
-                            href={`/bonus/slip/${encodeURIComponent(e.id)}`}
+                            href={`/${mode}/slip/${encodeURIComponent(e.id)}`}
                             prefetch={false}
                             className="button-secondary whitespace-nowrap"
                           >

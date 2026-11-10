@@ -624,11 +624,7 @@
     },
     {
       "path": "src/app/bonus/slip/[id]/page.tsx",
-      "sha256": "a876f9b7687661b60433efd7ae99a52415bef44e021e6b4770e9301482bf9a34"
-    },
-    {
-      "path": "src/app/bonus/slip/[id]/slip.css",
-      "sha256": "b96b8d2c8462e63fa4b1734083bdf6287be3b95ef4fd34b8e4e10d43c8205ee9"
+      "sha256": "4bf06f6cee1f6b45ba056fd536e506878b635b917f622bbb70c9ef3adb0e86ba"
     },
     {
       "path": "src/app/employee-actions.ts",
@@ -665,6 +661,10 @@
     {
       "path": "src/app/journal-actions.ts",
       "sha256": "78e8bf0fa67925374597489306323c73ef35bd30b9a7d9c0f741b062bb1ffcb6"
+    },
+    {
+      "path": "src/app/kasbon/slip/[id]/page.tsx",
+      "sha256": "afe2836d326d2368ca650c2af0387b489fed375ce0462b3227e79b2b6cba63e1"
     },
     {
       "path": "src/app/layout.tsx",
@@ -789,10 +789,6 @@
     {
       "path": "src/components/bonus-page.tsx",
       "sha256": "2eb5e59ba178dc81b4222c93679cf7a0e02efe7718bd9baa87c8a6697a3218c5"
-    },
-    {
-      "path": "src/components/bonus-slip-print.tsx",
-      "sha256": "b6358329f12fdc132280b7b7c33089b761032431ba8278fafec0479dc45ce2ec"
     },
     {
       "path": "src/components/bonus-view.css",
@@ -940,7 +936,19 @@
     },
     {
       "path": "src/components/money-page.tsx",
-      "sha256": "1fc48c3fbd9f4accd6596fa33a1009b039c52d0b7a4f2dcd3d28ca4dd16bb466"
+      "sha256": "9588a2d6cb83e1c0572d256ebbd2a33bc12870837c3fe99fdded344fd844a119"
+    },
+    {
+      "path": "src/components/money-slip-print.tsx",
+      "sha256": "ddfbea8bb753137f7bc8a0991c33798df8bacb57ce829336dd97042130b359ab"
+    },
+    {
+      "path": "src/components/money-slip.css",
+      "sha256": "a3bf139eefa2d26de7c7026f01b58d4830e5cd5ed699680a9da8ae3bd77f781b"
+    },
+    {
+      "path": "src/components/money-slip.tsx",
+      "sha256": "97d57721a701bcb244de735d34f2d5be667fa7184e9b3f463e43bcc5706c2fa6"
     },
     {
       "path": "src/components/navigation-link.tsx",
