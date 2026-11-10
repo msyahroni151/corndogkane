@@ -940,7 +940,7 @@
     },
     {
       "path": "src/components/money-page.tsx",
-      "sha256": "2fa00a7d1bac03ce885f9425fc343137a60ef7554efd766da3311afc0e47fd38"
+      "sha256": "d17371c7070010bcaf4ad5371638c19eb328643fe6cd6f977a5b4ec2edaa5cb8"
     },
     {
       "path": "src/components/navigation-link.tsx",

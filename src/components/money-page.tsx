@@ -11,6 +11,16 @@ import { moneyLabels, moneyStatuses, rupiah } from "@/lib/money";
 import { FormDialog } from "@/components/form-dialog";
 import { MoneyForm } from "@/components/money-form";
 import type { MoneyKind } from "@/generated/prisma/client";
+
+function bonusHistoryNote(entry: { kind: MoneyKind; postingKey: string | null; notes: string }) {
+  if (entry.kind !== "BONUS_EARNED" || !entry.postingKey?.startsWith("OUTLET-BONUS:"))
+    return entry.notes;
+  return entry.notes.replace(
+    /^Bonus omzet otomatis · (.+) · omzet Rp (\S+) · rekap \S+$/,
+    "$1 - OMZET Rp. $2",
+  );
+}
+
 export async function MoneyPage({
   mode,
   searchParams,
@@ -250,7 +260,7 @@ export async function MoneyPage({
                           ? e.kind === "LOAN" && e.status === "APPROVED"
                             ? rupiah(loanLeft(e.id, e.amount))
                             : e.sourceId || "—"
-                          : e.notes}
+                          : bonusHistoryNote(e)}
                       </td>
                       <td className="px-4 py-4" data-sort-value={moneyStatuses[e.status]}>
                         <span
