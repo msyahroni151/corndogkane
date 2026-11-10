@@ -75,14 +75,16 @@ export async function MoneyPage({
       ? [
           {
             title: "Riwayat Pencairan Bonus",
+            showStatus: true,
             rows: rows.filter((e) => e.kind === "BONUS_WITHDRAWAL"),
           },
           {
             title: "Riwayat Pendapatan Bonus",
+            showStatus: false,
             rows: rows.filter((e) => e.kind === "BONUS_EARNED"),
           },
         ]
-      : [{ title: "Riwayat", rows }];
+      : [{ title: "Riwayat", showStatus: true, rows }];
   const today = todayWib(),
     title = mode === "kasbon" ? "Kasbon" : "Bonus";
   const choices = employees
@@ -225,7 +227,7 @@ export async function MoneyPage({
                       "Jenis",
                       "Nominal",
                       mode === "kasbon" ? "ID kasbon / sisa" : "Keterangan",
-                      "Status",
+                      ...(group.showStatus ? ["Status"] : []),
                       "Dicatat / diproses oleh",
                       "Aksi",
                     ].map((t) => (
@@ -262,16 +264,18 @@ export async function MoneyPage({
                             : e.sourceId || "—"
                           : bonusHistoryNote(e)}
                       </td>
-                      <td className="px-4 py-4" data-sort-value={moneyStatuses[e.status]}>
-                        <span
-                          className={`whitespace-nowrap rounded-full px-2 py-1 text-[10px] font-semibold ${e.status === "APPROVED" ? "bg-emerald-50 text-emerald-700" : e.status === "REJECTED" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}
-                        >
-                          {moneyStatuses[e.status]}
-                        </span>
-                        {e.decisionNotes && (
-                          <p className="mt-2 text-[10px] text-slate-400">{e.decisionNotes}</p>
-                        )}
-                      </td>
+                      {group.showStatus && (
+                        <td className="px-4 py-4" data-sort-value={moneyStatuses[e.status]}>
+                          <span
+                            className={`whitespace-nowrap rounded-full px-2 py-1 text-[10px] font-semibold ${e.status === "APPROVED" ? "bg-emerald-50 text-emerald-700" : e.status === "REJECTED" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}
+                          >
+                            {moneyStatuses[e.status]}
+                          </span>
+                          {e.decisionNotes && (
+                            <p className="mt-2 text-[10px] text-slate-400">{e.decisionNotes}</p>
+                          )}
+                        </td>
+                      )}
                       <td className="px-4 py-4 text-[10px] text-slate-500">
                         {e.createdBy.name}
                         {e.decidedBy && (
