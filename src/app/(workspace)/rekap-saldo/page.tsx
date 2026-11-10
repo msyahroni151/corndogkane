@@ -1,11 +1,10 @@
 import { isCurrentLedgerEntry } from "@/lib/bonus-period";
-import SearchForm from "next/form";
+import { BalanceSummary } from "@/components/balance-summary";
 import { settlementLeft } from "@/lib/settlements";
-import { SortableTable } from "@/components/sortable-table";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { attendanceSummary } from "@/lib/attendance";
-import { rupiah } from "@/lib/money";
+import { operationalCash } from "@/lib/outlet-operations";
 
 export default async function BalanceSummaryPage({
   searchParams,
@@ -15,20 +14,10 @@ export default async function BalanceSummaryPage({
   await requireAccess("rekap-saldo");
   const { q } = await searchParams;
   const search = (Array.isArray(q) ? q[0] : q)?.trim().slice(0, 150) ?? "";
-  const term = search.replace(/[\\%_]/g, "\\$&");
   const db = getPrisma();
-  const [employees, ledger, days, paidTotals, settlementRows] = await Promise.all([
+  const [employees, ledger, days, paidTotals, operations] = await Promise.all([
     db.employee.findMany({
-      ...(term
-        ? {
-            where: {
-              OR: [
-                { fullName: { contains: term, mode: "insensitive" as const } },
-                { employeeCode: { contains: term, mode: "insensitive" as const } },
-              ],
-            },
-          }
-        : {}),
+      where: { active: true },
       orderBy: { fullName: "asc" },
       select: { id: true, fullName: true, employeeCode: true },
     }),
@@ -39,8 +28,60 @@ export default async function BalanceSummaryPage({
       where: { status: "PAID" },
       _sum: { lateDeduction: true },
     }),
-    db.settlementReview.findMany({ where: { status: "APPROVED" }, include: { deductions: true } }),
+    db.outletOperation.findMany({
+      where: {
+        cashReceived: { not: null },
+        crew: { active: true },
+      },
+      select: {
+        crewId: true,
+        totalGross: true,
+        qris: true,
+        gofood: true,
+        grabfood: true,
+        shopeefood: true,
+        expenseAmount: true,
+        cashReceived: true,
+        updatedAt: true,
+        settlementReviews: {
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          take: 1,
+          select: {
+            id: true,
+            employeeId: true,
+            date: true,
+            status: true,
+            amount: true,
+            sourceVersion: true,
+            deductions: { select: { amount: true } },
+          },
+        },
+      },
+    }),
   ]);
+  const approvedByEmployee = new Map<string, number>();
+  const pendingByEmployee = new Map<string, number>();
+  for (const operation of operations) {
+    const review = operation.settlementReviews[0];
+    if (review?.status === "APPROVED") {
+      approvedByEmployee.set(
+        review.employeeId,
+        (approvedByEmployee.get(review.employeeId) ?? 0) + settlementLeft(review),
+      );
+      continue;
+    }
+    if (
+      operation.cashReceived == null ||
+      review?.sourceVersion === operation.updatedAt.toISOString()
+    )
+      continue;
+    const shortage = operationalCash(operation) - operation.cashReceived;
+    if (shortage > 0)
+      pendingByEmployee.set(
+        operation.crewId,
+        (pendingByEmployee.get(operation.crewId) ?? 0) + shortage,
+      );
+  }
   const loans = ledger
     .filter((entry) => entry.kind === "LOAN")
     .map((entry) => ({
@@ -52,97 +93,33 @@ export default async function BalanceSummaryPage({
           .filter((payment) => payment.kind === "REPAYMENT" && payment.sourceId === entry.id)
           .reduce((sum, payment) => sum + payment.amount, 0),
     }));
-  return (
-    <section className="panel overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 p-5">
-        <h2 className="font-semibold">Saldo untuk periode berikutnya</h2>
-        <SearchForm
-          action=""
-          prefetch={false}
-          scroll={false}
-          className="flex flex-wrap items-center gap-2"
-        >
-          <div className="field">
-            <input
-              name="q"
-              type="search"
-              defaultValue={search}
-              maxLength={150}
-              aria-label="Cari nama atau kode karyawan"
-              placeholder="Cari nama atau kode..."
-            />
-          </div>
-          <button className="button-secondary">Cari</button>
-        </SearchForm>
-      </div>
-      <div className="overflow-x-auto">
-        <SortableTable className="w-full text-left text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              {[
-                "Karyawan",
-                "Sisa kasbon",
-                "Sisa bonus disetujui",
-                "Denda belum dipotong",
-                "Sisa selisih setoran",
-              ].map((h) => (
-                <th className="p-4" key={h}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map((e) => {
-              const entries = ledger.filter((l) => l.employeeId === e.id),
-                bonus = entries
-                  .filter(isCurrentLedgerEntry)
-                  .reduce(
-                    (s, l) =>
-                      s +
-                      (l.kind === "BONUS_EARNED"
-                        ? l.amount
-                        : l.kind === "BONUS_WITHDRAWAL"
-                          ? -l.amount
-                          : 0),
-                    0,
-                  ),
-                loan = loans.filter((l) => l.employeeId === e.id).reduce((s, l) => s + l.left, 0),
-                fine = Math.max(
-                  0,
-                  days
-                    .filter((d) => d.employeeId === e.id)
-                    .reduce((s, d) => s + attendanceSummary(d, d.attendance).lateFine, 0) -
-                    (paidTotals.find((p) => p.employeeId === e.id)?._sum.lateDeduction || 0),
-                );
-              return (
-                <tr key={e.id} className="border-t border-slate-100">
-                  <td className="p-4 font-medium">{e.employeeCode || e.fullName}</td>
-                  <td className="p-4">{rupiah(loan)}</td>
-                  <td className="p-4">{rupiah(bonus)}</td>
-                  <td className="p-4">{rupiah(fine)}</td>
-                  <td className="p-4">
-                    {rupiah(
-                      settlementRows
-                        .filter((s) => s.employeeId === e.id)
-                        .reduce((sum, s) => sum + settlementLeft(s), 0),
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-            {!employees.length && (
-              <tr>
-                <td colSpan={5} className="p-8 text-center text-slate-500">
-                  {search
-                    ? "Tidak ada karyawan yang cocok dengan pencarian."
-                    : "Belum ada data karyawan untuk rekap saldo."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </SortableTable>
-      </div>
-    </section>
-  );
+  const balances = employees.map((employee) => {
+    const entries = ledger.filter((entry) => entry.employeeId === employee.id);
+    const bonus = entries.filter(isCurrentLedgerEntry).reduce((total, entry) => {
+      if (entry.kind === "BONUS_EARNED") return total + entry.amount;
+      if (entry.kind === "BONUS_WITHDRAWAL") return total - entry.amount;
+      return total;
+    }, 0);
+    const loan = loans
+      .filter((entry) => entry.employeeId === employee.id)
+      .reduce((total, entry) => total + entry.left, 0);
+    const fine = Math.max(
+      0,
+      days
+        .filter((day) => day.employeeId === employee.id)
+        .reduce((total, day) => total + attendanceSummary(day, day.attendance).lateFine, 0) -
+        (paidTotals.find((paid) => paid.employeeId === employee.id)?._sum.lateDeduction || 0),
+    );
+    return {
+      id: employee.id,
+      fullName: employee.fullName,
+      employeeCode: employee.employeeCode,
+      loan,
+      bonus,
+      fine,
+      settlement: approvedByEmployee.get(employee.id) ?? 0,
+      settlementPending: pendingByEmployee.get(employee.id) ?? 0,
+    };
+  });
+  return <BalanceSummary key={search} rows={balances} initialSearch={search} />;
 }

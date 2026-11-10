@@ -532,7 +532,7 @@
     },
     {
       "path": "src/app/(workspace)/rekap-saldo/page.tsx",
-      "sha256": "207e34b325b4bb1f2c0420470fc373e82611b6b8ba0aced4bbe533712f28150a"
+      "sha256": "941dbc9dbdd29a2ea8656abec456ec29f5ec89526007b6efeb647cfd5476bc56"
     },
     {
       "path": "src/app/(workspace)/retur-pembeli/page.tsx",
@@ -785,6 +785,10 @@
     {
       "path": "src/components/auth-screen.tsx",
       "sha256": "c5cc5c925d6d9c0eb02349411f48411deaa9d195d9f55594b0ebbea358acdcd2"
+    },
+    {
+      "path": "src/components/balance-summary.tsx",
+      "sha256": "e0d089fa2728b34820f53706e47615f94932150b0eb70ff23329cba113d0b0f7"
     },
     {
       "path": "src/components/bonus-page.tsx",
