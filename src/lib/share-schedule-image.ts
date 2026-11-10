@@ -292,7 +292,7 @@ export function scheduleSvg(
 }
 type ScheduleImage = Pick<ReturnType<typeof scheduleSvg>, "svg" | "width" | "height">;
 
-export async function schedulePng(image: ScheduleImage) {
+async function rasterizeSchedule(image: ScheduleImage, type: "image/png" | "image/jpeg") {
   const scale = Math.min(
     2,
     Math.sqrt(40000000 / (image.width * image.height)),
@@ -317,13 +317,23 @@ export async function schedulePng(image: ScheduleImage) {
     ctx.drawImage(img, 0, 0);
     return await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(Error("Gambar belum dapat dibuat."))),
-        "image/png",
+        (blob) =>
+          blob?.type === type ? resolve(blob) : reject(Error("Gambar belum dapat dibuat.")),
+        type,
+        type === "image/jpeg" ? 0.94 : undefined,
       ),
     );
   } finally {
     URL.revokeObjectURL(source);
   }
+}
+
+export function schedulePng(image: ScheduleImage) {
+  return rasterizeSchedule(image, "image/png");
+}
+
+export function scheduleJpg(image: ScheduleImage) {
+  return rasterizeSchedule(image, "image/jpeg");
 }
 
 export async function schedulePdf(image: ScheduleImage) {

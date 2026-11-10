@@ -1,10 +1,21 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FormDialog } from "@/components/form-dialog";
 import { LocalInput } from "@/components/local-input";
 import type { OutletRecapRow } from "@/lib/outlet-recap";
 import { outletRecapSvg, type RecapOutlet } from "@/lib/outlet-recap-image";
-import { schedulePng } from "@/lib/share-schedule-image";
+import { scheduleJpg, schedulePng } from "@/lib/share-schedule-image";
+
+function saveImage(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 export function ShareOutletRecap(props: {
   from: string;
   to: string;
@@ -36,7 +47,12 @@ function RecapPreview({
   );
   const [busy, setBusy] = useState(true),
     [exporting, setExporting] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [notice, setNotice] = useState("");
+  const [jpg, setJpg] = useState<{
+    image: ReturnType<typeof outletRecapSvg>;
+    file: File | null;
+  } | null>(null);
   const controller = useRef<AbortController | null>(null);
   async function load(a: string, b: string) {
     controller.current?.abort();
@@ -44,6 +60,7 @@ function RecapPreview({
     controller.current = request;
     setBusy(true);
     setError("");
+    setNotice("");
     try {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(a) || !/^\d{4}-\d{2}-\d{2}$/.test(b) || b < a)
         throw Error("Pilih periode tanggal yang valid.");
@@ -70,37 +87,73 @@ function RecapPreview({
   const areas = [
     ...new Map([...outlets, ...(data?.rows || [])].map((o) => [o.areaId, o.areaName])).entries(),
   ].sort((a, b) => a[1].localeCompare(b[1], "id-ID"));
-  const rows = (data?.rows || []).filter((r) => !area || r.areaId === area);
+  const rows = useMemo(
+    () => (data?.rows || []).filter((r) => !area || r.areaId === area),
+    [data, area],
+  );
   const scope = areas.find(([id]) => id === area)?.[1] || "SEMUA AREA";
-  const image = data
-    ? outletRecapSvg(
-        rows,
-        outlets.filter((o) => !area || o.areaId === area),
-        data.start,
-        data.end,
-        scope,
-      )
-    : null;
+  const image = useMemo(
+    () =>
+      data
+        ? outletRecapSvg(
+            rows,
+            outlets.filter((o) => !area || o.areaId === area),
+            data.start,
+            data.end,
+            scope,
+          )
+        : null,
+    [data, rows, area, outlets, scope],
+  );
   const stale = busy || data?.start !== start || data?.end !== end;
+  const imageName = `Rekap-Outlet-${start}-${end}${area ? "-area" : "-semua-area"}`;
+  // Prepare the file before the click so navigator.share keeps the user's activation.
+  useEffect(() => {
+    if (!image || !rows.length || stale) return;
+    let current = true;
+    void scheduleJpg(image).then(
+      (blob) => {
+        if (current) setJpg({ image, file: new File([blob], `${imageName}.jpg`, { type: blob.type }) });
+      },
+      () => {
+        if (current) setJpg({ image, file: null });
+      },
+    );
+    return () => {
+      current = false;
+    };
+  }, [image, rows.length, stale, imageName]);
   async function download() {
     if (!image || stale) return;
     setExporting(true);
     setError("");
     try {
-      const blob = await schedulePng(image),
-        url = URL.createObjectURL(blob),
-        link = document.createElement("a");
-      link.href = url;
-      link.download = `Rekap-Outlet-${start}-${end}${area ? "-area" : "-semua-area"}.png`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      saveImage(await schedulePng(image), `${imageName}.png`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gambar belum dapat diunduh.");
     } finally {
       setExporting(false);
     }
+  }
+  async function shareWhatsApp() {
+    if (stale || !jpg || jpg.image !== image) return;
+    setError("");
+    setNotice("");
+    if (!jpg.file) {
+      setError("JPG belum dapat dibuat. Coba pilih satu area atau periode lebih pendek.");
+      return;
+    }
+    const shareData = { files: [jpg.file], title: "Rekap Penjualan Outlet" };
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+      }
+    }
+    saveImage(jpg.file, jpg.file.name);
+    setNotice("JPG telah diunduh. Lampirkan file tersebut di WhatsApp.");
   }
   return (
     <div className="p-5 sm:p-6">
@@ -159,19 +212,34 @@ function RecapPreview({
           {error}
         </p>
       )}
+      {notice && (
+        <p role="status" className="mt-4 text-sm text-slate-600">
+          {notice}
+        </p>
+      )}
       <div className="my-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-slate-500">
           {rows.length} rekap operasional tersimpan
           {stale ? " · Terapkan periode untuk memperbarui pratinjau" : ""}
         </p>
-        <button
-          type="button"
-          className="button-primary"
-          disabled={!image || !rows.length || stale || exporting}
-          onClick={download}
-        >
-          {exporting ? "Menyiapkan gambar…" : "Unduh PNG"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="button-primary"
+            disabled={!image || !rows.length || stale || exporting}
+            onClick={download}
+          >
+            {exporting ? "Menyiapkan gambar…" : "Unduh PNG"}
+          </button>
+          <button
+            type="button"
+            className="button-primary"
+            disabled={!image || !rows.length || stale || jpg?.image !== image}
+            onClick={shareWhatsApp}
+          >
+            Share WhatsApp
+          </button>
+        </div>
       </div>
       <div
         className="overflow-x-auto rounded-lg border border-slate-200 bg-white"

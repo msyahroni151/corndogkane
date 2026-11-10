@@ -12,9 +12,12 @@ export function summarizeRecap(rows: OutletRecapRow[], outlets: RecapOutlet[]) {
         entries.reduce((n, r) => n + (r[key] ?? 0), 0);
       const cash = entries.reduce((n, r) => n + operationalCash(r), 0);
       const realKnown = entries.length > 0 && entries.every((r) => r.cashReceived != null);
+      const openEntries = entries.filter((r) => r.operationalStatus !== "TUTUP");
+      const closed = entries.length > 0 && openEntries.length === 0;
       return {
         ...outlet,
         known: entries.length > 0,
+        closed,
         gross: sum("totalGross"),
         expense: sum("expenseAmount"),
         qris: sum("qris"),
@@ -24,7 +27,9 @@ export function summarizeRecap(rows: OutletRecapRow[], outlets: RecapOutlet[]) {
           entries.length && entries.every((r) => r.bonusAmount != null) ? sum("bonusAmount") : null,
         real: realKnown ? sum("cashReceived") : null,
         difference: realKnown ? sum("cashReceived") - cash : null,
-        crew: [...new Set(entries.map((r) => r.crewCode || r.crewName))].join(", "),
+        crew: closed
+          ? "TUTUP"
+          : [...new Set(openEntries.map((r) => r.crewCode || r.crewName))].join(", "),
         training: [...new Set(entries.map((r) => r.trainingCrewName).filter(Boolean))].join(", "),
       };
     });
@@ -34,8 +39,8 @@ const esc = (s: string) =>
     /[&<>"']/g,
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c]!,
   );
-const money = (n: number | null) =>
-  n == null ? "—" : (n < 0 ? "- Rp " : "Rp ") + Math.abs(n).toLocaleString("id-ID");
+const differenceFill = (value: number | null) =>
+  value == null || value === 0 ? undefined : value < 0 ? "#fff2a8" : "#dbeafe";
 export function outletRecapSvg(
   rows: OutletRecapRow[],
   outlets: RecapOutlet[],
@@ -69,23 +74,31 @@ export function outletRecapSvg(
     return result.length ? result : ["—"];
   };
   function cell(
-    text: string,
+    text: string | number | null,
     x: number,
     y: number,
     w: number,
     h: number,
     fill = "#fff",
     bold = false,
-    align = "left",
-    color = "#111",
+    signed = false,
   ) {
     parts.push(
       `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="#333" stroke-width="0.7"/>`,
     );
-    const wrapped = lines(text, w);
+    if (typeof text === "number") {
+      const baseline = y + (h - 17) / 2 + 13;
+      const sign = text < 0 ? "-" : signed && text > 0 ? "+" : "";
+      parts.push(
+        `<text x="${x + 7}" y="${baseline}" font-size="13" font-weight="${bold ? 700 : 400}" fill="#111">Rp.</text>`,
+        `<text x="${x + w - 7}" y="${baseline}" font-size="13" font-weight="${bold ? 700 : 400}" text-anchor="end" fill="#111">${sign}${Math.abs(text).toLocaleString("id-ID")}</text>`,
+      );
+      return;
+    }
+    const wrapped = lines(text ?? "", w);
     wrapped.forEach((line, i) =>
       parts.push(
-        `<text x="${align === "right" ? x + w - 7 : align === "middle" ? x + w / 2 : x + 7}" y="${y + (h - wrapped.length * 17) / 2 + 13 + i * 17}" font-size="13" font-weight="${bold ? 700 : 400}" text-anchor="${align === "right" ? "end" : align === "middle" ? "middle" : "start"}" fill="${color}">${esc(line)}</text>`,
+        `<text x="${x + w / 2}" y="${y + (h - wrapped.length * 17) / 2 + 13 + i * 17}" font-size="13" font-weight="${bold ? 700 : 400}" text-anchor="middle" fill="#111">${esc(line)}</text>`,
       ),
     );
   }
@@ -105,9 +118,8 @@ export function outletRecapSvg(
     38,
     "#fff",
     true,
-    "middle",
   );
-  cell(`REKAP PENJUALAN OUTLET · ${scope}`, 16, 54, W - 32, 28, "#eaf0eb", true, "middle");
+  cell(`REKAP PENJUALAN OUTLET · ${scope}`, 16, 54, W - 32, 28, "#eaf0eb", true);
   let x = 16;
   const heads = [
     "NO",
@@ -124,7 +136,7 @@ export function outletRecapSvg(
     "TRAINING",
   ];
   heads.forEach((t, i) => {
-    cell(t, x, 82, widths[i], 30, i >= 10 ? "#a9d37b" : "#fff", true, "middle");
+    cell(t, x, 82, widths[i], 30, i >= 10 ? "#a9d37b" : "#fff", true);
     x += widths[i];
   });
   let y = 112;
@@ -132,43 +144,32 @@ export function outletRecapSvg(
     const values = [
       String(idx + 1),
       r.name,
-      money(r.known ? r.gross : null),
-      money(r.bonus),
-      money(r.known ? r.expense : null),
-      money(r.known ? r.online : null),
-      money(r.known ? r.qris : null),
-      money(r.known ? r.cash : null),
-      money(r.real),
-      money(r.difference),
+      r.known ? r.gross : null,
+      r.bonus,
+      r.known ? r.expense : null,
+      r.known ? r.online : null,
+      r.known ? r.qris : null,
+      r.known ? r.cash : null,
+      r.real,
+      r.difference,
       r.crew,
       r.training,
     ];
-    const h = Math.max(30, ...values.map((v, i) => lines(v, widths[i]).length * 17 + 12));
+    const h = Math.max(
+      30,
+      ...values.map((v, i) => typeof v === "string" ? lines(v, widths[i]).length * 17 + 12 : 0),
+    );
     x = 16;
     values.forEach((v, i) => {
       const fill =
-        i >= 10
-          ? "#e3efd5"
-          : i === 9 && r.difference != null && r.difference !== 0
-            ? "#fff2a8"
-            : i === 4 && r.known
-              ? r.expense
-                ? "#f2d2ca"
-                : "#c6e3d0"
-              : i === 2 && r.known
-                ? "#d5e9dc"
-                : "#fff";
-      cell(
-        v,
-        x,
-        y,
-        widths[i],
-        h,
-        fill,
-        i >= 10,
-        i === 0 ? "middle" : i >= 2 && i <= 9 ? "right" : "left",
-        i === 9 && r.difference != null && r.difference < 0 ? "#a12626" : "#111",
-      );
+        i === 10 && r.closed
+          ? "#fecaca"
+          : i >= 10
+            ? "#e3efd5"
+            : i === 9
+              ? differenceFill(r.difference)
+              : undefined;
+      cell(v, x, y, widths[i], h, fill, i >= 10, i === 9);
       x += widths[i];
     });
     y += h;
@@ -180,23 +181,25 @@ export function outletRecapSvg(
     known.length && known.every((r) => r[key] != null)
       ? known.reduce((n, r) => n + (r[key] ?? 0), 0)
       : null;
+  const totalDifference = full("difference");
   const totals = [
     "",
     "TOTAL",
-    money(known.length ? sum("gross") : null),
-    money(full("bonus")),
-    money(known.length ? sum("expense") : null),
-    money(known.length ? sum("online") : null),
-    money(known.length ? sum("qris") : null),
-    money(known.length ? sum("cash") : null),
-    money(full("real")),
-    money(full("difference")),
+    known.length ? sum("gross") : null,
+    full("bonus"),
+    known.length ? sum("expense") : null,
+    known.length ? sum("online") : null,
+    known.length ? sum("qris") : null,
+    known.length ? sum("cash") : null,
+    full("real"),
+    totalDifference,
     "",
     "",
   ];
   x = 16;
   totals.forEach((v, i) => {
-    cell(v, x, y, widths[i], 34, "#eef4ec", true, i >= 2 && i <= 9 ? "right" : "left");
+    const fill = i === 9 ? differenceFill(totalDifference) : undefined;
+    cell(v, x, y, widths[i], 34, fill ?? (i >= 2 && i <= 9 ? "#fff" : "#eef4ec"), true, i === 9);
     x += widths[i];
   });
   y += 34;
