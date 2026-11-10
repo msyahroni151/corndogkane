@@ -1,7 +1,6 @@
 import { bonusStartDate } from "@/lib/bonus-period";
 import SearchForm from "next/form";
 import Link from "next/link";
-import { OutletBonusSummary } from "@/components/outlet-bonus-summary";
 import { SortableTable } from "@/components/sortable-table";
 import { APP_TIME_ZONE } from "@/lib/local-date";
 import { requireAccess } from "@/lib/auth";
@@ -322,14 +321,6 @@ export async function MoneyPage({
             <p className="p-10 text-center text-sm text-slate-500">
               Belum ada catatan pada filter ini.
             </p>
-          )}
-          {mode === "bonus" && index === 1 && (
-            <details className="border-t border-slate-100 p-5">
-              <summary className="cursor-pointer text-sm font-semibold text-emerald-700">
-                Rincian Bonus Operasional
-              </summary>
-              <OutletBonusSummary employee={query.employee} />
-            </details>
           )}
         </section>
       ))}

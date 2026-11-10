@@ -788,7 +788,7 @@
     },
     {
       "path": "src/components/bonus-page.tsx",
-      "sha256": "41f41b94487bc326d75d497a558914e9daf3fda8dae38689bb03ef1a066e4ad9"
+      "sha256": "b9a96649a2ed50ffcab18b612d56f316939caf52a02f76282c649ff4e407ad48"
     },
     {
       "path": "src/components/bonus-slip-print.tsx",
@@ -940,7 +940,7 @@
     },
     {
       "path": "src/components/money-page.tsx",
-      "sha256": "c118c00494f69f35bd745f1256feaaaf477f384d4d7e4e555207afb0bd0425ac"
+      "sha256": "1fc48c3fbd9f4accd6596fa33a1009b039c52d0b7a4f2dcd3d28ca4dd16bb466"
     },
     {
       "path": "src/components/navigation-link.tsx",
@@ -961,10 +961,6 @@
     {
       "path": "src/components/operational-expenses.css",
       "sha256": "8f8abcc1c58c386d71c9abc1a14db36739d367796c1f6249f98480ac59024087"
-    },
-    {
-      "path": "src/components/outlet-bonus-summary.tsx",
-      "sha256": "056a1d6db2a378d3e263703548e4da7e4480d7ea1b772b227976d2ba2432a329"
     },
     {
       "path": "src/components/outlet-cash-flow.tsx",

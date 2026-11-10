@@ -73,7 +73,7 @@ export async function BonusPage({ searchParams }: { searchParams: Promise<BonusQ
         <div className="panel flex flex-wrap items-center justify-between gap-4 p-5">
           <p className="max-w-2xl text-xs leading-5 text-amber-700">
             {unsynced} rekap lama belum masuk saldo bonus. Sinkronkan agar bonus yang memenuhi
-            syarat masuk ke saldo crew. Rinciannya tersedia di Riwayat.
+            syarat masuk ke saldo crew.
           </p>
           <SyncOutletBonuses />
         </div>
