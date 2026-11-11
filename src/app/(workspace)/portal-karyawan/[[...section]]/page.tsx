@@ -402,17 +402,7 @@ export default async function Page({
         startDate: true,
         endDate: true,
         paidAt: true,
-        basePay: true,
-        backupPay: true,
-        standbyPay: true,
-        warehouseBonus: true,
-        bonusPaid: true,
-        lateDeduction: true,
-        loanDeduction: true,
-        otherDeduction: true,
-        settlementDeduction: true,
         netPay: true,
-        notes: true,
       },
       orderBy: { endDate: "desc" },
       take: 24,
@@ -702,31 +692,14 @@ export default async function Page({
               displayDate(p.startDate) + " - " + displayDate(p.endDate),
               <strong key="net">{rupiah(p.netPay)}</strong>,
               p.paidAt ? displayDate(new Date(todayWib(p.paidAt) + "T00:00:00Z")) : "-",
-              <details key="detail" className="min-w-64">
-                <summary className="cursor-pointer font-semibold text-emerald-700">
-                  Lihat Slip Gaji
-                </summary>
-                <dl className="mt-3 space-y-2 text-xs">
-                  {[
-                    ["Gaji pokok", p.basePay],
-                    ["Tambahan backup", p.backupPay],
-                    ["Standby", p.standbyPay],
-                    ["Bonus gudang", p.warehouseBonus],
-                    ["Bonus dibayar", p.bonusPaid],
-                    ["Potongan terlambat", p.lateDeduction],
-                    ["Potongan kasbon", p.loanDeduction],
-                    ["Potongan selisih", p.settlementDeduction],
-                    ["Potongan lainnya", p.otherDeduction],
-                    ["Gaji bersih", p.netPay],
-                  ].map(([label, value]) => (
-                    <div key={label} className="flex justify-between gap-4">
-                      <dt>{label}</dt>
-                      <dd>{rupiah(Number(value))}</dd>
-                    </div>
-                  ))}
-                </dl>
-                {p.notes && <p className="mt-3 text-xs">{p.notes}</p>}
-              </details>,
+              <Link
+                key="slip"
+                href={`/payroll/slip/${encodeURIComponent(p.id)}?from=portal`}
+                prefetch={false}
+                className="button-secondary whitespace-nowrap"
+              >
+                Lihat Slip Gaji
+              </Link>,
             ])}
           />
         </>

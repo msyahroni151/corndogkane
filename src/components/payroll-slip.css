@@ -1,0 +1,102 @@
+.payroll-slip {
+  width: min(100%, 780px);
+}
+
+.payroll-slip-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.payroll-slip-details,
+.payroll-slip-amounts dl {
+  margin: 0;
+}
+
+.payroll-slip-details > div {
+  display: grid;
+  grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+}
+
+.payroll-slip-details dt,
+.payroll-slip-details dd {
+  margin: 0;
+  padding: 0.2rem 0.5rem;
+}
+
+.payroll-slip-details dt {
+  background: #e8f0eb;
+  font-weight: 700;
+}
+
+.payroll-slip-amounts {
+  --slip-section: #395747;
+  --slip-section-bg: #dce8d3;
+  --slip-section-line: #78917d;
+  margin-top: 0.5rem;
+  background: var(--slip-section-bg);
+  break-inside: avoid;
+}
+
+.payroll-slip-deductions {
+  --slip-section: #7b3b37;
+  --slip-section-bg: #f1d3d2;
+  --slip-section-line: #b78380;
+}
+
+.payroll-slip-amounts h2 {
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  background: var(--slip-section);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.payroll-slip-amounts dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(7rem, 28%);
+  gap: 0.5rem;
+  padding: 0.2rem 0.75rem;
+}
+
+.payroll-slip-amounts dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.payroll-slip-amounts dl > div:last-child {
+  border-top: 1px solid var(--slip-section-line);
+  font-weight: 700;
+}
+
+.payroll-slip-net {
+  margin-top: 0.5rem;
+  background: #edb886;
+  break-inside: avoid;
+}
+
+.payroll-slip-draft,
+.payroll-slip-notes {
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+}
+
+.payroll-slip-draft {
+  background: #fff2ce;
+  color: #8a4b17;
+  text-align: center;
+  font-weight: 700;
+}
+
+.payroll-slip-notes {
+  white-space: pre-wrap;
+}
+
+@media screen and (max-width: 560px) {
+  .payroll-slip-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -504,7 +504,7 @@
     },
     {
       "path": "src/app/(workspace)/payroll/page.tsx",
-      "sha256": "db7bda9e38c365554e68ab0b9d30d466ab753c981eaa388902733a4e01be63bf"
+      "sha256": "f5b520dcf564b83ce55f448031418795edbab6846b02f1fba0d58d93ddec1e61"
     },
     {
       "path": "src/app/(workspace)/pelanggan/page.tsx",
@@ -516,7 +516,7 @@
     },
     {
       "path": "src/app/(workspace)/portal-karyawan/[[...section]]/page.tsx",
-      "sha256": "729a1b63fdd17085344f0d06c506c4b58a0ab7562c82059efd872a5c2b9a9c29"
+      "sha256": "4036a399fcf5a16cbd0fc9973c1bc90f2074787595cd5a30dc41238cda1eb91b"
     },
     {
       "path": "src/app/(workspace)/pos/draft/page.tsx",
@@ -709,6 +709,10 @@
     {
       "path": "src/app/payroll-actions.ts",
       "sha256": "f1e868670656292a8f66e0fa7ea8ea9af59f5a8f7a40529af53be2cc367b49f8"
+    },
+    {
+      "path": "src/app/payroll/slip/[id]/page.tsx",
+      "sha256": "fdb37e43756951b76795f96e37ce260cdac2c859343d401381353318ae40cd22"
     },
     {
       "path": "src/app/placement-actions.ts",
@@ -1065,6 +1069,14 @@
     {
       "path": "src/components/payroll-form.tsx",
       "sha256": "9253b0fe7efc3cd6271851ec485d2c99ef4124a802acec30c9d433a8670747c8"
+    },
+    {
+      "path": "src/components/payroll-slip.css",
+      "sha256": "c2426e061a77ab9076d684fb6c98c7cc81dbf36a2b6a6f6cc799e730feadb91d"
+    },
+    {
+      "path": "src/components/payroll-slip.tsx",
+      "sha256": "eb2d801d88e96d078d7354066f716d03a100a7961dac0a3d70d767e6d3d5c390"
     },
     {
       "path": "src/components/pinned-table-controls.css",

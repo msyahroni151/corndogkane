@@ -1,4 +1,5 @@
 import { settlementLeft } from "@/lib/settlements";
+import Link from "next/link";
 import { SortableTable } from "@/components/sortable-table";
 import { APP_TIME_ZONE, dateToDisplay } from "@/lib/local-date";
 import { displayDate } from "@/lib/placements";
@@ -158,13 +159,24 @@ export default async function PayrollPage() {
                     )}
                   </td>
                   <td className="p-4">
-                    {p.status === "DRAFT" ? (
-                      <FormDialog title="Keputusan payroll" trigger="Proses draft">
-                        <PayrollForm id={p.id} today={today} />
-                      </FormDialog>
-                    ) : (
-                      "—"
-                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {p.status === "DRAFT" && (
+                        <FormDialog title="Keputusan payroll" trigger="Proses draft">
+                          <PayrollForm id={p.id} today={today} />
+                        </FormDialog>
+                      )}
+                      {p.status === "CANCELLED" ? (
+                        "—"
+                      ) : (
+                        <Link
+                          href={`/payroll/slip/${encodeURIComponent(p.id)}`}
+                          prefetch={false}
+                          className="button-secondary whitespace-nowrap"
+                        >
+                          Lihat Slip Gaji
+                        </Link>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
