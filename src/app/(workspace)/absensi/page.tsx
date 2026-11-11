@@ -10,7 +10,7 @@ import { timeLabel, isWarehouse } from "@/lib/schedules";
 import { attendanceLabels, attendanceSummary } from "@/lib/attendance";
 import { attendanceColumns } from "@/lib/attendance-columns";
 import { FormDialog } from "@/components/form-dialog";
-import { ScheduleOutletForm } from "@/components/schedule-outlet-form";
+import { ScheduleForm } from "@/components/schedule-form";
 import { AttendanceForm } from "@/components/attendance-form";
 import { AttendanceExport } from "@/components/attendance-export";
 import { UiIcon, type IconName } from "@/components/ui-icon";
@@ -369,30 +369,6 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                           >
                             {value}
                           </span>
-                        ) : i === 4 ? (
-                          <div className="flex flex-col items-start gap-2">
-                            <span>{value}</span>
-                            {!isWarehouse(row.role) && isWorkingSchedule(row.status) && (
-                              <FormDialog
-                                title="Ubah outlet bertugas"
-                                trigger="Ubah outlet"
-                                compact
-                              >
-                                <ScheduleOutletForm
-                                  scope="attendance"
-                                  outlets={outlets}
-                                  record={{
-                                    scheduleId: row.id,
-                                    scheduleVersion: row.updatedAt.toISOString(),
-                                    name: row.employeeName,
-                                    date: displayDate(row.date),
-                                    outletId: row.outletId || "",
-                                    outletName: row.outletName || "",
-                                  }}
-                                />
-                              </FormDialog>
-                            )}
-                          </div>
                         ) : i === 12 ? (
                           <div className="flex flex-col items-start gap-1.5">
                             <span
@@ -423,17 +399,42 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                       </td>
                     ))}
                     <td className="attendance-actions px-4 py-4">
-                      {isWorkingSchedule(row.status) ? (
+                      {row.status === "LIBUR" ? (
+                        <FormDialog title={`Jadwal · ${displayDate(row.date)}`} trigger="Edit">
+                          <ScheduleForm
+                            fromAttendance
+                            outlets={outlets}
+                            successRoute={"/absensi?" + filter.toString()}
+                            edit={{
+                              id: row.id,
+                              version: row.updatedAt.toISOString(),
+                              hasAttendance: !!a,
+                              name: row.employeeName,
+                              date: displayDate(row.date),
+                              role: row.role,
+                              status: row.status,
+                              shift: row.shift || "",
+                              outletId: row.outletId || "",
+                              outletName: row.outletName || "",
+                              startTime: timeLabel(row.startMinutes),
+                              endTime: timeLabel(row.endMinutes),
+                              notes: row.notes || "",
+                            }}
+                          />
+                        </FormDialog>
+                      ) : isWorkingSchedule(row.status) ? (
                         <AttendanceDateGate
                           date={row.date.toISOString().slice(0, 10)}
                           today={today}
+                          allowFuture={!isWarehouse(row.role)}
                         >
                           <FormDialog
                             title={`Absensi · ${displayDate(row.date)}`}
-                            trigger={a ? "Edit" : "Isi absensi"}
+                            trigger="Edit"
                           >
                             <AttendanceForm
                               warehouse={isWarehouse(row.role)}
+                              future={!isWarehouse(row.role) && row.date.toISOString().slice(0, 10) > today}
                               outlets={outlets}
                               successRoute={"/absensi?" + filter.toString()}
                               record={{

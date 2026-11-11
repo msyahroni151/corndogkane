@@ -12,6 +12,7 @@ export function AttendanceForm({
   warehouse,
   outlets,
   successRoute,
+  future = false,
 }: {
   record: {
     scheduleId: string;
@@ -32,8 +33,10 @@ export function AttendanceForm({
   warehouse: boolean;
   outlets: ScheduleOutletChoice[];
   successRoute: string;
+  future?: boolean;
 }) {
-  const [draft, setDraft] = useState(record);
+  const [draft, setDraft] = useState({ ...record, status: future ? "OUTLET_ONLY" : record.status });
+  const outletOnly = draft.status === "OUTLET_ONLY";
   const router = useRouter(),
     close = useCloseFormDialog();
   const [state, action, pending] = useActionState<FormState, FormData>(async (previous, form) => {
@@ -71,7 +74,7 @@ export function AttendanceForm({
               currentId={record.outletId}
               currentName={record.outletName}
               value={draft.outletId}
-              required={draft.status === "HADIR"}
+              required={outletOnly || draft.status === "HADIR"}
               disabled={pending}
               onChange={(outletId) => setDraft((old) => ({ ...old, outletId }))}
             />
@@ -82,77 +85,88 @@ export function AttendanceForm({
           </div>
         )}
 
-        <label className="field sm:col-span-2">
-          Status kehadiran
-          <select
-            name="status"
-            value={draft.status}
-            onChange={(e) => setDraft({ ...draft, status: e.target.value })}
-          >
-            {Object.entries(attendanceLabels)
-              .filter(([key]) => warehouse || key !== "SETENGAH_HARI")
-              .map(([key, label]) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
-              ))}
-          </select>
-        </label>
-        <div>
-          <label className="field">
-            Check-in
-            <LocalInput
-              type="time"
-              name="checkIn"
-              value={draft.checkIn}
-              onChange={(e) => setDraft({ ...draft, checkIn: e.target.value })}
-            />
+        {future ? (
+          <input type="hidden" name="status" value="OUTLET_ONLY" />
+        ) : (
+          <label className="field sm:col-span-2">
+            Status kehadiran
+            <select
+              name="status"
+              value={draft.status}
+              onChange={(e) => setDraft({ ...draft, status: e.target.value })}
+            >
+              {!warehouse && <option value="OUTLET_ONLY">Hanya ubah outlet</option>}
+              {Object.entries(attendanceLabels)
+                .filter(([key]) => warehouse || key !== "SETENGAH_HARI")
+                .map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+            </select>
           </label>
-          <label className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-            <LocalInput
-              type="checkbox"
-              name="checkInNextDay"
-              checked={draft.checkInNextDay}
-              onChange={(e) => setDraft({ ...draft, checkInNextDay: e.target.checked })}
-            />
-            Masuk hari berikutnya
-          </label>
-        </div>
-        <div>
-          <label className="field">
-            Check-out
-            <LocalInput
-              type="time"
-              name="checkOut"
-              value={draft.checkOut}
-              onChange={(e) => setDraft({ ...draft, checkOut: e.target.value })}
-            />
-          </label>
-          <label className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-            <LocalInput
-              type="checkbox"
-              name="checkOutNextDay"
-              checked={draft.checkOutNextDay}
-              onChange={(e) => setDraft({ ...draft, checkOutNextDay: e.target.checked })}
-            />
-            Pulang hari berikutnya
-          </label>
-        </div>
-        <label className="field sm:col-span-2">
-          Catatan
-          <textarea
-            name="notes"
-            value={draft.notes}
-            onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
-            maxLength={2000}
-            rows={3}
-          />
-        </label>
+        )}
+        {!outletOnly && (
+          <>
+            <div>
+              <label className="field">
+                Check-in
+                <LocalInput
+                  type="time"
+                  name="checkIn"
+                  value={draft.checkIn}
+                  onChange={(e) => setDraft({ ...draft, checkIn: e.target.value })}
+                />
+              </label>
+              <label className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                <LocalInput
+                  type="checkbox"
+                  name="checkInNextDay"
+                  checked={draft.checkInNextDay}
+                  onChange={(e) => setDraft({ ...draft, checkInNextDay: e.target.checked })}
+                />
+                Masuk hari berikutnya
+              </label>
+            </div>
+            <div>
+              <label className="field">
+                Check-out
+                <LocalInput
+                  type="time"
+                  name="checkOut"
+                  value={draft.checkOut}
+                  onChange={(e) => setDraft({ ...draft, checkOut: e.target.value })}
+                />
+              </label>
+              <label className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                <LocalInput
+                  type="checkbox"
+                  name="checkOutNextDay"
+                  checked={draft.checkOutNextDay}
+                  onChange={(e) => setDraft({ ...draft, checkOutNextDay: e.target.checked })}
+                />
+                Pulang hari berikutnya
+              </label>
+            </div>
+            <label className="field sm:col-span-2">
+              Catatan
+              <textarea
+                name="notes"
+                value={draft.notes}
+                onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+                maxLength={2000}
+                rows={3}
+              />
+            </label>
+          </>
+        )}
       </div>
-      <p className="mt-4 text-xs leading-5 text-slate-500">
-        Check-in saja sudah dihitung sebagai hari dibayar; check-out dapat dilengkapi kemudian.
-        Izin, sakit, dan alpa tidak memiliki jam kehadiran.
-      </p>
+      {!outletOnly && (
+        <p className="mt-4 text-xs leading-5 text-slate-500">
+          Check-in saja sudah dihitung sebagai hari dibayar. Check-out dapat dilengkapi kemudian.
+          Izin, sakit, dan alpa tidak memiliki jam kehadiran.
+        </p>
+      )}
       {state.error && (
         <p role="alert" className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">
           {state.error}
@@ -160,7 +174,7 @@ export function AttendanceForm({
       )}
       <div className="mt-6 flex justify-end">
         <button type="submit" className="button-primary" disabled={pending}>
-          {pending ? "Menyimpan…" : "Simpan absensi"}
+          {pending ? "Menyimpan…" : outletOnly ? "Simpan perubahan" : "Simpan absensi"}
         </button>
       </div>
     </form>

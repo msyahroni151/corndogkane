@@ -25,6 +25,7 @@ export async function saveAttendance(_: FormState, form: FormData): Promise<Form
   const user = await requireAccess("absensi");
   const get = (key: string) => String(form.get(key) || "").trim();
   const status = get("status");
+  if (status === "OUTLET_ONLY") return saveOutletCorrection(form);
   if (!Object.hasOwn(attendanceLabels, status)) return { error: "Status kehadiran tidak valid." };
   let checkInMinutes: number | null, checkOutMinutes: number | null;
   try {
@@ -130,9 +131,7 @@ export async function saveAttendance(_: FormState, form: FormData): Promise<Form
   return { success: "Absensi tersimpan." };
 }
 
-export async function updateAttendanceOutlet(_: FormState, form: FormData): Promise<FormState> {
-  await requireAccess("absensi", "edit");
-  await requireAccess("absensi");
+async function saveOutletCorrection(form: FormData): Promise<FormState> {
   try {
     await saveScheduleOutlet(getPrisma(), form);
   } catch (error) {

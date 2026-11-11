@@ -430,6 +430,16 @@ async function createOutletScheduleRows(
 export async function updateSchedule(_: FormState, form: FormData): Promise<FormState> {
   await requireAccess("jadwal", "edit");
   await requireAccess("jadwal");
+  return updateDailySchedule(form);
+}
+
+export async function updateAttendanceDayOff(_: FormState, form: FormData): Promise<FormState> {
+  await requireAccess("absensi", "edit");
+  await requireAccess("absensi");
+  return updateDailySchedule(form, true);
+}
+
+async function updateDailySchedule(form: FormData, dayOffOnly = false): Promise<FormState> {
   const get = (key: string) => String(form.get(key) || "").trim();
   try {
     await getPrisma().$transaction(
@@ -443,6 +453,8 @@ export async function updateSchedule(_: FormState, form: FormData): Promise<Form
           include: { attendance: true },
         });
         if (!record) invalid("Jadwal tidak ditemukan.");
+        if (dayOffOnly && record.status !== "LIBUR")
+          invalid("Jadwal libur sudah berubah. Tutup popup dan muat ulang rekap absensi.");
         if (
           await tx.payroll.findFirst({
             where: {

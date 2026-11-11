@@ -4,10 +4,12 @@ import { APP_TIME_ZONE } from "@/lib/local-date";
 export function AttendanceDateGate({
   date,
   today,
+  allowFuture = false,
   children,
 }: {
   date: string;
   today: string;
+  allowFuture?: boolean;
   children: ReactNode;
 }) {
   const [current, setCurrent] = useState(today);
@@ -25,5 +27,7 @@ export function AttendanceDateGate({
     const timer = setInterval(update, 30000);
     return () => clearInterval(timer);
   }, []);
-  return date > current ? <span className="text-xs text-slate-400">Belum waktunya</span> : children;
+  return !allowFuture && date > current ? (
+    <span className="text-xs text-slate-400">Belum waktunya</span>
+  ) : children;
 }

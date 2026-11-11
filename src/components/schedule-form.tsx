@@ -3,7 +3,7 @@ import { ScheduleOutletForm } from "@/components/schedule-outlet-form";
 import { LocalInput } from "@/components/local-input";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSchedules, updateSchedule } from "@/app/schedule-actions";
+import { createSchedules, updateAttendanceDayOff, updateSchedule } from "@/app/schedule-actions";
 import { useCloseFormDialog } from "@/components/form-dialog";
 import { isWarehouse, isWorkingSchedule, shiftLabels } from "@/lib/schedules";
 import type { FormState } from "@/lib/form-state";
@@ -30,17 +30,18 @@ type Props = {
   outlets?: OutletChoice[];
   edit?: Edit;
   successRoute?: string;
+  fromAttendance?: boolean;
 };
 export function ScheduleForm({
   employees = [],
   outlets = [],
   edit,
   successRoute = "/jadwal?tersimpan=1",
+  fromAttendance = false,
 }: Props) {
   if (edit?.hasAttendance && !isWarehouse(edit.role) && isWorkingSchedule(edit.status))
     return (
       <ScheduleOutletForm
-        scope="schedule"
         outlets={outlets}
         record={{
           scheduleId: edit.id,
@@ -53,7 +54,12 @@ export function ScheduleForm({
       />
     );
   return edit ? (
-    <DailyScheduleForm edit={edit} outlets={outlets} successRoute={successRoute} />
+    <DailyScheduleForm
+      edit={edit}
+      outlets={outlets}
+      successRoute={successRoute}
+      fromAttendance={fromAttendance}
+    />
   ) : (
     <CreateScheduleForm employees={employees} outlets={outlets} successRoute={successRoute} />
   );
@@ -558,10 +564,12 @@ function DailyScheduleForm({
   edit,
   outlets,
   successRoute,
+  fromAttendance,
 }: {
   edit: Edit;
   outlets: OutletChoice[];
   successRoute: string;
+  fromAttendance: boolean;
 }) {
   const [draft, setDraft] = useState({
     status: edit.status,
@@ -573,7 +581,10 @@ function DailyScheduleForm({
     notes: edit.notes,
   });
   const warehouse = isWarehouse(edit.role);
-  const { state, action, pending } = useScheduleAction(updateSchedule, successRoute);
+  const { state, action, pending } = useScheduleAction(
+    fromAttendance ? updateAttendanceDayOff : updateSchedule,
+    successRoute,
+  );
   const change = (key: keyof typeof draft, value: string) =>
     setDraft((old) => ({ ...old, [key]: value }));
   return (

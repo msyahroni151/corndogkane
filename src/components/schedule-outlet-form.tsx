@@ -1,7 +1,6 @@
 "use client";
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateAttendanceOutlet } from "@/app/attendance-actions";
 import { updateScheduleOutlet } from "@/app/schedule-actions";
 import { useCloseFormDialog } from "@/components/form-dialog";
 import { notifySuccess } from "@/components/notification-toasts";
@@ -49,7 +48,6 @@ export function OutletSelect({
 export function ScheduleOutletForm({
   record,
   outlets,
-  scope,
 }: {
   record: {
     scheduleId: string;
@@ -60,15 +58,11 @@ export function ScheduleOutletForm({
     outletName: string;
   };
   outlets: ScheduleOutletChoice[];
-  scope: "attendance" | "schedule";
 }) {
   const [outletId, setOutletId] = useState(record.outletId),
     close = useCloseFormDialog(),
     router = useRouter();
-  const [state, action, pending] = useActionState(
-    scope === "attendance" ? updateAttendanceOutlet : updateScheduleOutlet,
-    {},
-  );
+  const [state, action, pending] = useActionState(updateScheduleOutlet, {});
   useEffect(() => {
     if (state.success) {
       notifySuccess(state.success);
