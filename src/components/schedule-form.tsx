@@ -3,7 +3,7 @@ import { ScheduleOutletForm } from "@/components/schedule-outlet-form";
 import { LocalInput } from "@/components/local-input";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSchedules, updateAttendanceDayOff, updateSchedule } from "@/app/schedule-actions";
+import { createSchedules, updateSchedule, updateScheduleFromAttendance } from "@/app/schedule-actions";
 import { useCloseFormDialog } from "@/components/form-dialog";
 import { isWarehouse, isWorkingSchedule, shiftLabels } from "@/lib/schedules";
 import type { FormState } from "@/lib/form-state";
@@ -582,7 +582,7 @@ function DailyScheduleForm({
   });
   const warehouse = isWarehouse(edit.role);
   const { state, action, pending } = useScheduleAction(
-    fromAttendance ? updateAttendanceDayOff : updateSchedule,
+    fromAttendance ? updateScheduleFromAttendance : updateSchedule,
     successRoute,
   );
   const change = (key: keyof typeof draft, value: string) =>

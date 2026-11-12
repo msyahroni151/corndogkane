@@ -71,9 +71,10 @@ export function PinnedTableControls({
       window.removeEventListener("resize", schedule);
     };
   }, []);
+  const hasHorizontalOverflow = layout.contentWidth > layout.width + 1;
   useEffect(() => {
     if (bar.current && scroll.current) bar.current.scrollLeft = scroll.current.scrollLeft;
-  }, [layout.floating]);
+  }, [hasHorizontalOverflow, layout.floating]);
   const footer = (
     <div
       ref={toolbar}
@@ -88,6 +89,7 @@ export function PinnedTableControls({
       {controls}
       <div
         ref={bar}
+        hidden={!hasHorizontalOverflow}
         className="pinned-table-scrollbar"
         role="region"
         aria-label="Geser tabel horizontal"
@@ -116,7 +118,7 @@ export function PinnedTableControls({
       >
         {children}
       </div>
-      <div ref={anchor} style={{ minHeight: layout.height }}>
+      <div ref={anchor} style={layout.floating ? { minHeight: layout.height } : undefined}>
         {!layout.floating && footer}
       </div>
       {layout.floating && createPortal(footer, document.body)}

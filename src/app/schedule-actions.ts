@@ -9,7 +9,13 @@ import { revalidatePath } from "next/cache";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { employeeGroup, isBackupEmployee, parseCivilDate } from "@/lib/placements";
-import { isWarehouse, isWorkingSchedule, parseTime, shiftTimes } from "@/lib/schedules";
+import {
+  canEditScheduleFromAttendance,
+  isWarehouse,
+  isWorkingSchedule,
+  parseTime,
+  shiftTimes,
+} from "@/lib/schedules";
 import type { FormState } from "@/lib/form-state";
 import type { WarehouseShift, ScheduleStatus } from "@/generated/prisma/client";
 function invalid(message: string): never {
@@ -433,13 +439,13 @@ export async function updateSchedule(_: FormState, form: FormData): Promise<Form
   return updateDailySchedule(form);
 }
 
-export async function updateAttendanceDayOff(_: FormState, form: FormData): Promise<FormState> {
+export async function updateScheduleFromAttendance(_: FormState, form: FormData): Promise<FormState> {
   await requireAccess("absensi", "edit");
   await requireAccess("absensi");
   return updateDailySchedule(form, true);
 }
 
-async function updateDailySchedule(form: FormData, dayOffOnly = false): Promise<FormState> {
+async function updateDailySchedule(form: FormData, fromAttendance = false): Promise<FormState> {
   const get = (key: string) => String(form.get(key) || "").trim();
   try {
     await getPrisma().$transaction(
@@ -453,8 +459,8 @@ async function updateDailySchedule(form: FormData, dayOffOnly = false): Promise<
           include: { attendance: true },
         });
         if (!record) invalid("Jadwal tidak ditemukan.");
-        if (dayOffOnly && record.status !== "LIBUR")
-          invalid("Jadwal libur sudah berubah. Tutup popup dan muat ulang rekap absensi.");
+        if (fromAttendance && !canEditScheduleFromAttendance(record.status))
+          invalid("Status jadwal sudah berubah. Tutup popup dan muat ulang rekap absensi.");
         if (
           await tx.payroll.findFirst({
             where: {

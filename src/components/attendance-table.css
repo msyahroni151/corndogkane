@@ -1,0 +1,48 @@
+.workspace .attendance-table {
+  min-width: 820px;
+  table-layout: fixed;
+}
+
+.workspace .attendance-table > :is(thead, tbody) > tr > :is(th, td) {
+  padding-inline: 0.5rem;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.attendance-table th:nth-child(1),
+.attendance-table th:nth-child(5) {
+  width: 9%;
+}
+
+.attendance-table th:nth-child(2) {
+  width: 8%;
+}
+
+.attendance-table th:nth-child(3),
+.attendance-table th:nth-child(4) {
+  width: 7%;
+}
+
+.attendance-table th:nth-child(13) {
+  width: 11%;
+}
+
+.attendance-table th:last-child,
+.attendance-table td.attendance-actions {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  width: 68px;
+  border-left: 1px solid #e2e8e4;
+  background: #fff;
+}
+
+.attendance-table th:last-child {
+  background: #f8faf8;
+}
+
+.attendance-table tr:hover td.attendance-actions {
+  background: #f9fbf9;
+}

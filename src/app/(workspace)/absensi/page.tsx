@@ -1,4 +1,3 @@
-import { isWorkingSchedule } from "@/lib/schedules";
 import SearchForm from "next/form";
 import { LocalInput } from "@/components/local-input";
 import { AttendanceDateGate } from "@/components/attendance-date-gate";
@@ -6,13 +5,14 @@ import { SortableTable } from "@/components/sortable-table";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { todayWib, displayDate, parseCivilDate } from "@/lib/placements";
-import { timeLabel, isWarehouse } from "@/lib/schedules";
+import { canEditScheduleFromAttendance, isWarehouse, isWorkingSchedule, timeLabel } from "@/lib/schedules";
 import { attendanceLabels, attendanceSummary } from "@/lib/attendance";
 import { attendanceColumns } from "@/lib/attendance-columns";
 import { FormDialog } from "@/components/form-dialog";
 import { ScheduleForm } from "@/components/schedule-form";
 import { AttendanceForm } from "@/components/attendance-form";
 import { AttendanceExport } from "@/components/attendance-export";
+import "@/components/attendance-table.css";
 import { UiIcon, type IconName } from "@/components/ui-icon";
 import type { Prisma } from "@/generated/prisma/client";
 type Filters = {
@@ -340,11 +340,11 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
           </p>
         ) : (
           <div>
-            <SortableTable pinnedControls className="w-full text-left text-xs">
+            <SortableTable pinnedControls className="attendance-table w-full text-left">
               <thead>
                 <tr>
                   {[...attendanceColumns, "Aksi"].map((label) => (
-                    <th key={label} className="whitespace-nowrap px-4 py-3">
+                    <th key={label} className="py-3">
                       {label}
                     </th>
                   ))}
@@ -354,7 +354,7 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                 {records.map(({ row, a, summary, data, weekday, presence, validation }) => (
                   <tr key={row.id}>
                     {data.map((value, i) => (
-                      <td key={attendanceColumns[i]} className="whitespace-nowrap px-4 py-4">
+                      <td key={attendanceColumns[i]} className="py-4">
                         {i === 0 ? (
                           <>
                             <p className="font-medium">{displayDate(row.date)}</p>
@@ -398,8 +398,8 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                         )}
                       </td>
                     ))}
-                    <td className="attendance-actions px-4 py-4">
-                      {row.status === "LIBUR" ? (
+                    <td className="attendance-actions py-4">
+                      {canEditScheduleFromAttendance(row.status) ? (
                         <FormDialog title={`Jadwal · ${displayDate(row.date)}`} trigger="Edit">
                           <ScheduleForm
                             fromAttendance
@@ -485,8 +485,7 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
           {count} baris jadwal
           {count > 500
             ? " · tabel dan ekspor menampilkan 500 pertama; ringkasan menghitung semua hasil filter"
-            : ""}{" "}
-          · Geser tabel horizontal untuk melihat semua kolom.
+            : ""}
         </div>
       </section>
     </div>

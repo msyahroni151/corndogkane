@@ -28,3 +28,7 @@ export function shiftTimes(shift: string) {
 export function isWorkingSchedule(status: string) {
   return status === "KERJA" || status === "OPENINGAN";
 }
+
+export function canEditScheduleFromAttendance(status: string) {
+  return status === "LIBUR" || status === "STANBY";
+}
