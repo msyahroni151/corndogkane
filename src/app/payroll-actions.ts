@@ -36,6 +36,8 @@ export type PayrollFormState = FormState & {
     backup: number;
     standby: number;
     netPay: number;
+    basePay: number;
+    warehouseBonus: number;
     gross: number;
     loans: { id: string; left: number; amount: number }[];
     canEditAttendance: boolean;
@@ -290,15 +292,8 @@ export async function createPayroll(
           standbyPay = sum("standby"),
           warehouseBonus = sum("solo"),
           loanDeduction = Object.values(loanPayments).reduce((a, b) => a + b, 0);
-        const netPay =
-          basePay +
-          backupPay +
-          standbyPay +
-          warehouseBonus +
-          bonusPaid -
-          loanDeduction -
-          lateDeduction -
-          settlementDeduction;
+        const gross = basePay + backupPay + standbyPay + warehouseBonus + bonusPaid;
+        const netPay = gross - loanDeduction - lateDeduction - settlementDeduction;
         const version = createHash("sha256")
           .update(JSON.stringify([source.hash, sales, lines, loans]))
           .digest("hex");
@@ -311,7 +306,9 @@ export async function createPayroll(
             backup: backupPay,
             standby: standbyPay,
             netPay,
-            gross: basePay + backupPay + standbyPay + warehouseBonus + bonusPaid,
+            basePay,
+            warehouseBonus,
+            gross,
             loans,
             canEditAttendance: hasAction(user, "absensi", "edit"),
             lateDays: source.fines.flatMap((day) => {

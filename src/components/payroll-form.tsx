@@ -219,10 +219,14 @@ export function PayrollForm({
                 <input type="hidden" name="previewVersion" value={preview.version} />
                 <dl className="grid gap-2 rounded-xl bg-slate-50 p-4 text-sm">
                   {[
-                    ["Pendapatan kotor", preview.gross],
+                    ["Upah dasar", preview.basePay],
                     ["Tambahan backup", preview.backup],
                     ["Upah standby", preview.standby],
+                    ...(preview.warehouseBonus > 0
+                      ? [["Bonus jaga sendiri", preview.warehouseBonus]]
+                      : []),
                     ["Bonus dalam pendapatan", preview.bonus],
+                    ["Total pendapatan kotor", preview.gross],
                     ["Potongan kasbon", preview.loans.reduce((sum, loan) => sum + loan.amount, 0)],
                     ["Denda telat", preview.late],
                     ["Selisih setoran disetujui", preview.settlement],

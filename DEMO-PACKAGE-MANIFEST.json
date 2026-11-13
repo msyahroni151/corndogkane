@@ -708,7 +708,7 @@
     },
     {
       "path": "src/app/payroll-actions.ts",
-      "sha256": "1b178b71060b42d9323769920a25b94d96d6d7ddae9b57a75823b6cabebff61f"
+      "sha256": "7616e583ee3b06b89ecdcfbfd3bcb54b12471fa51b66f65d92297828a2d347c9"
     },
     {
       "path": "src/app/payroll/slip/[id]/page.tsx",
@@ -1072,7 +1072,7 @@
     },
     {
       "path": "src/components/payroll-form.tsx",
-      "sha256": "d6477d3b411c10a5edaa776eb491bc2072d0355b025f9b1444c8b36c863272c3"
+      "sha256": "539a113b47f8e396e1904649e815fc1f5a4b8be0acdc1c858888d6e65e95e127"
     },
     {
       "path": "src/components/payroll-slip.css",
