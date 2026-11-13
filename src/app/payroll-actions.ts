@@ -33,6 +33,7 @@ export type PayrollFormState = FormState & {
     bonus: number;
     late: number;
     settlement: number;
+    backupEligible: boolean;
     backup: number;
     standby: number;
     netPay: number;
@@ -240,6 +241,8 @@ export async function createPayroll(
             ? (employee.baseSalary ?? 0)
             : 0;
         const backupRate = 30000;
+        const backupEligible =
+          isBackupEmployee(employee) || employee.position.trim().toUpperCase() === "LEADER AREA";
         const { sales } = source;
         const candidates = Object.entries(loanPayments).map(([sourceId, n]) => ({
           id: `PAY:${sourceId}`,
@@ -278,7 +281,7 @@ export async function createPayroll(
           );
           const days = source.days.map((day) => ({
             ...day,
-            role: !isWarehouse(day.role) && isBackupEmployee(employee) ? "BACKUP" : day.role,
+            role: isWarehouse(day.role) ? day.role : backupEligible ? "BACKUP" : "REGULER",
             outletDailyRate: day.outletDailyRate || rates.get(day.outletId ?? "") || null,
           }));
           lines = payrollLines(days, source.coworkers, dailyRate, backupRate, sales);
@@ -303,6 +306,7 @@ export async function createPayroll(
             bonus: bonusPaid,
             late: lateDeduction,
             settlement: settlementDeduction,
+            backupEligible,
             backup: backupPay,
             standby: standbyPay,
             netPay,

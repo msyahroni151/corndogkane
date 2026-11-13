@@ -220,8 +220,12 @@ export function PayrollForm({
                 <dl className="grid gap-2 rounded-xl bg-slate-50 p-4 text-sm">
                   {[
                     ["Upah dasar", preview.basePay],
-                    ["Tambahan backup", preview.backup],
-                    ["Upah standby", preview.standby],
+                    ...(preview.backupEligible
+                      ? [
+                          ["Tambahan backup", preview.backup],
+                          ["Upah standby", preview.standby],
+                        ]
+                      : []),
                     ...(preview.warehouseBonus > 0
                       ? [["Bonus jaga sendiri", preview.warehouseBonus]]
                       : []),
