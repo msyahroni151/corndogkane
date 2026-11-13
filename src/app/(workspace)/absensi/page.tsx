@@ -369,6 +369,11 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                           >
                             {value}
                           </span>
+                        ) : i === 10 && summary.lateMinutes > 0 && a?.lateFineWaiver ? (
+                          <>
+                            {value}
+                            <p className="mt-1 text-xs text-slate-500">Dibebaskan · {a.lateFineWaiver}</p>
+                          </>
                         ) : i === 12 ? (
                           <div className="flex flex-col items-start gap-1.5">
                             <span

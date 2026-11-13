@@ -1,14 +1,15 @@
 "use server";
 import { isCurrentLedgerEntry } from "@/lib/bonus-period";
-import { dateFromDisplay } from "@/lib/local-date";
 import { allocateBusinessId } from "@/lib/business-id";
 import { createHash } from "node:crypto";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
-import { parseCivilDate } from "@/lib/placements";
+import { displayDate, isBackupEmployee, parseCivilDate } from "@/lib/placements";
+import { isWarehouse, timeLabel } from "@/lib/schedules";
+import { hasAction } from "@/lib/permission-actions";
 import { attendanceSummary } from "@/lib/attendance";
 import { payrollLines } from "@/lib/payroll";
-import { validateSettlementPayments } from "@/lib/settlements";
+import { settlementLeft, validateSettlementPayments } from "@/lib/settlements";
 import { validateLedger } from "@/lib/money";
 import { revalidatePath } from "next/cache";
 import type { FormState } from "@/lib/form-state";
@@ -26,6 +27,39 @@ function fail(e: unknown): FormState {
         : "Payroll belum tersimpan. Periksa koneksi dan coba lagi.",
   };
 }
+export type PayrollFormState = FormState & {
+  preview?: {
+    version: string;
+    bonus: number;
+    late: number;
+    settlement: number;
+    backup: number;
+    standby: number;
+    netPay: number;
+    gross: number;
+    loans: { id: string; left: number; amount: number }[];
+    canEditAttendance: boolean;
+    lateDays: {
+      scheduleId: string;
+      scheduleVersion: string;
+      version: string;
+      date: string;
+      outlet: string;
+      checkIn: string;
+      checkOut: string;
+      checkInNextDay: boolean;
+      checkOutNextDay: boolean;
+      scheduledIn: string;
+      scheduledOut: string;
+      status: string;
+      minutes: number;
+      fine: number;
+      waiver: string;
+      notes: string;
+      paid: boolean;
+    }[];
+  };
+};
 function amount(value: FormDataEntryValue | null, label: string) {
   const raw = String(value ?? "0");
   if (!/^\d+$/.test(raw) || Number(raw) > 1000000000)
@@ -60,13 +94,44 @@ async function sources(
   const relevant = days.filter(
     (d) => d.employeeId === employeeId || ["CREW_GUDANG", "LEADER_SHIFT"].includes(d.role),
   );
+  const employeeDays = days.filter((d) => d.employeeId === employeeId);
+  const cijerahDays = employeeDays.filter(
+    (day) =>
+      day.outletName?.trim().toUpperCase() === "CIJERAH" &&
+      attendanceSummary(day, day.attendance).paidUnits > 0,
+  );
+  const cijerah = cijerahDays.length
+    ? await tx.outletOperation.findMany({
+        where: {
+          outletId: {
+            in: [...new Set(cijerahDays.flatMap((d) => (d.outletId ? [d.outletId] : [])))],
+          },
+          date: { gte: startDate, lte: endDate },
+          salesPending: false,
+        },
+        select: { outletId: true, date: true, totalGross: true },
+      })
+    : [];
+  const sales = Object.fromEntries(
+    cijerahDays.flatMap((day) => {
+      const recap = cijerah.find((row) => row.outletId === day.outletId && +row.date === +day.date);
+      return recap ? [[day.date.toISOString().slice(0, 10), recap.totalGross] as const] : [];
+    }),
+  );
+  // Preserve hashes of existing drafts when the new attendance column is empty.
+  function normalizeAttendance<T extends { attendance: { lateFineWaiver: string | null } | null }>(
+    day: T,
+  ) {
+    if (!day.attendance || day.attendance.lateFineWaiver) return day;
+    return { ...day, attendance: { ...day.attendance, lateFineWaiver: undefined } };
+  }
   const hash = createHash("sha256")
     .update(
       JSON.stringify({
-        relevant,
+        relevant: relevant.map(normalizeAttendance),
         ledger,
         paid: paid.map((p) => [p.id, p.lateDeduction]),
-        fines,
+        fines: fines.map(normalizeAttendance),
         ...(settlements.length ? { settlements } : {}),
       }),
     )
@@ -85,73 +150,42 @@ async function sources(
       paid.reduce((sum, p) => sum + p.lateDeduction, 0),
   );
   return {
-    days: days.filter((d) => d.employeeId === employeeId),
+    days: employeeDays,
     coworkers: relevant,
     ledger,
     settlements,
     hash,
     bonus,
     late,
+    sales,
+    fines,
+    paid,
   };
 }
-export async function createPayroll(_: FormState, form: FormData): Promise<FormState> {
-  await requireAccess("payroll", "create");
-  const user = await requireAccess("payroll");
+export async function createPayroll(
+  _: PayrollFormState,
+  form: FormData,
+): Promise<PayrollFormState> {
+  const user = await requireAccess("payroll", "create");
   try {
     const employeeId = String(form.get("employeeId") || ""),
       startDate = parseCivilDate(String(form.get("startDate") || "")),
       endDate = parseCivilDate(String(form.get("endDate") || ""));
     if (endDate < startDate || (endDate.getTime() - startDate.getTime()) / 86400000 > 61)
       invalid("Pilih periode berurutan maksimal 62 hari.");
-    const dailyRate = amount(form.get("dailyRate"), "Tarif harian"),
-      backupRate = amount(form.get("backupRate"), "Tambahan backup"),
-      bonusPaid = amount(form.get("bonusPaid"), "Bonus dibayarkan"),
-      lateDeduction = amount(form.get("lateDeduction"), "Potongan telat"),
-      otherDeduction = amount(form.get("otherDeduction"), "Potongan lain");
-    const notes = String(form.get("notes") || "").trim();
-    if (notes.length > 2000 || (otherDeduction > 0 && !notes))
-      invalid("Isi catatan untuk potongan lain, maksimal 2000 karakter.");
-    const sales: Record<string, number> = {};
-    for (const line of String(form.get("sales") || "")
-      .split(/\r?\n/)
-      .filter((s) => s.trim())) {
-      const m = line.trim().match(/^(\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4})\s*[=:]\s*(\d+)$/);
-      if (!m || Number(m[2]) > 1000000000)
-        invalid("Omzet: satu tanggal=nominal per baris, contoh 12/10/2026=800000.");
-      const salesDate = dateFromDisplay(m[1]) || m[1];
-      try {
-        parseCivilDate(salesDate);
-      } catch {
-        invalid("Tanggal omzet tidak valid.");
-      }
-      if (Object.hasOwn(sales, salesDate)) invalid("Tanggal omzet tidak boleh berulang.");
-      sales[salesDate] = Number(m[2]);
-    }
-    const loanPayments: Record<string, number> = {};
+    const commit = form.get("mode") === "save";
+    const requestedLoans = new Map<string, number>();
     for (const [key, value] of form.entries())
       if (key.startsWith("loan:")) {
-        if (Object.hasOwn(loanPayments, key.slice(5))) invalid("ID kasbon berulang.");
-        const n = amount(value, "Pembayaran kasbon");
-        if (n) loanPayments[key.slice(5)] = n;
+        const id = key.slice(5);
+        if (requestedLoans.has(id)) invalid("ID kasbon berulang.");
+        requestedLoans.set(id, amount(value, "Pembayaran kasbon"));
       }
-    const settlementPayments: Record<string, number> = {};
-    const settlementKeys = new Set<string>();
-    for (const [key, value] of form.entries())
-      if (key.startsWith("settle:")) {
-        const id = key.slice(7);
-        if (settlementKeys.has(id)) invalid("ID selisih setoran berulang.");
-        settlementKeys.add(id);
-        const n = amount(value, "Potongan selisih setoran");
-        if (n) settlementPayments[id] = n;
-      }
-    const settlementDeduction = Object.values(settlementPayments).reduce((a, b) => a + b, 0);
-    if (settlementDeduction > 1000000000)
-      invalid("Total potongan selisih setoran melebihi batas nominal.");
-    await getPrisma().$transaction(
+    const preview = await getPrisma().$transaction(
       async (tx) => {
         await tx.$executeRaw`SELECT id FROM employees WHERE id=${employeeId} FOR UPDATE`;
         const employee = await tx.employee.findUnique({ where: { id: employeeId } });
-        if (!employee) invalid("Karyawan tidak ditemukan.");
+        if (!employee?.active) invalid("Karyawan aktif tidak ditemukan.");
         const overlap = await tx.payroll.findFirst({
           where: {
             employeeId,
@@ -167,20 +201,44 @@ export async function createPayroll(_: FormState, form: FormData): Promise<FormS
         const source = await sources(tx, employeeId, startDate, endDate);
         if (!source.days.length)
           invalid("Belum ada jadwal dalam periode ini. Isi jadwal dan absensi terlebih dahulu.");
-        const settlementError = validateSettlementPayments(
-          settlementPayments,
-          source.settlements,
-          endDate,
-        );
-        if (settlementError) invalid(settlementError);
-        if (bonusPaid > source.bonus)
-          invalid(`Bonus melebihi saldo disetujui sampai akhir periode (Rp ${source.bonus}).`);
-        if (lateDeduction > source.late)
-          invalid(`Potongan telat melebihi sisa denda sampai akhir periode (Rp ${source.late}).`);
-        for (const id of Object.keys(loanPayments)) {
-          if (!source.ledger.some((e) => e.id === id && e.kind === "LOAN"))
+        const repaymentByLoan = new Map<string, number>();
+        for (const entry of source.ledger)
+          if (entry.kind === "REPAYMENT" && entry.sourceId)
+            repaymentByLoan.set(
+              entry.sourceId,
+              (repaymentByLoan.get(entry.sourceId) ?? 0) + entry.amount,
+            );
+        const loans = source.ledger
+          .filter((entry) => entry.kind === "LOAN" && entry.date <= endDate)
+          .map((entry) => ({
+            id: entry.id,
+            left: entry.amount - (repaymentByLoan.get(entry.id) ?? 0),
+          }))
+          .filter((loan) => loan.left > 0)
+          .map((loan) => ({ ...loan, amount: requestedLoans.get(loan.id) ?? loan.left }));
+        for (const id of requestedLoans.keys()) {
+          if (!loans.some((loan) => loan.id === id))
             invalid("Pilih kasbon yang disetujui milik karyawan ini.");
         }
+        if (loans.some((loan) => loan.amount > loan.left))
+          invalid("Potongan melebihi sisa kasbon.");
+        const loanPayments = Object.fromEntries(
+          loans.filter((loan) => loan.amount > 0).map((loan) => [loan.id, loan.amount]),
+        );
+        const settlementPayments = Object.fromEntries(
+          source.settlements
+            .filter((review) => review.date <= endDate && settlementLeft(review) > 0)
+            .map((review) => [review.id, settlementLeft(review)]),
+        );
+        const settlementDeduction = Object.values(settlementPayments).reduce((a, b) => a + b, 0);
+        const bonusPaid = Math.max(0, source.bonus);
+        const lateDeduction = source.late;
+        const dailyRate =
+          employee.salaryBasis === "HARIAN" || employee.employeeType === "HARIAN"
+            ? (employee.baseSalary ?? 0)
+            : 0;
+        const backupRate = 30000;
+        const { sales } = source;
         const candidates = Object.entries(loanPayments).map(([sourceId, n]) => ({
           id: `PAY:${sourceId}`,
           sourceId,
@@ -200,7 +258,28 @@ export async function createPayroll(_: FormState, form: FormData): Promise<FormS
         if (error) invalid(error);
         let lines;
         try {
-          lines = payrollLines(source.days, source.coworkers, dailyRate, backupRate, sales);
+          const legacyOutletIds = [
+            ...new Set(
+              source.days.flatMap((day) =>
+                day.outletId && !day.outletDailyRate ? [day.outletId] : [],
+              ),
+            ),
+          ];
+          const rates = new Map(
+            (legacyOutletIds.length
+              ? await tx.outlet.findMany({
+                  where: { id: { in: legacyOutletIds } },
+                  select: { id: true, dailyRate: true },
+                })
+              : []
+            ).map((outlet) => [outlet.id, outlet.dailyRate]),
+          );
+          const days = source.days.map((day) => ({
+            ...day,
+            role: !isWarehouse(day.role) && isBackupEmployee(employee) ? "BACKUP" : day.role,
+            outletDailyRate: day.outletDailyRate || rates.get(day.outletId ?? "") || null,
+          }));
+          lines = payrollLines(days, source.coworkers, dailyRate, backupRate, sales);
         } catch (e) {
           invalid((e as Error).message);
         }
@@ -219,10 +298,55 @@ export async function createPayroll(_: FormState, form: FormData): Promise<FormS
           bonusPaid -
           loanDeduction -
           lateDeduction -
-          settlementDeduction -
-          otherDeduction;
+          settlementDeduction;
+        const version = createHash("sha256")
+          .update(JSON.stringify([source.hash, sales, lines, loans]))
+          .digest("hex");
+        if (!commit)
+          return {
+            version,
+            bonus: bonusPaid,
+            late: lateDeduction,
+            settlement: settlementDeduction,
+            backup: backupPay,
+            standby: standbyPay,
+            netPay,
+            gross: basePay + backupPay + standbyPay + warehouseBonus + bonusPaid,
+            loans,
+            canEditAttendance: hasAction(user, "absensi", "edit"),
+            lateDays: source.fines.flatMap((day) => {
+              const attendance = day.attendance;
+              const summary = attendanceSummary(day, attendance);
+              if (!attendance || !summary.lateMinutes) return [];
+              return [
+                {
+                  scheduleId: day.id,
+                  scheduleVersion: day.updatedAt.toISOString(),
+                  version: attendance.updatedAt.toISOString(),
+                  date: displayDate(day.date),
+                  outlet: day.outletName || day.location || "—",
+                  checkIn: timeLabel(attendance.checkInMinutes),
+                  checkOut: timeLabel(attendance.checkOutMinutes),
+                  checkInNextDay: attendance.checkInNextDay,
+                  checkOutNextDay: attendance.checkOutNextDay,
+                  scheduledIn: timeLabel(day.startMinutes),
+                  scheduledOut: timeLabel(day.endMinutes),
+                  status: attendance.status,
+                  minutes: summary.lateMinutes,
+                  fine: summary.lateFine,
+                  waiver: attendance.lateFineWaiver ?? "",
+                  notes: hasAction(user, "absensi", "edit") ? (attendance.notes ?? "") : "",
+                  paid: source.paid.some(
+                    (row) => row.startDate <= day.date && day.date <= row.endDate,
+                  ),
+                },
+              ];
+            }),
+          };
+        if (form.get("previewVersion") !== version)
+          invalid("Hitungan berubah. Tampilkan pratinjau terbaru sebelum menyimpan draft.");
         if (netPay < 0 || netPay > 1000000000)
-          invalid("Gaji bersih harus antara 0 dan 1 miliar. Sesuaikan potongan.");
+          invalid("Gaji bersih harus antara 0 dan 1 miliar. Periksa potongan pada pratinjau.");
         const payrollId = await allocateBusinessId(tx, "payroll");
         await tx.payroll.create({
           data: {
@@ -242,21 +366,26 @@ export async function createPayroll(_: FormState, form: FormData): Promise<FormS
             bonusPaid,
             lateDeduction,
             loanDeduction,
-            otherDeduction,
+            otherDeduction: 0,
             settlementDeduction,
             settlementPayments,
             netPay,
             details: lines,
             sales,
             loanPayments,
-            sourceHash: source.hash,
-            notes,
+            sourceHash:
+              "auto:" +
+              createHash("sha256")
+                .update(JSON.stringify([source.hash, sales]))
+                .digest("hex"),
+            notes: "",
             createdById: user.id,
           },
         });
       },
       { timeout: 20000 },
     );
+    if (preview) return { preview };
   } catch (e) {
     return fail(e);
   }
@@ -281,12 +410,20 @@ export async function decidePayroll(_: FormState, form: FormData): Promise<FormS
           // Serialize with attendance changes, including coworkers used for solo bonuses.
           await tx.$executeRaw`SELECT id FROM schedules WHERE date >= ${row.startDate} AND date <= ${row.endDate} ORDER BY id FOR UPDATE`;
           const source = await sources(tx, row.employeeId, row.startDate, row.endDate);
-          if (source.hash !== row.sourceHash)
+          const hash = row.sourceHash.startsWith("auto:")
+            ? "auto:" +
+              createHash("sha256")
+                .update(JSON.stringify([source.hash, source.sales]))
+                .digest("hex")
+            : source.hash;
+          if (hash !== row.sourceHash)
             invalid(
               "Absensi atau saldo berubah sejak draft dibuat. Batalkan draft dan hitung ulang sebelum pembayaran.",
             );
           if (row.bonusPaid > Math.max(0, source.bonus))
-            invalid("Bonus pada draft melebihi saldo mulai 1 November 2026. Batalkan draft dan hitung ulang sebelum pembayaran.");
+            invalid(
+              "Bonus pada draft melebihi saldo mulai 1 November 2026. Batalkan draft dan hitung ulang sebelum pembayaran.",
+            );
           const settlementPayments = (row.settlementPayments ?? {}) as Record<string, number>;
           const settlementError = validateSettlementPayments(
             settlementPayments,

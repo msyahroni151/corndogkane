@@ -271,6 +271,7 @@ model Attendance {
   checkOutMinutes Int?
   checkInNextDay  Boolean          @default(false)
   checkOutNextDay Boolean          @default(false)
+  lateFineWaiver  String?          @db.VarChar(500)
   notes           String?
   updatedById     String
   updatedBy       User             @relation(fields: [updatedById], references: [id], onDelete: Restrict)

@@ -276,7 +276,7 @@
     },
     {
       "path": "prisma/schema.prisma",
-      "sha256": "fa353f321ff8440018694f0a80c96a09f34f59ec4f9cd1d4eb9e288839477d74"
+      "sha256": "ca6324aa700b964d9fda9da82c44dfcd9d94775cf3b37e61ad995a71c8edbe77"
     },
     {
       "path": "public/corndog-kane-logo.png",
@@ -392,7 +392,7 @@
     },
     {
       "path": "src/app/(workspace)/absensi/page.tsx",
-      "sha256": "04b3007557c0be5633211e0bae25d359cae3f92868ecc798faace42251171ad1"
+      "sha256": "80764d797fbb914e94244dd523c01cc175e1d616fa838e6aff5cf3b990362f03"
     },
     {
       "path": "src/app/(workspace)/admin-malam/master-akun/page.tsx",
@@ -504,7 +504,7 @@
     },
     {
       "path": "src/app/(workspace)/payroll/page.tsx",
-      "sha256": "f5b520dcf564b83ce55f448031418795edbab6846b02f1fba0d58d93ddec1e61"
+      "sha256": "16559f935f7f90a76cb59ea7118652102223271d8b9169b207c6f65edb476195"
     },
     {
       "path": "src/app/(workspace)/pelanggan/page.tsx",
@@ -612,7 +612,7 @@
     },
     {
       "path": "src/app/attendance-actions.ts",
-      "sha256": "908658982d52c3e307ffffba0ecbd1380081462a00447284f3b447d17e45faf9"
+      "sha256": "cee755f64ed2331095fd9103325aa07250831e489b920129d1b04cb313ce66ca"
     },
     {
       "path": "src/app/auth-actions.ts",
@@ -708,7 +708,7 @@
     },
     {
       "path": "src/app/payroll-actions.ts",
-      "sha256": "f1e868670656292a8f66e0fa7ea8ea9af59f5a8f7a40529af53be2cc367b49f8"
+      "sha256": "1b178b71060b42d9323769920a25b94d96d6d7ddae9b57a75823b6cabebff61f"
     },
     {
       "path": "src/app/payroll/slip/[id]/page.tsx",
@@ -1072,7 +1072,7 @@
     },
     {
       "path": "src/components/payroll-form.tsx",
-      "sha256": "9253b0fe7efc3cd6271851ec485d2c99ef4124a802acec30c9d433a8670747c8"
+      "sha256": "d6477d3b411c10a5edaa776eb491bc2072d0355b025f9b1444c8b36c863272c3"
     },
     {
       "path": "src/components/payroll-slip.css",
@@ -1260,7 +1260,7 @@
     },
     {
       "path": "src/lib/attendance.ts",
-      "sha256": "d8d2893dd6164f2a3f675a465614302c0f4a1b74b29b09d4ec20fb2ef90a5533"
+      "sha256": "7d245fff0a6a55abc7b3e0fcc3f91c5ff7cd2d802af4d4aebd9d2bf51dc7822b"
     },
     {
       "path": "src/lib/auth-notice.ts",
@@ -1472,7 +1472,7 @@
     },
     {
       "path": "src/lib/payroll.ts",
-      "sha256": "db3ea98a0fdcd1dbaceb460bb0bdec00f86d5b8eca654a074aa160680a7c86f0"
+      "sha256": "8bcb2ddc568668976f14f962a3f1f3f5484213d5a6382f361ed71f2730cac1c6"
     },
     {
       "path": "src/lib/permission-actions.ts",
@@ -1568,7 +1568,7 @@
     },
     {
       "path": "src/lib/schedule-revalidation.ts",
-      "sha256": "04a2eb512628a7ab6445e3bff942aa37b57e2f3942a2d1ad99b6a46e26f57750"
+      "sha256": "802ce45817b62e579a6bc8caf1450a289f039d70b35d698141a963adf9394b66"
     },
     {
       "path": "src/lib/schedules.ts",
@@ -1617,6 +1617,10 @@
     {
       "path": "tsconfig.json",
       "sha256": "54c8bde2bb01ee7606849d8370a6c5a9117098f2049e04dca0dc63744f309839"
+    },
+    {
+      "path": "prisma/migrations/20261113110000_attendance_late_fine_waiver/migration.sql",
+      "sha256": "a07a9432f0e190f173a94cb05d0b8091368a1696e9709705d02c184ffc2173a2"
     }
   ]
 }

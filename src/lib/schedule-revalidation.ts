@@ -4,6 +4,7 @@ export function refreshScheduleViews() {
     "/jadwal",
     "/absensi",
     "/payroll",
+    "/rekap-saldo",
     "/penempatan",
     "/menu-utama/dashboard",
     "/portal-karyawan",

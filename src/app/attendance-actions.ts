@@ -25,6 +25,11 @@ export async function saveAttendance(_: FormState, form: FormData): Promise<Form
   const user = await requireAccess("absensi");
   const get = (key: string) => String(form.get(key) || "").trim();
   const status = get("status");
+  const fineCorrection = form.has("lateFineWaiver");
+  if (fineCorrection) await requireAccess("payroll", "create");
+  const lateFineWaiver = get("lateFineWaiver");
+  if (lateFineWaiver.length > 500)
+    return { error: "Alasan pembebasan denda maksimal 500 karakter." };
   if (status === "OUTLET_ONLY") return saveOutletCorrection(form);
   if (!Object.hasOwn(attendanceLabels, status)) return { error: "Status kehadiran tidak valid." };
   let checkInMinutes: number | null, checkOutMinutes: number | null;
@@ -108,6 +113,7 @@ export async function saveAttendance(_: FormState, form: FormData): Promise<Form
           checkInNextDay: checkInMinutes !== null && checkInNextDay,
           checkOutNextDay: checkOutMinutes !== null && checkOutNextDay,
           notes: get("notes") || null,
+          ...(fineCorrection ? { lateFineWaiver: lateFineWaiver || null } : {}),
           updatedById: user.id,
         };
         await tx.attendance.upsert({

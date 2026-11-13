@@ -1,4 +1,3 @@
-import { settlementLeft } from "@/lib/settlements";
 import Link from "next/link";
 import { SortableTable } from "@/components/sortable-table";
 import { APP_TIME_ZONE, dateToDisplay } from "@/lib/local-date";
@@ -12,15 +11,13 @@ import { PayrollForm } from "@/components/payroll-form";
 export default async function PayrollPage() {
   await requireAccess("payroll");
   const db = getPrisma();
-  const [employees, rows, ledger, settlementRows] = await Promise.all([
-    db.employee.findMany({ orderBy: { fullName: "asc" } }),
-    db.payroll.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
-    db.moneyEntry.findMany({ where: { status: "APPROVED" } }),
-    db.settlementReview.findMany({
-      where: { status: "APPROVED", amount: { gt: 0 } },
-      include: { deductions: true },
-      orderBy: { date: "asc" },
+  const [employees, rows] = await Promise.all([
+    db.employee.findMany({
+      where: { active: true },
+      orderBy: { fullName: "asc" },
+      select: { id: true, fullName: true, employeeCode: true },
     }),
+    db.payroll.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
   ]);
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: APP_TIME_ZONE,
@@ -28,42 +25,19 @@ export default async function PayrollPage() {
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
-  const loans = ledger
-    .filter((e) => e.kind === "LOAN")
-    .map((e) => ({
-      id: e.id,
-      employeeId: e.employeeId,
-      left:
-        e.amount -
-        ledger
-          .filter((p) => p.kind === "REPAYMENT" && p.sourceId === e.id)
-          .reduce((s, p) => s + p.amount, 0),
-    }));
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-end gap-4">
         <FormDialog title="Hitung payroll" trigger="+ Buat payroll" wide>
           <PayrollForm
-            employees={employees
-              .filter((e) => e.active)
-              .map((e) => ({ id: e.id, name: e.employeeCode || e.fullName }))}
-            loans={loans}
-            settlements={settlementRows.map((s) => ({
-              id: s.id,
-              employeeId: s.employeeId,
-              left: settlementLeft(s),
-              label: `${displayDate(s.date)} · ${s.outletName}`,
-            }))}
+            employees={employees.map((e) => ({ id: e.id, name: e.employeeCode || e.fullName }))}
             today={today}
           />
         </FormDialog>
       </div>
       <div className="panel p-5 text-sm leading-6 text-slate-600">
-        Absensi dengan check-in sudah dihitung untuk upah. Draft belum mengurangi saldo. Setelah
-        dicatat dibayar, potongan kasbon dan pengambilan bonus masuk ke riwayat masing-masing.
-        Periode karyawan yang sama tidak boleh bertumpang tindih. Bonus penjualan berasal dari rekap
-        operasional yang sudah disetujui; omzet CIJERAH mengikuti isian payroll. Potongan selisih
-        setoran disetujui dapat dipilih dan dicicil saat membuat draft.
+        Payroll memakai jadwal, absensi, saldo bonus dan kasbon, serta kekurangan setoran yang sudah
+        disetujui. Saldo diperbarui setelah payroll dicatat dibayar.
       </div>
       <section className="panel overflow-hidden">
         <h2 className="border-b border-slate-100 p-5 font-semibold">

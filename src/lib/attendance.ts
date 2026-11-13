@@ -12,6 +12,7 @@ type AttendanceLike = {
   checkInMinutes: number | null;
   checkOutMinutes: number | null;
   checkInNextDay: boolean;
+  lateFineWaiver?: string | null;
 };
 export function attendanceSummary(
   schedule: { status: string; role: string; shift: string | null; startMinutes: number | null },
@@ -37,6 +38,6 @@ export function attendanceSummary(
     validation: attendance.checkOutMinutes === null ? "CHECK-OUT BELUM DIISI" : "LENGKAP",
     paidUnits,
     lateMinutes,
-    lateFine: Math.min(lateMinutes * 1000, 30000),
+    lateFine: attendance.lateFineWaiver ? 0 : Math.min(lateMinutes * 1000, 30000),
   };
 }

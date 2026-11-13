@@ -18,6 +18,7 @@ export type PayrollDay = {
     checkOutMinutes: number | null;
     checkInNextDay: boolean;
     checkOutNextDay: boolean;
+    lateFineWaiver?: string | null;
   } | null;
 };
 export type PayLine = {
@@ -45,11 +46,14 @@ export function payrollLines(
     let rate = isWarehouse(day.role) ? 80000 : (day.outletDailyRate ?? dailyRate);
     if (summary.paidUnits && !isWarehouse(day.role)) {
       if (day.outletName?.trim().toUpperCase() === "CIJERAH" && date >= "2026-10-01") {
-        if (!Object.hasOwn(sales, date)) throw Error(`Isi omzet CIJERAH tanggal ${date}.`);
+        if (!Object.hasOwn(sales, date))
+          throw Error(
+            `Rekap omzet CIJERAH tanggal ${date} belum tersedia atau belum dikonfirmasi di Monitoring Outlet.`,
+          );
         rate = sales[date] >= 800000 ? 100000 : 95000;
       } else if (!rate)
         throw Error(
-          "Tarif harian belum tersedia. Atur tarif di Master Outlet sebelum membuat jadwal, atau isi tarif cadangan untuk jadwal lama/office.",
+          "Tarif harian belum tersedia. Periksa tarif di Master Outlet atau gaji harian di Data Karyawan.",
         );
     }
     let solo = 0;
