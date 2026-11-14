@@ -10,9 +10,11 @@ const filters = ["ALL", "DRAFT", "PAID", "CANCELLED"] as const;
 export function PayrollHistory({
   records,
   header,
+  createAction,
 }: {
   records: { id: string; name: string; fullName: string; status: PayrollStatus; row: ReactNode }[];
   header: ReactNode;
+  createAction: ReactNode;
 }) {
   const [status, setStatus] = useState<(typeof filters)[number]>("ALL");
   const [search, setSearch] = useState("");
@@ -28,14 +30,17 @@ export function PayrollHistory({
     <section className="panel overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-4 px-5 pt-5 pb-2">
         <h2 className="font-semibold">Riwayat payroll · {records.length} terbaru</h2>
-        <div className="field w-full sm:w-auto">
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            aria-label="Cari nama karyawan atau ID payroll"
-            placeholder="Cari nama atau ID payroll..."
-          />
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <div className="field min-w-0 flex-1 sm:w-60">
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              aria-label="Cari nama karyawan atau ID payroll"
+              placeholder="Cari nama atau ID payroll..."
+            />
+          </div>
+          <div className="shrink-0 whitespace-nowrap">{createAction}</div>
         </div>
       </div>
       <div

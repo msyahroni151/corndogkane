@@ -31,19 +31,15 @@ export default async function PayrollPage() {
   }).format(new Date());
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-end gap-4">
-        <FormDialog title="Hitung payroll" trigger="+ Buat payroll" wide>
-          <PayrollForm
-            employees={employees.map((e) => ({ id: e.id, name: e.employeeCode || e.fullName }))}
-            today={today}
-          />
-        </FormDialog>
-      </div>
-      <div className="panel p-5 text-sm leading-6 text-slate-600">
-        Payroll memakai jadwal, absensi, saldo bonus dan kasbon, serta kekurangan setoran yang sudah
-        disetujui. Saldo diperbarui setelah payroll dicatat dibayar.
-      </div>
       <PayrollHistory
+        createAction={
+          <FormDialog title="Hitung payroll" trigger="+ Buat Payroll" wide>
+            <PayrollForm
+              employees={employees.map((e) => ({ id: e.id, name: e.employeeCode || e.fullName }))}
+              today={today}
+            />
+          </FormDialog>
+        }
         header={
           <thead className="bg-slate-50">
             <tr>
