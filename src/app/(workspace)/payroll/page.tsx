@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SortableTable } from "@/components/sortable-table";
+import { PayrollHistory } from "@/components/payroll-history";
 import { APP_TIME_ZONE, dateToDisplay } from "@/lib/local-date";
 import { displayDate } from "@/lib/placements";
 import { requireAccess } from "@/lib/auth";
@@ -17,7 +17,11 @@ export default async function PayrollPage() {
       orderBy: { fullName: "asc" },
       select: { id: true, fullName: true, employeeCode: true },
     }),
-    db.payroll.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),
+    db.payroll.findMany({
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: 200,
+      include: { employee: { select: { fullName: true } } },
+    }),
   ]);
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: APP_TIME_ZONE,
@@ -39,130 +43,122 @@ export default async function PayrollPage() {
         Payroll memakai jadwal, absensi, saldo bonus dan kasbon, serta kekurangan setoran yang sudah
         disetujui. Saldo diperbarui setelah payroll dicatat dibayar.
       </div>
-      <section className="panel overflow-hidden">
-        <h2 className="border-b border-slate-100 p-5 font-semibold">
-          Riwayat payroll · {rows.length} terbaru
-        </h2>
-        <div className="overflow-x-auto">
-          <SortableTable className="w-full min-w-[1000px] text-left text-sm">
-            <thead className="bg-slate-50">
-              <tr>
-                {[
-                  "ID / Karyawan",
-                  "Periode",
-                  "Unit dibayar / standby",
-                  "Upah dasar",
-                  "Tambahan / bonus",
-                  "Potongan",
-                  "Gaji bersih",
-                  "Status",
-                  "Aksi",
-                ].map((h) => (
-                  <th key={h} className="p-4">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((p) => (
-                <tr key={p.id} className="border-t border-slate-100 align-top">
-                  <td className="p-4" data-sort-value={p.employeeName}>
-                    <p className="font-semibold">{p.employeeName}</p>
-                    <p className="mt-1 text-xs text-slate-500">{p.id}</p>
-                    <details className="mt-3">
-                      <summary className="cursor-pointer text-emerald-700">
-                        Rincian hitungan
-                      </summary>
-                      <div className="mt-3 space-y-2 text-xs">
-                        {(p.details as unknown as PayLine[]).map((l) => (
-                          <p key={l.date}>
-                            {dateToDisplay(l.date)} · {l.outlet} · {l.validation}
-                            <br />
-                            {l.units} × {rupiah(l.rate)} = {rupiah(l.base)}; backup{" "}
-                            {rupiah(l.backup)}; standby {rupiah(l.standby)}; sendiri{" "}
-                            {rupiah(l.solo)}; denda {rupiah(l.fine)}
-                          </p>
-                        ))}
-                        <p>
-                          Bonus ledger: {rupiah(p.bonusPaid)}
-                          <br />
-                          Kasbon: {rupiah(p.loanDeduction)}
-                          <br />
-                          Selisih setoran: {rupiah(p.settlementDeduction)}
-                          <br />
-                          Telat: {rupiah(p.lateDeduction)}
-                          <br />
-                          Lain: {rupiah(p.otherDeduction)}
-                        </p>
-                        <p>{p.notes || "Tanpa catatan"}</p>
-                      </div>
-                    </details>
-                  </td>
-                  <td className="p-4 whitespace-nowrap" data-sort-value={p.startDate.getTime()}>
-                    {displayDate(p.startDate)}
-                    <br />
-                    {displayDate(p.endDate)}
-                  </td>
-                  <td className="p-4" data-sort-value={p.paidUnits}>
-                    {p.paidUnits} / {p.standbyDays}
-                  </td>
-                  <td className="p-4 whitespace-nowrap">{rupiah(p.basePay)}</td>
-                  <td className="p-4 whitespace-nowrap">
-                    {rupiah(p.backupPay + p.standbyPay + p.warehouseBonus + p.bonusPaid)}
-                  </td>
-                  <td className="p-4 whitespace-nowrap">
-                    {rupiah(
-                      p.loanDeduction + p.lateDeduction + p.otherDeduction + p.settlementDeduction,
-                    )}
-                  </td>
-                  <td className="p-4 font-bold whitespace-nowrap">{rupiah(p.netPay)}</td>
-                  <td className="p-4" data-sort-value={payrollStatuses[p.status]}>
-                    <span
-                      className={`inline-block rounded-full px-3 py-1 text-xs ${p.status === "PAID" ? "bg-emerald-50 text-emerald-700" : p.status === "CANCELLED" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`}
-                    >
-                      {payrollStatuses[p.status]}
-                    </span>
-                    {p.paidAt && (
-                      <p className="mt-2 text-xs text-slate-500">
-                        {new Intl.DateTimeFormat("id-ID", {
-                          dateStyle: "medium",
-                          timeZone: APP_TIME_ZONE,
-                        }).format(p.paidAt)}
-                      </p>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex flex-wrap gap-2">
-                      {p.status === "DRAFT" && (
-                        <FormDialog title="Keputusan payroll" trigger="Proses draft">
-                          <PayrollForm id={p.id} today={today} />
-                        </FormDialog>
-                      )}
-                      {p.status === "CANCELLED" ? (
-                        "—"
-                      ) : (
-                        <Link
-                          href={`/payroll/slip/${encodeURIComponent(p.id)}`}
-                          prefetch={false}
-                          className="button-secondary whitespace-nowrap"
-                        >
-                          Lihat Slip Gaji
-                        </Link>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+      <PayrollHistory
+        header={
+          <thead className="bg-slate-50">
+            <tr>
+              {[
+                "ID / Karyawan",
+                "Periode",
+                "Unit dibayar / standby",
+                "Upah dasar",
+                "Tambahan / bonus",
+                "Potongan",
+                "Gaji bersih",
+                "Status",
+                "Aksi",
+              ].map((h) => (
+                <th key={h} className="p-4">
+                  {h}
+                </th>
               ))}
-            </tbody>
-          </SortableTable>
-          {!rows.length && (
-            <p className="p-6 text-sm text-slate-500">
-              Belum ada payroll. Klik Buat payroll untuk menghitung periode.
-            </p>
-          )}
-        </div>
-      </section>
+            </tr>
+          </thead>
+        }
+        records={rows.map((p) => ({
+          id: p.id,
+          name: p.employeeName,
+          fullName: p.employee.fullName,
+          status: p.status,
+          row: (
+            <tr key={p.id} className="border-t border-slate-100 align-top">
+              <td className="p-4" data-sort-value={p.employeeName}>
+                <p className="font-semibold">{p.employeeName}</p>
+                <p className="mt-1 text-xs text-slate-500">{p.id}</p>
+                <details className="mt-3">
+                  <summary className="cursor-pointer text-emerald-700">Rincian hitungan</summary>
+                  <div className="mt-3 space-y-2 text-xs">
+                    {(p.details as unknown as PayLine[]).map((l) => (
+                      <p key={l.date}>
+                        {dateToDisplay(l.date)} · {l.outlet} · {l.validation}
+                        <br />
+                        {l.units} × {rupiah(l.rate)} = {rupiah(l.base)}; backup {rupiah(l.backup)};
+                        standby {rupiah(l.standby)}; sendiri {rupiah(l.solo)}; denda{" "}
+                        {rupiah(l.fine)}
+                      </p>
+                    ))}
+                    <p>
+                      Bonus ledger: {rupiah(p.bonusPaid)}
+                      <br />
+                      Kasbon: {rupiah(p.loanDeduction)}
+                      <br />
+                      Selisih setoran: {rupiah(p.settlementDeduction)}
+                      <br />
+                      Telat: {rupiah(p.lateDeduction)}
+                      <br />
+                      Lain: {rupiah(p.otherDeduction)}
+                    </p>
+                    <p>{p.notes || "Tanpa catatan"}</p>
+                  </div>
+                </details>
+              </td>
+              <td className="p-4 whitespace-nowrap" data-sort-value={p.startDate.getTime()}>
+                {displayDate(p.startDate)}
+                <br />
+                {displayDate(p.endDate)}
+              </td>
+              <td className="p-4" data-sort-value={p.paidUnits}>
+                {p.paidUnits} / {p.standbyDays}
+              </td>
+              <td className="p-4 whitespace-nowrap">{rupiah(p.basePay)}</td>
+              <td className="p-4 whitespace-nowrap">
+                {rupiah(p.backupPay + p.standbyPay + p.warehouseBonus + p.bonusPaid)}
+              </td>
+              <td className="p-4 whitespace-nowrap">
+                {rupiah(
+                  p.loanDeduction + p.lateDeduction + p.otherDeduction + p.settlementDeduction,
+                )}
+              </td>
+              <td className="p-4 font-bold whitespace-nowrap">{rupiah(p.netPay)}</td>
+              <td className="p-4" data-sort-value={payrollStatuses[p.status]}>
+                <span
+                  className={`inline-block rounded-full px-3 py-1 text-xs ${p.status === "PAID" ? "bg-emerald-50 text-emerald-700" : p.status === "CANCELLED" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`}
+                >
+                  {payrollStatuses[p.status]}
+                </span>
+                {p.paidAt && (
+                  <p className="mt-2 text-xs text-slate-500">
+                    {new Intl.DateTimeFormat("id-ID", {
+                      dateStyle: "medium",
+                      timeZone: APP_TIME_ZONE,
+                    }).format(p.paidAt)}
+                  </p>
+                )}
+              </td>
+              <td className="p-4">
+                <div className="flex flex-wrap gap-2">
+                  {p.status === "DRAFT" && (
+                    <FormDialog title="Keputusan payroll" trigger="Proses draft">
+                      <PayrollForm id={p.id} today={today} />
+                    </FormDialog>
+                  )}
+                  {p.status === "CANCELLED" ? (
+                    "—"
+                  ) : (
+                    <Link
+                      href={`/payroll/slip/${encodeURIComponent(p.id)}`}
+                      prefetch={false}
+                      className="button-secondary whitespace-nowrap"
+                    >
+                      Lihat Slip Gaji
+                    </Link>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ),
+        }))}
+      />
     </div>
   );
 }

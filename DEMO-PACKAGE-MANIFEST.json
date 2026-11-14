@@ -504,7 +504,7 @@
     },
     {
       "path": "src/app/(workspace)/payroll/page.tsx",
-      "sha256": "16559f935f7f90a76cb59ea7118652102223271d8b9169b207c6f65edb476195"
+      "sha256": "a46fb03f47010cdda025e2c311454f191414f7678e7bb6e57b380f714a395a1b"
     },
     {
       "path": "src/app/(workspace)/pelanggan/page.tsx",
@@ -1625,6 +1625,10 @@
     {
       "path": "src/lib/leader-home-area.ts",
       "sha256": "55f3761a05cdb762656d26d401addf09007293855a0c2b3c6984469ee5c81460"
+    },
+    {
+      "path": "src/components/payroll-history.tsx",
+      "sha256": "ffb36a72f125a83c964c93ae1fb6047cceaf29f0b143c59908225c35e39a0d3c"
     }
   ]
 }
