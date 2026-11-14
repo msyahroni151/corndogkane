@@ -5,6 +5,7 @@ import { hasPermission } from "@/lib/permissions";
 import { currentUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { parseCivilDate } from "@/lib/placements";
+import { isWorkingSchedule } from "@/lib/schedules";
 import {
   isShareArea,
   resolveShareHomeAreas,
@@ -12,6 +13,13 @@ import {
   type ShareScheduleData,
 } from "@/lib/share-schedule";
 class ScheduleInputError extends Error {}
+const leaderAreaNames = new Map([
+  ["EPUL", "AREA 1"],
+  ["AZI", "AREA 2"],
+  ["ZAEN", "AREA 3"],
+  ["DADAN", "AREA 4"],
+]);
+
 export async function GET(request: Request) {
   const user = await currentUser();
   if (!user)
@@ -58,6 +66,7 @@ export async function GET(request: Request) {
         outletId: true,
         outletName: true,
         areaName: true,
+        employee: { select: { employeeCode: true } },
         startMinutes: true,
         endMinutes: true,
         placement: { select: { areaId: true } },
@@ -73,9 +82,7 @@ export async function GET(request: Request) {
   );
   const shareAreas = areas.filter(isShareArea);
   const activeAreas = new Set(shareAreas.map((a) => a.id));
-  const archivedOutlets = new Set(
-    outlets.filter((o) => !activeAreas.has(o.areaId)).map((o) => o.id),
-  );
+  const areasByName = new Map(areas.map((area) => [area.name.trim().toUpperCase(), area]));
   const visibleOutlets = outlets.filter(
     (o) => activeAreas.has(o.areaId) && (o.active || referencedOutlets.has(o.id)),
   );
@@ -91,24 +98,34 @@ export async function GET(request: Request) {
         note: n.note,
         version: n.updatedAt.toISOString(),
       })),
-    rows: rows.map((r) => ({
-      id: r.id,
-      employeeId: r.employeeId,
-      name: r.employeeName,
-      date: r.date.toISOString().slice(0, 10),
-      role: r.role,
-      status: r.status,
-      outletId: r.outletId,
-      outletName: r.outletName,
-      homeAreaId: r.placement.areaId,
-      homeAreaName: r.areaName,
-      startMinutes: r.startMinutes,
-      endMinutes: r.endMinutes,
-    })),
+    rows: rows.map((r) => {
+      const leaderArea = areasByName.get(
+        leaderAreaNames.get(r.employee.employeeCode?.trim().toUpperCase() ?? "") ?? "",
+      );
+      return {
+        id: r.id,
+        employeeId: r.employeeId,
+        name: r.employeeName,
+        date: r.date.toISOString().slice(0, 10),
+        role: r.role,
+        status: r.status,
+        outletId: r.outletId,
+        outletName: r.outletName,
+        homeAreaId: leaderArea?.id ?? r.placement.areaId,
+        homeAreaName: leaderArea?.name ?? r.areaName,
+        startMinutes: r.startMinutes,
+        endMinutes: r.endMinutes,
+      };
+    }),
   };
+  const visibleOutletIds = new Set(visibleOutlets.map((outlet) => outlet.id));
   data.rows = resolveShareHomeAreas({ ...data, outlets }).filter(
     (row) =>
-      row.date >= data.from && row.date <= data.to && !archivedOutlets.has(row.outletId || ""),
+      row.date >= data.from &&
+      row.date <= data.to &&
+      (row.outletId && isWorkingSchedule(row.status)
+        ? visibleOutletIds.has(row.outletId)
+        : !!row.homeAreaId && activeAreas.has(row.homeAreaId)),
   );
   return Response.json(data, { headers: { "Cache-Control": "private, no-store" } });
 }

@@ -82,25 +82,7 @@ export function shareDayLabel(iso: string) {
 }
 export function shareWeeks(data: ShareScheduleData, scope: string): ShareWeek[] {
   const areas = data.areas.filter(isShareArea),
-    outlets = [...data.outlets];
-  for (const row of data.rows) {
-    if (
-      isWorkingSchedule(row.status) &&
-      row.outletId &&
-      (!row.homeAreaId || areas.some((a) => a.id === row.homeAreaId)) &&
-      !outlets.some((o) => o.id === row.outletId)
-    )
-      outlets.push({
-        id: row.outletId,
-        name: row.outletName || "Outlet sebelumnya",
-        areaId: row.homeAreaId || "unassigned",
-      });
-  }
-  if (
-    outlets.some((o) => o.areaId === "unassigned") ||
-    data.rows.some((r) => !r.homeAreaId && !r.outletId)
-  )
-    areas.push({ id: "unassigned", name: "Belum ada area" });
+    outlets = data.outlets;
   const collator = new Intl.Collator("id-ID", { numeric: true, sensitivity: "base" });
   areas.sort((a, b) => collator.compare(a.name, b.name));
   const dates: string[] = [];
@@ -117,7 +99,7 @@ export function shareWeeks(data: ShareScheduleData, scope: string): ShareWeek[] 
       .filter((a) => !scope || a.id === scope)
       .map((area) => {
         const entries = data.rows.filter((r) => days.includes(r.date));
-        const home = (r: ShareRow) => (r.homeAreaId || "unassigned") === area.id;
+        const home = (r: ShareRow) => r.homeAreaId === area.id;
         const names = (status: string) =>
           days.map((date) => [
             ...new Set(
