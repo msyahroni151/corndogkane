@@ -5,6 +5,7 @@ import { hasPermission } from "@/lib/permissions";
 import { currentUser } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { parseCivilDate } from "@/lib/placements";
+import { leaderHomeAreaName } from "@/lib/leader-home-area";
 import { isWorkingSchedule } from "@/lib/schedules";
 import {
   isShareArea,
@@ -13,13 +14,6 @@ import {
   type ShareScheduleData,
 } from "@/lib/share-schedule";
 class ScheduleInputError extends Error {}
-const leaderAreaNames = new Map([
-  ["EPUL", "AREA 1"],
-  ["AZI", "AREA 2"],
-  ["ZAEN", "AREA 3"],
-  ["DADAN", "AREA 4"],
-]);
-
 export async function GET(request: Request) {
   const user = await currentUser();
   if (!user)
@@ -99,9 +93,7 @@ export async function GET(request: Request) {
         version: n.updatedAt.toISOString(),
       })),
     rows: rows.map((r) => {
-      const leaderArea = areasByName.get(
-        leaderAreaNames.get(r.employee.employeeCode?.trim().toUpperCase() ?? "") ?? "",
-      );
+      const leaderArea = areasByName.get(leaderHomeAreaName(r.employee.employeeCode) ?? "");
       return {
         id: r.id,
         employeeId: r.employeeId,

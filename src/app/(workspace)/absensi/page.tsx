@@ -4,8 +4,14 @@ import { AttendanceDateGate } from "@/components/attendance-date-gate";
 import { SortableTable } from "@/components/sortable-table";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
+import { leaderHomeAreaName } from "@/lib/leader-home-area";
 import { todayWib, displayDate, parseCivilDate } from "@/lib/placements";
-import { canEditScheduleFromAttendance, isWarehouse, isWorkingSchedule, timeLabel } from "@/lib/schedules";
+import {
+  canEditScheduleFromAttendance,
+  isWarehouse,
+  isWorkingSchedule,
+  timeLabel,
+} from "@/lib/schedules";
 import { attendanceLabels, attendanceSummary } from "@/lib/attendance";
 import { attendanceColumns } from "@/lib/attendance-columns";
 import { FormDialog } from "@/components/form-dialog";
@@ -49,9 +55,72 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
   } catch {
     valid = false;
   }
+  const [masterAreas, employees, outlets] = await Promise.all([
+    db.area.findMany({
+      select: {
+        id: true,
+        name: true,
+        color: true,
+        active: true,
+        outlets: { select: { id: true } },
+      },
+      orderBy: { name: "asc" },
+    }),
+    db.employee.findMany({
+      select: { id: true, employeeCode: true, fullName: true, active: true },
+      orderBy: { fullName: "asc" },
+    }),
+    db.outlet.findMany({
+      where: { active: true, closed: false, area: { active: true } },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+  const areaByName = new Map(masterAreas.map((area) => [area.name.trim().toUpperCase(), area]));
+  const areaById = new Map(masterAreas.map((area) => [area.id, area]));
+  const areaByOutlet = new Map(
+    masterAreas.flatMap((area) => area.outlets.map(({ id }) => [id, area] as const)),
+  );
+  const leaderAreas = new Map(
+    employees.flatMap((employee) => {
+      const area = areaByName.get(leaderHomeAreaName(employee.employeeCode) ?? "");
+      return area ? [[employee.id, area] as const] : [];
+    }),
+  );
+  const selectedArea = query.area;
+  const filterArea = masterAreas.find((area) => area.name === selectedArea);
+  const areaFilter: Prisma.ScheduleWhereInput = selectedArea
+    ? {
+        OR: [
+          {
+            employeeId: {
+              in: [...leaderAreas]
+                .filter(([, area]) => area.id === filterArea?.id)
+                .map(([id]) => id),
+            },
+          },
+          {
+            employeeId: { notIn: [...leaderAreas.keys()] },
+            OR: [
+              { areaName: selectedArea },
+              ...(filterArea
+                ? [
+                    { areaName: null, placement: { areaId: filterArea.id } },
+                    {
+                      areaName: null,
+                      placement: { areaId: null },
+                      outletId: { in: filterArea.outlets.map(({ id }) => id) },
+                    },
+                  ]
+                : []),
+            ],
+          },
+        ],
+      }
+    : {};
   const where: Prisma.ScheduleWhereInput = {
     date: { gte: start, lte: end },
-    ...(query.area ? { areaName: query.area } : {}),
+    ...areaFilter,
     ...(query.employee ? { employeeId: query.employee } : {}),
     ...(query.group === "warehouse"
       ? { role: { in: ["CREW_GUDANG", "LEADER_SHIFT"] } }
@@ -59,28 +128,16 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
         ? { role: { in: ["REGULER", "BACKUP"] } }
         : {}),
   };
-  const [rows, count, areas, employees, summaryRows, outlets] = await Promise.all([
+  const [rows, count, summaryRows] = await Promise.all([
     valid
       ? db.schedule.findMany({
           where,
-          include: { attendance: true },
+          include: { attendance: true, placement: { select: { areaId: true } } },
           orderBy: [{ date: "asc" }, { areaName: "asc" }, { employeeName: "asc" }],
           take: 500,
         })
       : [],
     valid ? db.schedule.count({ where }) : 0,
-    db.area
-      .findMany({
-        where: { active: true },
-        select: { name: true },
-        orderBy: { name: "asc" },
-      })
-      .then((areas) => areas.map((area) => ({ areaName: area.name }))),
-    db.employee.findMany({
-      where: { active: true },
-      select: { id: true, employeeCode: true, fullName: true },
-      orderBy: { fullName: "asc" },
-    }),
     valid
       ? db.schedule.findMany({
           where,
@@ -103,11 +160,6 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
           },
         })
       : [],
-    db.outlet.findMany({
-      where: { active: true, closed: false, area: { active: true } },
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
-    }),
   ]);
   const present = summaryRows.filter((r) => attendanceSummary(r, r.attendance).paidUnits > 0);
   const actualEnd = (r: (typeof summaryRows)[number]) =>
@@ -175,6 +227,11 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
     tersimpan: "1",
   });
   const records = rows.map((row) => {
+    const area =
+      leaderAreas.get(row.employeeId) ??
+      (row.areaName === null
+        ? (areaById.get(row.placement.areaId ?? "") ?? areaByOutlet.get(row.outletId ?? ""))
+        : undefined);
     const a = row.attendance,
       summary = attendanceSummary(row, a);
     const duration =
@@ -199,7 +256,7 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
     const data = [
       `${displayDate(row.date)} · ${weekday}`,
       row.employeeName,
-      row.areaName || row.location || "—",
+      area?.name || row.areaName || row.location || "—",
       row.status,
       row.outletName || "—",
       timeLabel(row.startMinutes) || "—",
@@ -220,7 +277,16 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
         : `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, "0")}`,
       presence === validation ? presence : `${presence} · Validasi: ${validation}`,
     ];
-    return { row, a, summary, data, weekday, presence, validation };
+    return {
+      row,
+      a,
+      summary,
+      data,
+      weekday,
+      presence,
+      validation,
+      areaColor: area?.color || row.areaColor,
+    };
   });
   return (
     <div className="space-y-5">
@@ -293,11 +359,13 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
               defaultValue={query.area || ""}
             >
               <option value="">Semua area</option>
-              {areas.map((a) => (
-                <option key={a.areaName} value={a.areaName!}>
-                  {a.areaName}
-                </option>
-              ))}
+              {masterAreas
+                .filter((area) => area.active)
+                .map((area) => (
+                  <option key={area.id} value={area.name}>
+                    {area.name}
+                  </option>
+                ))}
             </select>
           </label>
           <label className="flex flex-col gap-1.5 text-slate-500">
@@ -351,127 +419,131 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                 </tr>
               </thead>
               <tbody>
-                {records.map(({ row, a, summary, data, weekday, presence, validation }) => (
-                  <tr key={row.id}>
-                    {data.map((value, i) => (
-                      <td key={attendanceColumns[i]} className="py-4">
-                        {i === 0 ? (
-                          <>
-                            <p className="font-medium">{displayDate(row.date)}</p>
-                            <p className="mt-1 text-[10px] text-slate-400">{weekday}</p>
-                          </>
-                        ) : i === 1 ? (
-                          <span className="font-semibold">{value}</span>
-                        ) : i === 2 ? (
-                          <span
-                            className="rounded-full px-2 py-1"
-                            style={{ backgroundColor: row.areaColor || "#eef4ee" }}
-                          >
-                            {value}
-                          </span>
-                        ) : i === 10 && summary.lateMinutes > 0 && a?.lateFineWaiver ? (
-                          <>
-                            {value}
-                            <p className="mt-1 text-xs text-slate-500">Dibebaskan · {a.lateFineWaiver}</p>
-                          </>
-                        ) : i === 12 ? (
-                          <div className="flex flex-col items-start gap-1.5">
+                {records.map(
+                  ({ row, a, summary, data, weekday, presence, validation, areaColor }) => (
+                    <tr key={row.id}>
+                      {data.map((value, i) => (
+                        <td key={attendanceColumns[i]} className="py-4">
+                          {i === 0 ? (
+                            <>
+                              <p className="font-medium">{displayDate(row.date)}</p>
+                              <p className="mt-1 text-[10px] text-slate-400">{weekday}</p>
+                            </>
+                          ) : i === 1 ? (
+                            <span className="font-semibold">{value}</span>
+                          ) : i === 2 ? (
                             <span
-                              className={`rounded-full px-2 py-1 text-[10px] font-semibold ${presence === "HADIR" || presence === "LIBUR" ? "bg-emerald-50 text-emerald-700" : summary.paidUnits === 0 && a ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}
+                              className="rounded-full px-2 py-1"
+                              style={{ backgroundColor: areaColor || "#eef4ee" }}
                             >
-                              {presence}
+                              {value}
                             </span>
-                            {validation !== presence && (
+                          ) : i === 10 && summary.lateMinutes > 0 && a?.lateFineWaiver ? (
+                            <>
+                              {value}
+                              <p className="mt-1 text-xs text-slate-500">
+                                Dibebaskan · {a.lateFineWaiver}
+                              </p>
+                            </>
+                          ) : i === 12 ? (
+                            <div className="flex flex-col items-start gap-1.5">
                               <span
-                                className={`rounded-full px-2 py-1 text-[10px] ${validation === "LENGKAP" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
+                                className={`rounded-full px-2 py-1 text-[10px] font-semibold ${presence === "HADIR" || presence === "LIBUR" ? "bg-emerald-50 text-emerald-700" : summary.paidUnits === 0 && a ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-700"}`}
                               >
-                                Validasi: {validation}
+                                {presence}
                               </span>
-                            )}
-                          </div>
-                        ) : i === 5 ? (
-                          <>
-                            <span>{value}</span>
-                            {row.shift && (
-                              <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">
-                                {row.shift === "FULL" ? "[S1-S2]" : `[${row.shift}]`}
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          value
-                        )}
-                      </td>
-                    ))}
-                    <td className="attendance-actions py-4">
-                      {canEditScheduleFromAttendance(row.status) ? (
-                        <FormDialog title={`Jadwal · ${displayDate(row.date)}`} trigger="Edit">
-                          <ScheduleForm
-                            fromAttendance
-                            outlets={outlets}
-                            successRoute={"/absensi?" + filter.toString()}
-                            edit={{
-                              id: row.id,
-                              version: row.updatedAt.toISOString(),
-                              hasAttendance: !!a,
-                              name: row.employeeName,
-                              date: displayDate(row.date),
-                              role: row.role,
-                              status: row.status,
-                              shift: row.shift || "",
-                              outletId: row.outletId || "",
-                              outletName: row.outletName || "",
-                              startTime: timeLabel(row.startMinutes),
-                              endTime: timeLabel(row.endMinutes),
-                              notes: row.notes || "",
-                            }}
-                          />
-                        </FormDialog>
-                      ) : isWorkingSchedule(row.status) ? (
-                        <AttendanceDateGate
-                          date={row.date.toISOString().slice(0, 10)}
-                          today={today}
-                          allowFuture={!isWarehouse(row.role)}
-                        >
-                          <FormDialog
-                            title={`Absensi · ${displayDate(row.date)}`}
-                            trigger="Edit"
-                          >
-                            <AttendanceForm
-                              warehouse={isWarehouse(row.role)}
-                              future={!isWarehouse(row.role) && row.date.toISOString().slice(0, 10) > today}
+                              {validation !== presence && (
+                                <span
+                                  className={`rounded-full px-2 py-1 text-[10px] ${validation === "LENGKAP" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
+                                >
+                                  Validasi: {validation}
+                                </span>
+                              )}
+                            </div>
+                          ) : i === 5 ? (
+                            <>
+                              <span>{value}</span>
+                              {row.shift && (
+                                <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">
+                                  {row.shift === "FULL" ? "[S1-S2]" : `[${row.shift}]`}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            value
+                          )}
+                        </td>
+                      ))}
+                      <td className="attendance-actions py-4">
+                        {canEditScheduleFromAttendance(row.status) ? (
+                          <FormDialog title={`Jadwal · ${displayDate(row.date)}`} trigger="Edit">
+                            <ScheduleForm
+                              fromAttendance
                               outlets={outlets}
                               successRoute={"/absensi?" + filter.toString()}
-                              record={{
-                                scheduleId: row.id,
-                                scheduleVersion: row.updatedAt.toISOString(),
-                                outletId: row.outletId || "",
-                                outletName: row.outletName || "",
-                                location: row.location || "",
+                              edit={{
+                                id: row.id,
+                                version: row.updatedAt.toISOString(),
+                                hasAttendance: !!a,
                                 name: row.employeeName,
                                 date: displayDate(row.date),
-                                status: a?.status || "HADIR",
-                                checkIn: timeLabel(a?.checkInMinutes ?? null),
-                                checkOut: timeLabel(a?.checkOutMinutes ?? null),
-                                checkInNextDay: a?.checkInNextDay || false,
-                                checkOutNextDay:
-                                  a?.checkOutMinutes != null
-                                    ? a.checkOutNextDay
-                                    : row.startMinutes !== null &&
-                                      row.endMinutes !== null &&
-                                      row.endMinutes <= row.startMinutes,
-                                notes: a?.notes || "",
-                                version: a?.updatedAt.toISOString() || "",
+                                role: row.role,
+                                status: row.status,
+                                shift: row.shift || "",
+                                outletId: row.outletId || "",
+                                outletName: row.outletName || "",
+                                startTime: timeLabel(row.startMinutes),
+                                endTime: timeLabel(row.endMinutes),
+                                notes: row.notes || "",
                               }}
                             />
                           </FormDialog>
-                        </AttendanceDateGate>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                        ) : isWorkingSchedule(row.status) ? (
+                          <AttendanceDateGate
+                            date={row.date.toISOString().slice(0, 10)}
+                            today={today}
+                            allowFuture={!isWarehouse(row.role)}
+                          >
+                            <FormDialog title={`Absensi · ${displayDate(row.date)}`} trigger="Edit">
+                              <AttendanceForm
+                                warehouse={isWarehouse(row.role)}
+                                future={
+                                  !isWarehouse(row.role) &&
+                                  row.date.toISOString().slice(0, 10) > today
+                                }
+                                outlets={outlets}
+                                successRoute={"/absensi?" + filter.toString()}
+                                record={{
+                                  scheduleId: row.id,
+                                  scheduleVersion: row.updatedAt.toISOString(),
+                                  outletId: row.outletId || "",
+                                  outletName: row.outletName || "",
+                                  location: row.location || "",
+                                  name: row.employeeName,
+                                  date: displayDate(row.date),
+                                  status: a?.status || "HADIR",
+                                  checkIn: timeLabel(a?.checkInMinutes ?? null),
+                                  checkOut: timeLabel(a?.checkOutMinutes ?? null),
+                                  checkInNextDay: a?.checkInNextDay || false,
+                                  checkOutNextDay:
+                                    a?.checkOutMinutes != null
+                                      ? a.checkOutNextDay
+                                      : row.startMinutes !== null &&
+                                        row.endMinutes !== null &&
+                                        row.endMinutes <= row.startMinutes,
+                                  notes: a?.notes || "",
+                                  version: a?.updatedAt.toISOString() || "",
+                                }}
+                              />
+                            </FormDialog>
+                          </AttendanceDateGate>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                    </tr>
+                  ),
+                )}
                 {!records.length && (
                   <tr>
                     <td
