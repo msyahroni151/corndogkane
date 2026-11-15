@@ -4,7 +4,6 @@ import { outletBonus, outletBonusRate } from "@/lib/outlet-bonus";
 import { syncOutletBonus } from "@/lib/outlet-bonus-ledger";
 import { getPrisma } from "@/lib/db";
 import { parseCivilDate } from "@/lib/placements";
-import { hasOutletWorkSchedule } from "@/lib/outlet-schedule-data";
 import {
   operationalCash,
   operationalProducts,
@@ -32,7 +31,6 @@ export async function saveOutletOperation(
     historicalCrewIds?: ReadonlySet<string>;
     historicalOutletIds?: ReadonlySet<string>;
     initialBonusId?: string;
-    requireWorkSchedule?: boolean;
     reviseManualCsv?: boolean;
   } = {},
 ) {
@@ -85,7 +83,7 @@ export async function saveOutletOperation(
     });
     if (closure?.closed)
       throw new InputError(
-        "Tanggal ini sudah tercatat tutup dalam riwayat operasional outlet.",
+        "Outlet tercatat TUTUP pada tanggal ini. Ubah status menjadi Buka di Monitoring Outlet terlebih dahulu.",
         409,
       );
     const existing = await tx.outletOperation.findUnique({
@@ -115,12 +113,6 @@ export async function saveOutletOperation(
         !verifiedHistoricalOutlet)
     )
       throw new InputError("Outlet tidak aktif atau tidak ditemukan.");
-    if (
-      options.requireWorkSchedule &&
-      !existing &&
-      !(await hasOutletWorkSchedule(tx, outletId, date))
-    )
-      throw new InputError("Belum ada jadwal kerja untuk outlet pada tanggal yang dipilih.", 409);
     const crew = await tx.employee.findUnique({ where: { id: crewId } });
     if (!crew || (!crew.active && !allowInactiveCrew && crew.id !== existing?.crewId))
       throw new InputError("Pilih crew aktif yang terdaftar.");
