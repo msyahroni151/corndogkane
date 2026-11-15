@@ -11,12 +11,18 @@ type Props = Omit<
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
+  onOptionSelect?: (value: string) => void;
+  selectedValue?: string;
+  inline?: boolean;
 };
 export function EditableCombobox({
   options,
   value,
   defaultValue = "",
   onValueChange,
+  onOptionSelect,
+  selectedValue,
+  inline = false,
   onFocus,
   onBlur,
   onKeyDown,
@@ -59,13 +65,15 @@ export function EditableCombobox({
   };
   const select = (next: string) => {
     if (input.current?.matches(":disabled") || readOnly) return;
-    update(next);
+    if (onOptionSelect) onOptionSelect(next);
+    else update(next);
     setOpen(false);
     setActive(-1);
   };
   useEffect(() => {
     if (!open) return;
     const place = () => {
+      if (inline) return;
       const rect = root.current?.getBoundingClientRect();
       if (!rect) return;
       const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
@@ -98,150 +106,156 @@ export function EditableCombobox({
       window.removeEventListener("scroll", place, true);
       window.visualViewport?.removeEventListener("resize", place);
     };
-  }, [open]);
+  }, [open, inline]);
   useEffect(() => {
     if (open && active >= 0)
       popup.current
         ?.querySelector(`[id="${CSS.escape(id + "-" + active)}"]`)
         ?.scrollIntoView({ block: "nearest" });
   }, [open, active, id]);
+  const list = (
+    <div
+      ref={popup}
+      id={id}
+      role="listbox"
+      aria-label={props["aria-label"] || props.placeholder || "Pilihan tersedia"}
+      className={`editable-combobox-list${inline ? " mt-1.5 max-h-44" : ""}`}
+      style={!inline && position ? { position: "fixed", ...position } : undefined}
+    >
+      {visible.length ? (
+        visible.map((choice, index) => (
+          <button
+            type="button"
+            role="option"
+            id={id + "-" + index}
+            key={choice.value}
+            tabIndex={-1}
+            aria-selected={choice.value.toLowerCase() === (selectedValue ?? current).toLowerCase()}
+            data-highlighted={index === active || undefined}
+            className="editable-combobox-option"
+            onPointerDown={(e) => e.preventDefault()}
+            onMouseEnter={() => setActive(index)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              select(choice.value);
+            }}
+          >
+            {choice.label}
+          </button>
+        ))
+      ) : (
+        <p className="editable-combobox-empty">
+          {onOptionSelect
+            ? "Tidak ada pilihan yang cocok."
+            : "Tidak ada pilihan yang cocok. Teks baru tetap dapat disimpan."}
+        </p>
+      )}
+    </div>
+  );
   return (
     <div className="editable-combobox" ref={root}>
-      <input
-        {...props}
-        ref={input}
-        value={current}
-        disabled={disabled}
-        readOnly={readOnly}
-        className={"editable-combobox-input " + className}
-        role="combobox"
-        aria-autocomplete="list"
-        aria-expanded={open}
-        aria-controls={open ? id : undefined}
-        aria-activedescendant={
-          open && active >= 0 && active < visible.length ? id + "-" + active : undefined
-        }
-        autoComplete="off"
-        onChange={(e) => {
-          update(e.target.value);
-          setSearching(true);
-          setOpen(true);
-          setActive(-1);
-        }}
-        onFocus={(e) => {
-          if (!readOnly) {
-            setSearching(false);
-            setOpen(true);
-            setActive(-1);
-          }
-          onFocus?.(e);
-        }}
-        onClick={(e) => {
-          if (!readOnly && !open) {
-            setSearching(false);
-            setOpen(true);
-            setActive(-1);
-          }
-          props.onClick?.(e);
-        }}
-        onBlur={(e) => {
-          setOpen(false);
-          onBlur?.(e);
-        }}
-        onKeyDown={(e) => {
-          onKeyDown?.(e);
-          if (e.defaultPrevented || readOnly) return;
-          if (e.key === "Escape" && open) {
-            e.preventDefault();
-            e.stopPropagation();
-            setOpen(false);
-          } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-            e.preventDefault();
-            setOpen(true);
-            setActive((old) =>
-              Math.max(0, Math.min(visible.length - 1, old + (e.key === "ArrowDown" ? 1 : -1))),
-            );
-          } else if (e.key === "Enter" && open) {
-            e.preventDefault();
-            if (active >= 0 && visible[active]) select(visible[active].value);
-            else setOpen(false);
-          } else if (e.key === "Tab") setOpen(false);
-        }}
-      />
-      {!readOnly && (
-        <button
-          type="button"
+      <div className="relative">
+        <input
+          {...props}
+          ref={input}
+          value={current}
           disabled={disabled}
-          aria-label="Tampilkan pilihan"
+          readOnly={readOnly}
+          className={"editable-combobox-input " + className}
+          role="combobox"
+          aria-autocomplete="list"
           aria-expanded={open}
-          className="editable-combobox-toggle"
-          tabIndex={-1}
-          onPointerDown={(e) => e.preventDefault()}
-          onClick={(e) => {
-            e.preventDefault();
-            if (input.current?.matches(":disabled")) return;
-            const wasOpen = open;
-            input.current?.focus();
-            setSearching(false);
+          aria-controls={open ? id : undefined}
+          aria-activedescendant={
+            open && active >= 0 && active < visible.length ? id + "-" + active : undefined
+          }
+          autoComplete="off"
+          onChange={(e) => {
+            update(e.target.value);
+            setSearching(true);
+            setOpen(true);
             setActive(-1);
-            setOpen(!wasOpen);
           }}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            aria-hidden="true"
+          onFocus={(e) => {
+            if (!readOnly) {
+              setSearching(false);
+              setOpen(true);
+              setActive(-1);
+            }
+            onFocus?.(e);
+          }}
+          onClick={(e) => {
+            if (!readOnly && !open) {
+              setSearching(false);
+              setOpen(true);
+              setActive(-1);
+            }
+            props.onClick?.(e);
+          }}
+          onBlur={(e) => {
+            setOpen(false);
+            onBlur?.(e);
+          }}
+          onKeyDown={(e) => {
+            onKeyDown?.(e);
+            if (e.defaultPrevented || readOnly) return;
+            if (e.key === "Escape" && open) {
+              e.preventDefault();
+              e.stopPropagation();
+              setOpen(false);
+            } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+              e.preventDefault();
+              setOpen(true);
+              setActive((old) =>
+                Math.max(0, Math.min(visible.length - 1, old + (e.key === "ArrowDown" ? 1 : -1))),
+              );
+            } else if (e.key === "Enter" && open) {
+              e.preventDefault();
+              if (active >= 0 && visible[active]) select(visible[active].value);
+              else setOpen(false);
+            } else if (e.key === "Tab") setOpen(false);
+          }}
+        />
+        {!readOnly && (
+          <button
+            type="button"
+            disabled={disabled}
+            aria-label="Tampilkan pilihan"
+            aria-expanded={open}
+            className="editable-combobox-toggle"
+            tabIndex={-1}
+            onPointerDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              if (input.current?.matches(":disabled")) return;
+              const wasOpen = open;
+              input.current?.focus();
+              setSearching(false);
+              setActive(-1);
+              setOpen(!wasOpen);
+            }}
           >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </button>
-      )}
-      {open &&
-        position &&
-        input.current &&
-        createPortal(
-          <div
-            ref={popup}
-            id={id}
-            role="listbox"
-            aria-label={props["aria-label"] || props.placeholder || "Pilihan tersedia"}
-            className="editable-combobox-list"
-            style={{ position: "fixed", ...position }}
-          >
-            {visible.length ? (
-              visible.map((choice, index) => (
-                <button
-                  type="button"
-                  role="option"
-                  id={id + "-" + index}
-                  key={choice.value}
-                  tabIndex={-1}
-                  aria-selected={choice.value.toLowerCase() === current.toLowerCase()}
-                  data-highlighted={index === active || undefined}
-                  className="editable-combobox-option"
-                  onPointerDown={(e) => e.preventDefault()}
-                  onMouseEnter={() => setActive(index)}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    select(choice.value);
-                  }}
-                >
-                  {choice.label}
-                </button>
-              ))
-            ) : (
-              <p className="editable-combobox-empty">
-                Tidak ada pilihan yang cocok. Teks baru tetap dapat disimpan.
-              </p>
-            )}
-          </div>,
-          input.current.closest("dialog") || document.body,
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
         )}
+      </div>
+      {open &&
+        (inline
+          ? list
+          : position &&
+            input.current &&
+            createPortal(list, input.current.closest("dialog") || document.body))}
     </div>
   );
 }

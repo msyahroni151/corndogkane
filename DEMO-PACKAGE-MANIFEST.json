@@ -876,7 +876,7 @@
     },
     {
       "path": "src/components/editable-combobox.tsx",
-      "sha256": "6e7e2d4f944b4fe7caeb2c4f8cfa7f15ab1c471844eae5ee21bef40a82eb6a8c"
+      "sha256": "4581761eda2a3fb6719b18693c23ab7200f8a4befd6d30323c405cea0abe12c2"
     },
     {
       "path": "src/components/employee-form.tsx",
@@ -1072,7 +1072,7 @@
     },
     {
       "path": "src/components/payroll-form.tsx",
-      "sha256": "d837d9ed1bbe11833b5665f2a097425f8f54034caabe34804b4f48a430d5f904"
+      "sha256": "31e9b9b132f92e2868950cb448f053e5d31ef31887eaa56722460bede28a0e40"
     },
     {
       "path": "src/components/payroll-slip.css",

@@ -1,6 +1,7 @@
 "use client";
 import { LocalInput } from "@/components/local-input";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { EditableCombobox } from "@/components/editable-combobox";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCloseFormDialog } from "@/components/form-dialog";
 import { saveAttendance } from "@/app/attendance-actions";
@@ -101,6 +102,8 @@ export function PayrollForm({
     {},
   );
   const [employee, setEmployee] = useState("");
+  const [employeeSearch, setEmployeeSearch] = useState("");
+  const employeeInputId = useId();
   const [startDate, setStartDate] = useState(today.slice(0, 8) + "01");
   const [endDate, setEndDate] = useState(today);
   const [reviewed, setReviewed] = useState("");
@@ -168,25 +171,35 @@ export function PayrollForm({
         ) : (
           <>
             <fieldset disabled={pending} className="grid gap-5 sm:grid-cols-2">
-              <label className="field sm:col-span-2">
-                Karyawan *
-                <select
-                  name="employeeId"
+              <div className="field sm:col-span-2">
+                <label htmlFor={employeeInputId}>Karyawan *</label>
+                <input type="hidden" name="employeeId" value={employee} />
+                <EditableCombobox
+                  id={employeeInputId}
+                  inline
                   required
-                  value={employee}
-                  onChange={(e) => {
-                    setEmployee(e.target.value);
-                    resetPreview();
+                  placeholder="Cari karyawan…"
+                  title="Pilih karyawan dari daftar."
+                  pattern={employee ? undefined : "(?!)"}
+                  options={employees.map(({ id, name }) => ({ value: id, label: name }))}
+                  value={employeeSearch}
+                  selectedValue={employee}
+                  onValueChange={(text) => {
+                    setEmployeeSearch(text);
+                    if (employee) {
+                      setEmployee("");
+                      resetPreview();
+                    }
                   }}
-                >
-                  <option value="">Pilih karyawan…</option>
-                  {employees.map((entry) => (
-                    <option key={entry.id} value={entry.id}>
-                      {entry.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onOptionSelect={(id) => {
+                    const selected = employees.find((entry) => entry.id === id);
+                    if (!selected) return;
+                    setEmployee(selected.id);
+                    setEmployeeSearch(selected.name);
+                    if (selected.id !== employee) resetPreview();
+                  }}
+                />
+              </div>
               <label className="field">
                 Periode mulai *
                 <LocalInput
@@ -220,7 +233,9 @@ export function PayrollForm({
                 <dl className="grid gap-2 rounded-xl bg-slate-50 p-4 text-sm">
                   <div className="flex justify-between gap-3 border-b border-slate-200 pb-2">
                     <dt>Total hari kerja</dt>
-                    <dd className="font-semibold">{preview.paidUnits.toLocaleString("id-ID")} hari</dd>
+                    <dd className="font-semibold">
+                      {preview.paidUnits.toLocaleString("id-ID")} hari
+                    </dd>
                   </div>
                   {[
                     ["Upah dasar", preview.basePay],
