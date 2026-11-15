@@ -483,6 +483,8 @@ async function updateDailySchedule(form: FormData, fromAttendance = false): Prom
         const status = get("status");
         if (!["KERJA", "LIBUR", "STANBY", "OPENINGAN"].includes(status))
           invalid("Status jadwal tidak valid.");
+        if (fromAttendance && isWorkingSchedule(record.status) && isWorkingSchedule(status))
+          invalid("Pilih Libur atau Standby untuk mengubah status kerja dari Rekap Absen.");
         if (["STANBY", "OPENINGAN"].includes(status) && isWarehouse(record.role))
           invalid("Status Standby dan Openingan berlaku untuk karyawan outlet.");
         if (get("notes").length > 2000) invalid("Catatan maksimal 2000 karakter.");
@@ -560,7 +562,7 @@ async function updateDailySchedule(form: FormData, fromAttendance = false): Prom
   } catch (e) {
     return failure(e);
   }
-  refreshSchedulePages();
+  refreshScheduleViews();
   return { success: "Jadwal diperbarui." };
 }
 

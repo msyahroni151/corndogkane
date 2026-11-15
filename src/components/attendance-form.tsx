@@ -1,12 +1,51 @@
 "use client";
 import { OutletSelect, type ScheduleOutletChoice } from "@/components/schedule-outlet-form";
 import { LocalInput } from "@/components/local-input";
-import { useActionState, useState } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { saveAttendance } from "@/app/attendance-actions";
 import { useCloseFormDialog } from "@/components/form-dialog";
 import { attendanceLabels } from "@/lib/attendance";
 import type { FormState } from "@/lib/form-state";
+
+export function AttendanceEditOptions({
+  attendance,
+  schedule,
+}: {
+  attendance: ReactNode;
+  schedule: ReactNode;
+}) {
+  const [editSchedule, setEditSchedule] = useState(false);
+  if (!attendance || !schedule) return attendance || schedule;
+  return (
+    <>
+      <div
+        className="flex gap-2 border-b border-slate-100 px-6 py-3"
+        role="group"
+        aria-label="Pilihan edit"
+      >
+        <button
+          type="button"
+          className={editSchedule ? "button-secondary" : "button-primary"}
+          aria-pressed={!editSchedule}
+          onClick={() => setEditSchedule(false)}
+        >
+          Edit absensi
+        </button>
+        <button
+          type="button"
+          className={editSchedule ? "button-primary" : "button-secondary"}
+          aria-pressed={editSchedule}
+          onClick={() => setEditSchedule(true)}
+        >
+          Ubah status jadwal
+        </button>
+      </div>
+      <div hidden={editSchedule}>{attendance}</div>
+      <div hidden={!editSchedule}>{schedule}</div>
+    </>
+  );
+}
 export function AttendanceForm({
   record,
   warehouse,

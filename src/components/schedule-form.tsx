@@ -3,7 +3,11 @@ import { ScheduleOutletForm } from "@/components/schedule-outlet-form";
 import { LocalInput } from "@/components/local-input";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSchedules, updateSchedule, updateScheduleFromAttendance } from "@/app/schedule-actions";
+import {
+  createSchedules,
+  updateSchedule,
+  updateScheduleFromAttendance,
+} from "@/app/schedule-actions";
 import { useCloseFormDialog } from "@/components/form-dialog";
 import { isWarehouse, isWorkingSchedule, shiftLabels } from "@/lib/schedules";
 import type { FormState } from "@/lib/form-state";
@@ -571,8 +575,9 @@ function DailyScheduleForm({
   successRoute: string;
   fromAttendance: boolean;
 }) {
+  const changeWorkingStatus = fromAttendance && isWorkingSchedule(edit.status);
   const [draft, setDraft] = useState({
-    status: edit.status,
+    status: changeWorkingStatus ? "" : edit.status,
     shift: edit.shift || "S1",
     outletId: edit.outletId,
     timeMode: edit.startTime && edit.endTime ? "manual" : "outlet",
@@ -609,6 +614,7 @@ function DailyScheduleForm({
           Status jadwal
           <select
             name="status"
+            required
             value={draft.status}
             onChange={(e) => {
               change("status", e.target.value);
@@ -616,12 +622,16 @@ function DailyScheduleForm({
                 change("timeMode", "outlet");
             }}
           >
-            <option value="KERJA">Kerja</option>
+            {changeWorkingStatus ? (
+              <option value="">Pilih status…</option>
+            ) : (
+              <option value="KERJA">Kerja</option>
+            )}
             <option value="LIBUR">Libur</option>
             {!warehouse && (
               <>
                 <option value="STANBY">Standby</option>
-                <option value="OPENINGAN">Openingan</option>
+                {!changeWorkingStatus && <option value="OPENINGAN">Openingan</option>}
               </>
             )}
           </select>

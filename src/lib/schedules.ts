@@ -30,5 +30,5 @@ export function isWorkingSchedule(status: string) {
 }
 
 export function canEditScheduleFromAttendance(status: string) {
-  return status === "LIBUR" || status === "STANBY";
+  return isWorkingSchedule(status) || status === "LIBUR" || status === "STANBY";
 }

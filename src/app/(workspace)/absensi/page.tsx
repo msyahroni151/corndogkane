@@ -16,7 +16,7 @@ import { attendanceLabels, attendanceSummary } from "@/lib/attendance";
 import { attendanceColumns } from "@/lib/attendance-columns";
 import { FormDialog } from "@/components/form-dialog";
 import { ScheduleForm } from "@/components/schedule-form";
-import { AttendanceForm } from "@/components/attendance-form";
+import { AttendanceEditOptions, AttendanceForm } from "@/components/attendance-form";
 import { AttendanceExport } from "@/components/attendance-export";
 import "@/components/attendance-table.css";
 import { UiIcon, type IconName } from "@/components/ui-icon";
@@ -475,68 +475,76 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                         </td>
                       ))}
                       <td className="attendance-actions py-4">
-                        {canEditScheduleFromAttendance(row.status) ? (
-                          <FormDialog title={`Jadwal · ${displayDate(row.date)}`} trigger="Edit">
-                            <ScheduleForm
-                              fromAttendance
-                              outlets={outlets}
-                              successRoute={"/absensi?" + filter.toString()}
-                              edit={{
-                                id: row.id,
-                                version: row.updatedAt.toISOString(),
-                                hasAttendance: !!a,
-                                name: row.employeeName,
-                                date: displayDate(row.date),
-                                role: row.role,
-                                status: row.status,
-                                shift: row.shift || "",
-                                outletId: row.outletId || "",
-                                outletName: row.outletName || "",
-                                startTime: timeLabel(row.startMinutes),
-                                endTime: timeLabel(row.endMinutes),
-                                notes: row.notes || "",
-                              }}
+                        {canEditScheduleFromAttendance(row.status) &&
+                        (!a || isWorkingSchedule(row.status)) ? (
+                          <FormDialog title={`Absensi · ${displayDate(row.date)}`} trigger="Edit">
+                            <AttendanceEditOptions
+                              schedule={
+                                !a && (
+                                  <ScheduleForm
+                                    fromAttendance
+                                    outlets={outlets}
+                                    successRoute={"/absensi?" + filter.toString()}
+                                    edit={{
+                                      id: row.id,
+                                      version: row.updatedAt.toISOString(),
+                                      hasAttendance: false,
+                                      name: row.employeeName,
+                                      date: displayDate(row.date),
+                                      role: row.role,
+                                      status: row.status,
+                                      shift: row.shift || "",
+                                      outletId: row.outletId || "",
+                                      outletName: row.outletName || "",
+                                      startTime: timeLabel(row.startMinutes),
+                                      endTime: timeLabel(row.endMinutes),
+                                      notes: row.notes || "",
+                                    }}
+                                  />
+                                )
+                              }
+                              attendance={
+                                isWorkingSchedule(row.status) && (
+                                  <AttendanceDateGate
+                                    date={row.date.toISOString().slice(0, 10)}
+                                    today={today}
+                                    allowFuture={!isWarehouse(row.role)}
+                                  >
+                                    <AttendanceForm
+                                      warehouse={isWarehouse(row.role)}
+                                      future={
+                                        !isWarehouse(row.role) &&
+                                        row.date.toISOString().slice(0, 10) > today
+                                      }
+                                      outlets={outlets}
+                                      successRoute={"/absensi?" + filter.toString()}
+                                      record={{
+                                        scheduleId: row.id,
+                                        scheduleVersion: row.updatedAt.toISOString(),
+                                        outletId: row.outletId || "",
+                                        outletName: row.outletName || "",
+                                        location: row.location || "",
+                                        name: row.employeeName,
+                                        date: displayDate(row.date),
+                                        status: a?.status || "HADIR",
+                                        checkIn: timeLabel(a?.checkInMinutes ?? null),
+                                        checkOut: timeLabel(a?.checkOutMinutes ?? null),
+                                        checkInNextDay: a?.checkInNextDay || false,
+                                        checkOutNextDay:
+                                          a?.checkOutMinutes != null
+                                            ? a.checkOutNextDay
+                                            : row.startMinutes !== null &&
+                                              row.endMinutes !== null &&
+                                              row.endMinutes <= row.startMinutes,
+                                        notes: a?.notes || "",
+                                        version: a?.updatedAt.toISOString() || "",
+                                      }}
+                                    />
+                                  </AttendanceDateGate>
+                                )
+                              }
                             />
                           </FormDialog>
-                        ) : isWorkingSchedule(row.status) ? (
-                          <AttendanceDateGate
-                            date={row.date.toISOString().slice(0, 10)}
-                            today={today}
-                            allowFuture={!isWarehouse(row.role)}
-                          >
-                            <FormDialog title={`Absensi · ${displayDate(row.date)}`} trigger="Edit">
-                              <AttendanceForm
-                                warehouse={isWarehouse(row.role)}
-                                future={
-                                  !isWarehouse(row.role) &&
-                                  row.date.toISOString().slice(0, 10) > today
-                                }
-                                outlets={outlets}
-                                successRoute={"/absensi?" + filter.toString()}
-                                record={{
-                                  scheduleId: row.id,
-                                  scheduleVersion: row.updatedAt.toISOString(),
-                                  outletId: row.outletId || "",
-                                  outletName: row.outletName || "",
-                                  location: row.location || "",
-                                  name: row.employeeName,
-                                  date: displayDate(row.date),
-                                  status: a?.status || "HADIR",
-                                  checkIn: timeLabel(a?.checkInMinutes ?? null),
-                                  checkOut: timeLabel(a?.checkOutMinutes ?? null),
-                                  checkInNextDay: a?.checkInNextDay || false,
-                                  checkOutNextDay:
-                                    a?.checkOutMinutes != null
-                                      ? a.checkOutNextDay
-                                      : row.startMinutes !== null &&
-                                        row.endMinutes !== null &&
-                                        row.endMinutes <= row.startMinutes,
-                                  notes: a?.notes || "",
-                                  version: a?.updatedAt.toISOString() || "",
-                                }}
-                              />
-                            </FormDialog>
-                          </AttendanceDateGate>
                         ) : (
                           "—"
                         )}
