@@ -477,7 +477,13 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                       <td className="attendance-actions py-4">
                         {canEditScheduleFromAttendance(row.status) &&
                         (!a || isWorkingSchedule(row.status)) ? (
-                          <FormDialog title={`Absensi · ${displayDate(row.date)}`} trigger="Edit">
+                          <FormDialog
+                            title={`Absensi · ${row.employeeName}`}
+                            subtitle={[displayDate(row.date), row.outletName || row.location]
+                              .filter(Boolean)
+                              .join(" · ")}
+                            trigger="Edit"
+                          >
                             <AttendanceEditOptions
                               schedule={
                                 !a && (
@@ -523,9 +529,6 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
                                         scheduleVersion: row.updatedAt.toISOString(),
                                         outletId: row.outletId || "",
                                         outletName: row.outletName || "",
-                                        location: row.location || "",
-                                        name: row.employeeName,
-                                        date: displayDate(row.date),
                                         status: a?.status || "HADIR",
                                         checkIn: timeLabel(a?.checkInMinutes ?? null),
                                         checkOut: timeLabel(a?.checkOutMinutes ?? null),

@@ -602,8 +602,8 @@ function DailyScheduleForm({
     >
       <input name="id" type="hidden" value={edit.id} />
       <input name="version" type="hidden" value={edit.version} />
-      <p className="mb-5 text-sm font-semibold">{edit.name}</p>
-      {!warehouse && (
+      {!fromAttendance && <p className="mb-5 text-sm font-semibold">{edit.name}</p>}
+      {!warehouse && !fromAttendance && (
         <p className="mb-5 text-xs text-slate-500">
           Standby: Rp50.000 per hari, outlet opsional. Jika jadi masuk, pilih Kerja dan outlet yang
           dijaga agar payroll memakai tarif outlet tanpa uang standby.
@@ -638,7 +638,7 @@ function DailyScheduleForm({
         </label>
         {!warehouse && (isWorkingSchedule(draft.status) || draft.status === "STANBY") && (
           <label className="field">
-            Outlet kerja {draft.status === "STANBY" ? "(opsional)" : "*"}
+            {draft.status === "STANBY" ? "Outlet standby (opsional)" : "Outlet kerja *"}
             <select
               name="outletId"
               required={draft.status !== "STANBY"}

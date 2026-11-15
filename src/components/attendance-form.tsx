@@ -20,13 +20,13 @@ export function AttendanceEditOptions({
   return (
     <>
       <div
-        className="flex gap-2 border-b border-slate-100 px-6 py-3"
+        className="flex gap-5 border-b border-slate-200 px-4 sm:px-6"
         role="group"
         aria-label="Pilihan edit"
       >
         <button
           type="button"
-          className={editSchedule ? "button-secondary" : "button-primary"}
+          className="border-b-2 border-transparent py-3 text-sm font-medium text-slate-500 hover:text-emerald-900 aria-pressed:border-[#395848] aria-pressed:text-[#254637]"
           aria-pressed={!editSchedule}
           onClick={() => setEditSchedule(false)}
         >
@@ -34,7 +34,7 @@ export function AttendanceEditOptions({
         </button>
         <button
           type="button"
-          className={editSchedule ? "button-primary" : "button-secondary"}
+          className="border-b-2 border-transparent py-3 text-sm font-medium text-slate-500 hover:text-emerald-900 aria-pressed:border-[#395848] aria-pressed:text-[#254637]"
           aria-pressed={editSchedule}
           onClick={() => setEditSchedule(true)}
         >
@@ -58,9 +58,6 @@ export function AttendanceForm({
     scheduleVersion: string;
     outletId: string;
     outletName: string;
-    location: string;
-    name: string;
-    date: string;
     status: string;
     checkIn: string;
     checkOut: string;
@@ -91,23 +88,15 @@ export function AttendanceForm({
       action={action}
       aria-busy={pending}
       onReset={(e) => e.preventDefault()}
-      className="panel p-6"
+      className="panel px-4 pt-5 pb-4 sm:px-6"
       aria-label="Catat absensi"
     >
       <input type="hidden" name="scheduleId" value={record.scheduleId} />
       <input type="hidden" name="version" value={record.version} />
       <input type="hidden" name="scheduleVersion" value={record.scheduleVersion} />
-      <p className="font-semibold">{record.name}</p>
-      <p className="mt-1 text-xs text-slate-500">{record.date}</p>
-      <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">
-        {warehouse ? "Lokasi bertugas" : "Outlet pada jadwal"}:{" "}
-        <strong>
-          {warehouse ? record.location || "Gudang" : record.outletName || "Belum diatur"}
-        </strong>
-      </p>
-      <div className="mt-5 grid gap-5 sm:grid-cols-2">
+      <div className="grid items-start gap-4 sm:grid-cols-2">
         {!warehouse && (
-          <div className="sm:col-span-2">
+          <div className={future ? "sm:col-span-2" : "min-w-0"}>
             <OutletSelect
               outlets={outlets}
               currentId={record.outletId}
@@ -117,17 +106,18 @@ export function AttendanceForm({
               disabled={pending}
               onChange={(outletId) => setDraft((old) => ({ ...old, outletId }))}
             />
-            <p className="mt-2 text-xs text-slate-500">
-              Outlet yang dipilih ikut tersimpan di jadwal. Jam jadwal tetap; tarif harian mengikuti
-              outlet jika diubah.
-            </p>
+            {draft.outletId !== record.outletId && (
+              <p className="mt-2 text-xs text-slate-500">
+                Perubahan outlet dan tarif harian ikut tersimpan di jadwal.
+              </p>
+            )}
           </div>
         )}
 
         {future ? (
           <input type="hidden" name="status" value="OUTLET_ONLY" />
         ) : (
-          <label className="field sm:col-span-2">
+          <label className={warehouse ? "field sm:col-span-2" : "field"}>
             Status kehadiran
             <select
               name="status"
@@ -147,46 +137,54 @@ export function AttendanceForm({
         )}
         {!outletOnly && (
           <>
-            <div>
-              <label className="field">
-                Check-in
-                <LocalInput
-                  type="time"
-                  name="checkIn"
-                  value={draft.checkIn}
-                  onChange={(e) => setDraft({ ...draft, checkIn: e.target.value })}
-                />
-              </label>
-              <label className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-                <LocalInput
-                  type="checkbox"
-                  name="checkInNextDay"
-                  checked={draft.checkInNextDay}
-                  onChange={(e) => setDraft({ ...draft, checkInNextDay: e.target.checked })}
-                />
-                Masuk hari berikutnya
-              </label>
-            </div>
-            <div>
-              <label className="field">
-                Check-out
-                <LocalInput
-                  type="time"
-                  name="checkOut"
-                  value={draft.checkOut}
-                  onChange={(e) => setDraft({ ...draft, checkOut: e.target.value })}
-                />
-              </label>
-              <label className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-                <LocalInput
-                  type="checkbox"
-                  name="checkOutNextDay"
-                  checked={draft.checkOutNextDay}
-                  onChange={(e) => setDraft({ ...draft, checkOutNextDay: e.target.checked })}
-                />
-                Pulang hari berikutnya
-              </label>
-            </div>
+            <fieldset className="col-span-full min-w-0 rounded-xl border border-slate-200 bg-slate-50 px-3 pb-3 sm:px-4">
+              <legend className="px-1 text-sm font-medium text-slate-700">Jam kehadiran</legend>
+              <div className="mt-1 grid gap-3 sm:grid-cols-2 sm:gap-4">
+                <div>
+                  <label className="field">
+                    Check-in
+                    <LocalInput
+                      type="time"
+                      name="checkIn"
+                      value={draft.checkIn}
+                      onChange={(e) => setDraft({ ...draft, checkIn: e.target.value })}
+                    />
+                  </label>
+                  <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
+                    <LocalInput
+                      type="checkbox"
+                      name="checkInNextDay"
+                      checked={draft.checkInNextDay}
+                      onChange={(e) => setDraft({ ...draft, checkInNextDay: e.target.checked })}
+                    />
+                    Masuk hari berikutnya
+                  </label>
+                </div>
+                <div>
+                  <label className="field">
+                    Check-out
+                    <LocalInput
+                      type="time"
+                      name="checkOut"
+                      value={draft.checkOut}
+                      onChange={(e) => setDraft({ ...draft, checkOut: e.target.value })}
+                    />
+                  </label>
+                  <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
+                    <LocalInput
+                      type="checkbox"
+                      name="checkOutNextDay"
+                      checked={draft.checkOutNextDay}
+                      onChange={(e) => setDraft({ ...draft, checkOutNextDay: e.target.checked })}
+                    />
+                    Pulang hari berikutnya
+                  </label>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-slate-600">
+                Check-out boleh dilengkapi setelah check-in.
+              </p>
+            </fieldset>
             <label className="field sm:col-span-2">
               Catatan
               <textarea
@@ -194,24 +192,18 @@ export function AttendanceForm({
                 value={draft.notes}
                 onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
                 maxLength={2000}
-                rows={3}
+                rows={2}
               />
             </label>
           </>
         )}
       </div>
-      {!outletOnly && (
-        <p className="mt-4 text-xs leading-5 text-slate-500">
-          Check-in saja sudah dihitung sebagai hari dibayar. Check-out dapat dilengkapi kemudian.
-          Izin, sakit, dan alpa tidak memiliki jam kehadiran.
-        </p>
-      )}
       {state.error && (
         <p role="alert" className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">
           {state.error}
         </p>
       )}
-      <div className="mt-6 flex justify-end">
+      <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
         <button type="submit" className="button-primary" disabled={pending}>
           {pending ? "Menyimpan…" : outletOnly ? "Simpan perubahan" : "Simpan absensi"}
         </button>
