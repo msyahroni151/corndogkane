@@ -37,6 +37,7 @@ export type PayrollFormState = FormState & {
     backup: number;
     standby: number;
     netPay: number;
+    paidUnits: number;
     basePay: number;
     warehouseBonus: number;
     gross: number;
@@ -295,6 +296,7 @@ export async function createPayroll(
           standbyPay = sum("standby"),
           warehouseBonus = sum("solo"),
           loanDeduction = Object.values(loanPayments).reduce((a, b) => a + b, 0);
+        const paidUnits = lines.reduce((sum, line) => sum + line.units, 0);
         const gross = basePay + backupPay + standbyPay + warehouseBonus + bonusPaid;
         const netPay = gross - loanDeduction - lateDeduction - settlementDeduction;
         const version = createHash("sha256")
@@ -310,6 +312,7 @@ export async function createPayroll(
             backup: backupPay,
             standby: standbyPay,
             netPay,
+            paidUnits,
             basePay,
             warehouseBonus,
             gross,
@@ -358,7 +361,7 @@ export async function createPayroll(
             endDate,
             dailyRate,
             backupRate,
-            paidUnits: lines.reduce((s, l) => s + l.units, 0),
+            paidUnits,
             standbyDays: lines.filter((l) => l.standby > 0).length,
             basePay,
             backupPay,

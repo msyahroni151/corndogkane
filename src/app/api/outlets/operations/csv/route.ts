@@ -190,10 +190,14 @@ export async function POST(request: Request) {
     if (typeof body?.csv !== "string") throw new InputError("Pilih file CSV.");
     if (body.action !== "preview" && body.action !== "import")
       throw new InputError("Aksi tidak valid.");
+    const updateExisting = body.updateExisting === true;
+    if (updateExisting && !hasAction(user, "monitoring-outlet", "edit"))
+      return json({ error: "Anda tidak memiliki izin untuk merevisi rekap." }, 403);
+    const options = { updateExisting };
     if (body.action === "preview") {
       let plan;
       try {
-        plan = await prepareSalesImport(getPrisma(), body.csv);
+        plan = await prepareSalesImport(getPrisma(), body.csv, options);
       } catch (error) {
         if (error instanceof RequestBodyError)
           return Response.json({ error: error.message }, { status: error.status });
@@ -203,22 +207,35 @@ export async function POST(request: Request) {
         preview: plan.preview,
         errors: plan.errors,
         newRows: plan.fresh.length,
+        updatedRows: plan.revisions.length,
+        version: plan.version,
         skipped: plan.skipped,
-        total: plan.fresh.reduce((sum, row) => sum + row.totalGross, 0),
+        total:
+          plan.fresh.reduce((sum, row) => sum + row.totalGross, 0) +
+          plan.revisions.reduce((sum, { row }) => sum + row.totalGross, 0),
       });
     }
     if (body.confirmed !== true) throw new InputError("Periksa pratinjau lalu konfirmasi impor.");
-    const result = await importSalesCsv(body.csv, user.id);
-    for (const path of [
-      "/admin-malam/monitoring-outlet",
-      "/menu-utama/dashboard",
-      "/bonus",
-      "/payroll",
-      "/rekap-saldo",
-      "/selisih-setor",
-      "/finance/laporan-akuntansi",
-    ])
-      revalidatePath(path);
+    const result = await importSalesCsv(
+      body.csv,
+      user.id,
+      options,
+      typeof body.version === "string" ? body.version : undefined,
+    );
+    try {
+      for (const path of [
+        "/admin-malam/monitoring-outlet",
+        "/menu-utama/dashboard",
+        "/bonus",
+        "/payroll",
+        "/rekap-saldo",
+        "/selisih-setor",
+        "/finance/laporan-akuntansi",
+      ])
+        revalidatePath(path);
+    } catch {
+      console.error(JSON.stringify({ event: "outlet_csv_revalidation_failed" }));
+    }
     return json(result);
   } catch (error) {
     if (error instanceof RequestBodyError)
@@ -238,8 +255,8 @@ export async function POST(request: Request) {
           error instanceof InputError
             ? error.message
             : error instanceof Error && "code" in error && error.code === "P2028"
-              ? "Impor melewati batas waktu. Seluruh baris baru dibatalkan dan data lama tidak berubah. Coba kembali setelah koneksi stabil."
-              : "CSV belum tersimpan. Seluruh baris baru dibatalkan; periksa data dan coba kembali.",
+              ? "Impor melewati batas waktu. Periksa pratinjau lagi sebelum mencoba kembali."
+              : "CSV belum tersimpan. Periksa data dan coba kembali.",
       },
       error instanceof InputError ? error.status : 500,
     );

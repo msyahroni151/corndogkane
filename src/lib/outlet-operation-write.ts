@@ -4,6 +4,7 @@ import { outletBonus, outletBonusRate } from "@/lib/outlet-bonus";
 import { syncOutletBonus } from "@/lib/outlet-bonus-ledger";
 import { getPrisma } from "@/lib/db";
 import { parseCivilDate } from "@/lib/placements";
+import { hasOutletWorkSchedule } from "@/lib/outlet-schedule-data";
 import {
   operationalCash,
   operationalProducts,
@@ -31,11 +32,14 @@ export async function saveOutletOperation(
     historicalCrewIds?: ReadonlySet<string>;
     historicalOutletIds?: ReadonlySet<string>;
     initialBonusId?: string;
+    requireWorkSchedule?: boolean;
+    reviseManualCsv?: boolean;
   } = {},
 ) {
   const createOnly = options.createOnly === true;
   // This exception is supplied by the CSV service, never from request body fields.
-  const allowInactiveCrew = createOnly && options.allowInactiveCrew === true;
+  const reviseManualCsv = options.reviseManualCsv === true;
+  const allowInactiveCrew = (createOnly || reviseManualCsv) && options.allowInactiveCrew === true;
   const str = (key: string) => (typeof body[key] === "string" ? body[key].trim() : "");
   const salesMode = body.salesMode === "POS" ? "POS" : "TOTAL";
   const outletId = str("outletId"),
@@ -81,7 +85,7 @@ export async function saveOutletOperation(
     });
     if (closure?.closed)
       throw new InputError(
-        "Outlet tercatat TUTUP pada tanggal ini. Ubah status menjadi Buka di Monitoring Outlet terlebih dahulu.",
+        "Tanggal ini sudah tercatat tutup dalam riwayat operasional outlet.",
         409,
       );
     const existing = await tx.outletOperation.findUnique({
@@ -89,22 +93,42 @@ export async function saveOutletOperation(
     });
     if (createOnly && existing)
       throw new InputError("Rekap outlet dan tanggal ini sudah ada.", 409);
+    if (reviseManualCsv && !existing)
+      throw new InputError("Rekap yang akan direvisi sudah tidak tersedia.", 409);
     if ((existing?.updatedAt.toISOString() || null) !== (body.version ?? null))
       throw new InputError(
         "Rekap sudah berubah. Tutup lalu buka kembali agar data terbaru terbaca.",
         409,
       );
     await tx.$executeRaw`SELECT id FROM outlets WHERE id=${outletId} FOR SHARE`;
-    const outlet = await tx.outlet.findUnique({ where: { id: outletId } });
-    const verifiedHistoricalOutlet = createOnly && options.historicalOutletIds?.has(outletId);
-    if (!outlet || ((!outlet.active || outlet.closed) && !verifiedHistoricalOutlet))
+    if (reviseManualCsv)
+      await tx.$executeRaw`SELECT a.id FROM areas a JOIN outlets o ON o."areaId"=a.id WHERE o.id=${outletId} FOR SHARE OF a`;
+    const outlet = await tx.outlet.findUnique({
+      where: { id: outletId },
+      include: { area: { select: { active: true } } },
+    });
+    const verifiedHistoricalOutlet =
+      (createOnly || reviseManualCsv) && options.historicalOutletIds?.has(outletId);
+    if (
+      !outlet ||
+      ((!outlet.active || outlet.closed || (reviseManualCsv && !outlet.area.active)) &&
+        !verifiedHistoricalOutlet)
+    )
       throw new InputError("Outlet tidak aktif atau tidak ditemukan.");
+    if (
+      options.requireWorkSchedule &&
+      !existing &&
+      !(await hasOutletWorkSchedule(tx, outletId, date))
+    )
+      throw new InputError("Belum ada jadwal kerja untuk outlet pada tanggal yang dipilih.", 409);
     const crew = await tx.employee.findUnique({ where: { id: crewId } });
     if (!crew || (!crew.active && !allowInactiveCrew && crew.id !== existing?.crewId))
       throw new InputError("Pilih crew aktif yang terdaftar.");
     // A trusted historical import may name explicitly verified employees whose current job differs.
     const verifiedHistoricalCrew =
-      createOnly && !!crew.employeeCode?.trim() && options.historicalCrewIds?.has(crew.id);
+      (createOnly || reviseManualCsv) &&
+      !!crew.employeeCode?.trim() &&
+      options.historicalCrewIds?.has(crew.id);
     if (
       !(allowInactiveCrew ? canImportOutletCrew(crew) : canRecordOutletCrew(crew)) &&
       !verifiedHistoricalCrew &&
@@ -120,11 +144,12 @@ export async function saveOutletOperation(
         p.key,
         {
           quantity: quantities[p.key],
-          unitPrice: existing
-            ? old[p.key].unitPrice
-            : createOnly && body.unitPrices
+          unitPrice:
+            (createOnly || reviseManualCsv) && body.unitPrices
               ? integer((body.unitPrices as Record<string, unknown>)[p.key] ?? p.price, 1000000000)
-              : p.price,
+              : existing
+                ? old[p.key].unitPrice
+                : p.price,
         },
       ]),
     );
@@ -158,6 +183,14 @@ export async function saveOutletOperation(
       : await tx.saleTransaction.count({
           where: { operationId: existing?.id || "NONE" },
         });
+    if (
+      reviseManualCsv &&
+      (hasLedger || existing?.salesSource !== "MANUAL" || existing.salesPending)
+    )
+      throw new InputError(
+        "Rekap terhubung ke transaksi POS atau rekonsiliasi. Perbarui melalui Monitoring Outlet.",
+        409,
+      );
     if (salesMode === "POS" && !hasLedger)
       throw new InputError("Belum ada transaksi POS atau tambahan manual untuk dipakai.");
     const manualSales = {
@@ -190,7 +223,10 @@ export async function saveOutletOperation(
       date,
       crewId,
       crewName: crew.fullName,
-      trainingCrewId: null,
+      trainingCrewId:
+        reviseManualCsv && existing?.trainingCrewName === trainingCrewName
+          ? existing.trainingCrewId
+          : null,
       trainingCrewName,
       expenseAmount: Object.hasOwn(body, "expenseAmount")
         ? expenseAmount

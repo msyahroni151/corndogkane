@@ -17,6 +17,8 @@ type Preview = {
   }[];
   errors: { row: number; message: string }[];
   newRows: number;
+  updatedRows: number;
+  version?: string;
   skipped: number;
   total: number;
 };
@@ -77,10 +79,12 @@ export function OutletSalesCsv({
 }
 function ImportSalesCsv({ onSaved }: { onSaved: () => void }) {
   const [csv, setCsv] = useState(""),
+    [updateExisting, setUpdateExisting] = useState(false),
     [preview, setPreview] = useState<Preview | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     close = useCloseFormDialog();
+  const writeCount = preview ? preview.newRows + (preview.updatedRows ?? 0) : 0;
   async function send(action: "preview" | "import") {
     if (busy) return;
     setBusy(true);
@@ -89,14 +93,23 @@ function ImportSalesCsv({ onSaved }: { onSaved: () => void }) {
       const response = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ csv, action, confirmed: action === "import" }),
+          body: JSON.stringify({
+            csv,
+            action,
+            updateExisting,
+            confirmed: action === "import",
+            version: action === "import" ? preview?.version : undefined,
+          }),
         }),
         result = await response.json();
-      if (!response.ok) throw Error(result.error || "CSV belum diproses.");
+      if (!response.ok) {
+        if (response.status === 409) setPreview(null);
+        throw Error(result.error || "CSV belum diproses.");
+      }
       if (action === "preview") setPreview(result);
       else {
         notifySuccess(
-          `${result.imported} rekap berhasil diimpor, ${result.skipped} baris sudah tercatat dilewati.`,
+          `${result.imported} rekap baru, ${result.updated ?? 0} rekap diperbarui, ${result.skipped} baris dilewati.`,
         );
         onSaved();
         close?.();
@@ -157,6 +170,19 @@ function ImportSalesCsv({ onSaved }: { onSaved: () => void }) {
           }}
         />
       </label>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={updateExisting}
+          disabled={busy}
+          onChange={(event) => {
+            setUpdateExisting(event.target.checked);
+            setPreview(null);
+            setError("");
+          }}
+        />
+        Perbarui rekap yang sudah ada
+      </label>
       <button
         className="button-secondary"
         type="button"
@@ -168,10 +194,10 @@ function ImportSalesCsv({ onSaved }: { onSaved: () => void }) {
       {preview && (
         <>
           <div className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">
-            {preview.newRows} baris baru · {preview.skipped} sudah tercatat ·{" "}
-            {preview.errors.length} kesalahan
+            {preview.newRows} baris baru · {preview.updatedRows ?? 0} revisi · {preview.skipped}{" "}
+            dilewati · {preview.errors.length} kesalahan
             <br />
-            Total omzet baru: <strong>{rupiah(preview.total)}</strong>
+            Total omzet baris yang diproses <strong>{rupiah(preview.total)}</strong>
           </div>
           {!!preview.errors.length && (
             <ul
@@ -226,9 +252,9 @@ function ImportSalesCsv({ onSaved }: { onSaved: () => void }) {
         </>
       )}
       <p className="rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600">
-        Rekap outlet dan tanggal yang sudah ada dilewati. Rekap baru mengikuti perhitungan bonus
-        seperti input manual. Impor rekap historis tidak mengurangi stok. Jika satu baris baru gagal
-        disimpan, seluruh baris baru dalam file dibatalkan.
+        Revisi mencocokkan outlet dan tanggal dari file. Gunakan Monitoring Outlet untuk rekap
+        dengan transaksi POS atau perubahan status buka/tutup. Seluruh perubahan dalam file disimpan
+        bersama.
       </p>
       {error && (
         <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
@@ -247,10 +273,16 @@ function ImportSalesCsv({ onSaved }: { onSaved: () => void }) {
         <button
           type="button"
           className="button-primary"
-          disabled={busy || !preview || !!preview.errors.length || !preview.newRows}
+          disabled={
+            busy ||
+            !preview ||
+            !!preview.errors.length ||
+            !writeCount ||
+            (updateExisting && !preview.version)
+          }
           onClick={() => send("import")}
         >
-          {busy ? "Memproses…" : `Impor ${preview?.newRows || 0} Rekap`}
+          {busy ? "Memproses…" : `Proses ${writeCount} Rekap`}
         </button>
       </div>
     </div>

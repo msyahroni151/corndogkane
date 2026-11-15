@@ -172,7 +172,7 @@ export type SalesCsvRow = {
   shopeefood: number;
   totalGross: number;
 };
-export function parseSalesCsv(text: string) {
+export function parseSalesCsv(text: string, revisionMode = false) {
   const [headers, ...records] = readCsv(text);
   if (!headers) throw Error("CSV kosong.");
   const labels = headers.map((header) => header.trim().toLowerCase());
@@ -187,10 +187,25 @@ export function parseSalesCsv(text: string) {
     throw Error("Kolom wajib belum ada: Nama_Outlet.");
   if (!keys.includes("crew") && !keys.includes("nama_crew"))
     throw Error("Kolom wajib belum ada: kode_name.");
+  if (revisionMode)
+    for (const [label, key] of salesExportColumns) {
+      if (["nama_outlet", "nama_crew", "total_penjualan"].includes(key)) continue;
+      if (!keys.includes(key))
+        throw Error(`Kolom revisi belum ada: ${label}. Gunakan hasil Ekspor CSV.`);
+    }
   if (!records.length || records.length > csvImportLimit)
     throw Error("Isi 1–" + csvImportLimit + " baris data per file.");
   const rows: SalesCsvRow[] = [],
-    errors: { row: number; message: string }[] = [];
+    errors: { row: number; message: string }[] = [],
+    nonManual: {
+      row: number;
+      date: string;
+      outlet: string;
+      crew: string;
+      operationalStatus: "BUKA";
+      total: number;
+      status: string;
+    }[] = [];
   records.forEach((record, index) => {
     const row = index + 2;
     try {
@@ -208,13 +223,25 @@ export function parseSalesCsv(text: string) {
       const crew = get("crew") || get("nama_crew");
       const operationalStatus =
         get("status_operasional").toUpperCase() || (legacyClosed ? "TUTUP" : "BUKA");
+      const source = get("sumber_penjualan").toUpperCase();
+      if (revisionMode && ["POS", "MANUAL_ADD", "POS_MANUAL_ADD", "REVIEW"].includes(source)) {
+        nonManual.push({
+          row,
+          date,
+          outlet,
+          crew,
+          operationalStatus: "BUKA",
+          total: csvNumber(get("total_penjualan"), "Total penjualan", 2000000000) ?? 0,
+          status: "Dilewati: terhubung ke POS atau rekonsiliasi",
+        });
+        return;
+      }
       if (!["BUKA", "TUTUP"].includes(operationalStatus))
         throw Error("Status operasional harus BUKA atau TUTUP.");
       if (legacyClosed && operationalStatus !== "TUTUP")
         throw Error("Crew TUTUP bertentangan dengan status BUKA.");
       if (!outlet) throw Error("Outlet wajib diisi.");
-      if (operationalStatus === "BUKA" && !crew)
-        throw Error("Crew wajib diisi untuk outlet BUKA.");
+      if (operationalStatus === "BUKA" && !crew) throw Error("Crew wajib diisi untuk outlet BUKA.");
       if (operationalStatus === "TUTUP" && crew && !legacyClosed)
         throw Error("Kosongkan crew untuk outlet TUTUP.");
       if (operationalStatus === "BUKA" && get("keterangan_operasional"))
@@ -223,7 +250,7 @@ export function parseSalesCsv(text: string) {
         );
       if (get("keterangan_operasional").length > 1000)
         throw Error("Keterangan operasional maksimal 1.000 karakter.");
-      if (get("sumber_penjualan") && get("sumber_penjualan").toUpperCase() !== "MANUAL")
+      if (source && source !== "MANUAL")
         throw Error(
           "Hanya rekap MANUAL yang dapat diimpor. Ekspor POS/REVIEW adalah laporan dan tidak diimpor ulang.",
         );
@@ -303,7 +330,7 @@ export function parseSalesCsv(text: string) {
       errors.push({ row, message: error instanceof Error ? error.message : "Baris tidak valid." });
     }
   });
-  return { rows, errors };
+  return { rows, errors, nonManual };
 }
 export function salesCsvValues(row: Record<string, string | number | null | undefined>) {
   return csvHeaders.map((h) => row[h] ?? "");

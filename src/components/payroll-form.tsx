@@ -218,6 +218,10 @@ export function PayrollForm({
               <div className="mt-6 space-y-4">
                 <input type="hidden" name="previewVersion" value={preview.version} />
                 <dl className="grid gap-2 rounded-xl bg-slate-50 p-4 text-sm">
+                  <div className="flex justify-between gap-3 border-b border-slate-200 pb-2">
+                    <dt>Total hari kerja</dt>
+                    <dd className="font-semibold">{preview.paidUnits.toLocaleString("id-ID")} hari</dd>
+                  </div>
                   {[
                     ["Upah dasar", preview.basePay],
                     ...(preview.backupEligible

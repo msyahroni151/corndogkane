@@ -1,8 +1,16 @@
+import { createHash } from "node:crypto";
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { parseSalesCsv, type SalesCsvRow } from "@/lib/outlet-sales-csv";
 import { getPrisma } from "@/lib/db";
-import { canImportOutletCrew } from "@/lib/outlet-operations";
-import { InputError } from "@/lib/outlet-operation-write";
+import {
+  canImportOutletCrew,
+  operationalPayments,
+  operationalProducts,
+  snapshotItems,
+} from "@/lib/outlet-operations";
+import { InputError, saveOutletOperation } from "@/lib/outlet-operation-write";
+import { BonusSyncError } from "@/lib/outlet-bonus-ledger";
+import { SaleError } from "@/lib/sale-input";
 import { writeSalesImportBatch } from "@/lib/outlet-sales-csv-write";
 export type ResolvedSalesCsvRow = SalesCsvRow & {
   outletId: string;
@@ -39,13 +47,14 @@ function match<T extends { id: string }>(
 export type HistoricalImportOptions = {
   historicalCrewIds?: ReadonlySet<string>;
   historicalOutletIds?: ReadonlySet<string>;
+  updateExisting?: boolean;
 };
 export async function prepareSalesImport(
   db: LookupDb,
   csv: string,
   options: HistoricalImportOptions = {},
 ) {
-  const parsed = parseSalesCsv(csv),
+  const parsed = parseSalesCsv(csv, options.updateExisting),
     errors = [...parsed.errors];
   const [outlets, employees] = await Promise.all([
     db.outlet.findMany({
@@ -122,7 +131,26 @@ export async function prepareSalesImport(
             date: new Date(row.date + "T00:00:00Z"),
           })),
         },
-        select: { outletId: true, date: true },
+        select: {
+          id: true,
+          outletId: true,
+          date: true,
+          updatedAt: true,
+          crewId: true,
+          trainingCrewName: true,
+          doughUsed: true,
+          expenseAmount: true,
+          expenseNotes: true,
+          cashReceived: true,
+          items: true,
+          qris: true,
+          gofood: true,
+          grabfood: true,
+          shopeefood: true,
+          salesSource: true,
+          salesPending: true,
+          _count: { select: { sales: true } },
+        },
       })
     : [];
   const closures = rows.length
@@ -136,39 +164,84 @@ export async function prepareSalesImport(
         select: { outletId: true, date: true, closed: true },
       })
     : [];
-  const occupied = new Set(
-    existing.map((r) => r.outletId + "|" + r.date.toISOString().slice(0, 10)),
+  const existingByDay = new Map(
+    existing.map((r) => [r.outletId + "|" + r.date.toISOString().slice(0, 10), r]),
   );
   const dailyStatuses = new Map(
     closures.map((r) => [r.outletId + "|" + r.date.toISOString().slice(0, 10), r]),
   );
-  for (const row of rows) {
-    const identity = row.outletId + "|" + row.date;
-    const daily = dailyStatuses.get(identity);
-    // Reimporting an old file must never close a day an admin has explicitly reopened.
-    if (daily && (daily.closed || row.operationalStatus === "TUTUP")) occupied.add(identity);
-  }
-  const fresh = rows.filter((row) => !occupied.has(row.outletId + "|" + row.date));
+  const fresh: ResolvedSalesCsvRow[] = [];
+  const revisions: { row: ResolvedSalesCsvRow; version: string; crewId: string }[] = [];
+  const preview = rows
+    .map((row) => {
+      const identity = row.outletId + "|" + row.date;
+      const prior = existingByDay.get(identity);
+      const daily = dailyStatuses.get(identity);
+      let status = "Dilewati: sudah tercatat";
+      if (!prior && !(daily && (daily.closed || row.operationalStatus === "TUTUP"))) {
+        fresh.push(row);
+        status = "Baru";
+      } else if (options.updateExisting) {
+        if (daily?.closed || row.operationalStatus === "TUTUP") {
+          status = "Dilewati: status tutup";
+        } else if (
+          prior &&
+          (prior._count.sales || prior.salesPending || prior.salesSource !== "MANUAL")
+        ) {
+          status = "Dilewati: terhubung ke POS atau rekonsiliasi";
+        } else if (prior) {
+          const items = snapshotItems(prior.items);
+          const unchanged =
+            row.crewId === prior.crewId &&
+            row.trainingCrewName === prior.trainingCrewName &&
+            row.doughUsed === prior.doughUsed &&
+            row.expenseAmount === prior.expenseAmount &&
+            row.expenseNotes === prior.expenseNotes &&
+            row.cashReceived === prior.cashReceived &&
+            operationalPayments.every(({ key }) => row[key] === prior[key]) &&
+            operationalProducts.every(
+              ({ key }) =>
+                row.quantities[key] === items[key].quantity &&
+                row.unitPrices[key] === items[key].unitPrice,
+            );
+          if (unchanged) status = "Dilewati: tidak ada perubahan";
+          else {
+            revisions.push({ row, version: prior.updatedAt.toISOString(), crewId: prior.crewId });
+            status = "Akan diperbarui";
+          }
+        }
+      }
+      return {
+        row: row.row,
+        date: row.date,
+        outlet: row.outletName,
+        crew: row.crewName,
+        operationalStatus: row.operationalStatus,
+        total: row.totalGross,
+        status,
+      };
+    })
+    .concat(parsed.nonManual)
+    .sort((a, b) => a.row - b.row);
   return {
     rows,
     fresh,
     errors: errors.sort((a, b) => a.row - b.row),
-    skipped: rows.length - fresh.length,
-    preview: rows.map((row) => ({
-      row: row.row,
-      date: row.date,
-      outlet: row.outletName,
-      crew: row.crewName,
-      operationalStatus: row.operationalStatus,
-      total: row.totalGross,
-      status: occupied.has(row.outletId + "|" + row.date) ? "Dilewati: sudah tercatat" : "Baru",
-    })),
+    revisions,
+    skipped: preview.length - fresh.length - revisions.length,
+    preview,
+    version: options.updateExisting
+      ? createHash("sha256")
+          .update(JSON.stringify([csv, fresh, revisions, preview]))
+          .digest("hex")
+      : undefined,
   };
 }
 export async function importSalesCsv(
   csv: string,
   userId: string,
   options: HistoricalImportOptions = {},
+  previewVersion?: string,
 ) {
   return getPrisma().$transaction(
     async (tx) => {
@@ -185,11 +258,47 @@ export async function importSalesCsv(
       const current = await prepareSalesImport(tx, csv, options);
       if (current.errors.length)
         throw new InputError("Referensi berubah saat impor. Periksa pratinjau kembali.");
-      const employees = [...new Set(current.fresh.map((row) => row.crewId).filter(Boolean))].sort();
+      if (options.updateExisting && (!previewVersion || current.version !== previewVersion))
+        throw new InputError(
+          "Data berubah sejak pratinjau. Klik Periksa CSV lagi sebelum impor.",
+          409,
+        );
+      const employees = [
+        ...new Set(
+          [
+            ...current.fresh.map((row) => row.crewId),
+            ...current.revisions.flatMap(({ row, crewId }) => [row.crewId, crewId]),
+          ].filter(Boolean),
+        ),
+      ].sort();
       if (employees.length)
         await tx.$executeRaw`SELECT id FROM employees WHERE id IN (${Prisma.join(employees)}) ORDER BY id FOR UPDATE`;
       await writeSalesImportBatch(tx, current.fresh, userId, options);
-      return { imported: current.fresh.length, skipped: current.skipped };
+      for (const { row, version } of current.revisions) {
+        try {
+          await saveOutletOperation({ ...row, version }, userId, tx, {
+            ...options,
+            allowInactiveCrew: true,
+            reviseManualCsv: true,
+          });
+        } catch (error) {
+          if (
+            error instanceof InputError ||
+            error instanceof BonusSyncError ||
+            error instanceof SaleError
+          )
+            throw new InputError(
+              `Baris ${row.row} (${row.outletName}, ${row.date}): ${error.message}`,
+              409,
+            );
+          throw error;
+        }
+      }
+      return {
+        imported: current.fresh.length,
+        updated: current.revisions.length,
+        skipped: current.skipped,
+      };
     },
     { timeout: 120000, maxWait: 10000 },
   );

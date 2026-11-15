@@ -572,7 +572,7 @@
     },
     {
       "path": "src/app/api/outlets/operations/csv/route.ts",
-      "sha256": "e977ab2175dee1127b3b49062a55e6bfb97f5f75f2cbe67d50a1a20a0f3aab83"
+      "sha256": "23a02ff4acf870585651f4e39763931d6f785dd769148afb4a692d8490d9d395"
     },
     {
       "path": "src/app/api/outlets/operations/recap/route.ts",
@@ -708,7 +708,7 @@
     },
     {
       "path": "src/app/payroll-actions.ts",
-      "sha256": "e5d2063f41b0ff41f656c8f4c3921a2f1a52764244deced78bf1a94ea824b296"
+      "sha256": "973c4a46a090de8c515df84e5435bdeff17c8dfca44faac80f296ca2ce317eac"
     },
     {
       "path": "src/app/payroll/slip/[id]/page.tsx",
@@ -1048,7 +1048,7 @@
     },
     {
       "path": "src/components/outlet-sales-csv.tsx",
-      "sha256": "8d2fc67ab30935ee7268501b2311c70a299dd2254dc1d27817a5b49bd15ca170"
+      "sha256": "524f8b3576b387275192efd024839473c277fcb7df829c92f8b7c2560ac3823b"
     },
     {
       "path": "src/components/outlet-stock-forms.tsx",
@@ -1072,7 +1072,7 @@
     },
     {
       "path": "src/components/payroll-form.tsx",
-      "sha256": "e02fb9e56cad643084fdee925a56ba8409ff4bf9b6b963c920b207f11018b085"
+      "sha256": "d837d9ed1bbe11833b5665f2a097425f8f54034caabe34804b4f48a430d5f904"
     },
     {
       "path": "src/components/payroll-slip.css",
@@ -1416,7 +1416,7 @@
     },
     {
       "path": "src/lib/outlet-operation-write.ts",
-      "sha256": "30771d4dd095f3ad25f9b69b877dd46d3e3f352ea9247df239ddb4eedc4d7a5d"
+      "sha256": "25143461ae6ed62d71cd300bd9407b63bd67d21b2ab70cad3fadc045f2e089a3"
     },
     {
       "path": "src/lib/outlet-operations.ts",
@@ -1432,7 +1432,7 @@
     },
     {
       "path": "src/lib/outlet-sales-csv-service.ts",
-      "sha256": "faded3ea90c16c19acdf13311a01531f0f1c912358a1c6aae69c7c1645ccfbe2"
+      "sha256": "7b91cc6510ebb9ba2f5bb4bb76376178a5e954925dd4b787869139ab53bdd2be"
     },
     {
       "path": "src/lib/outlet-sales-csv-write.ts",
@@ -1440,7 +1440,7 @@
     },
     {
       "path": "src/lib/outlet-sales-csv.ts",
-      "sha256": "4a9bdfc0a7968f231f163711a328d9a402a07003521cc75ab7b47046d3cfa915"
+      "sha256": "60afd1d8c9164013b3ef6eee86b215e99f8f67df524824c5a5306502a27a781a"
     },
     {
       "path": "src/lib/outlet-sales.ts",
