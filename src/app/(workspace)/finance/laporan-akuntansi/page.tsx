@@ -227,6 +227,7 @@ export default async function ReportPage({
             Daftar akun bersama untuk seluruh outlet. Pilihan outlet tidak mengubah master COA.
           </p>
           <CoaTable
+            canImport={user.roleSystemKey === "OWNER" && accounts.length === 0}
             accounts={accounts
               .filter((a) => a.active)
               .map((a) => ({

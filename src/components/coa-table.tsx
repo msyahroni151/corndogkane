@@ -5,14 +5,15 @@ import { coaRoot, normalBalanceLabel, type CoaAccount } from "@/lib/coa";
 import { accountKinds } from "@/lib/general-journal";
 import { FormDialog } from "@/components/form-dialog";
 import { FinancialAccountForm } from "@/components/journal-forms";
-import { setFinancialAccountStatus } from "@/app/journal-actions";
+import { importDefaultFinancialAccounts, setFinancialAccountStatus } from "@/app/journal-actions";
 import { notifySuccess } from "@/components/notification-toasts";
 import "./coa-table.css";
-export function CoaTable({ accounts }: { accounts: CoaAccount[] }) {
+export function CoaTable({ accounts, canImport = false }: { accounts: CoaAccount[]; canImport?: boolean }) {
   const [kind, setKind] = useState(""),
     [q, setQ] = useState(""),
     [open, setOpen] = useState<Set<string>>(new Set()),
     [error, setError] = useState("");
+  const [importing, startImport] = useTransition();
   const filtered = accounts.filter(
     (a) =>
       (!kind || a.kind === kind) &&
@@ -48,9 +49,32 @@ export function CoaTable({ accounts }: { accounts: CoaAccount[] }) {
           <h2>Chart of Accounts (COA)</h2>
           <p>Pengaturan daftar akun standar untuk pembukuan · {accounts.length} akun</p>
         </div>
-        <FormDialog title="Akun Baru" trigger="+ Akun Baru">
-          <FinancialAccountForm />
-        </FormDialog>
+        <div className="flex flex-wrap gap-2">
+          {canImport && (
+            <button
+              type="button"
+              className="button-primary"
+              disabled={importing}
+              onClick={() =>
+                startImport(async () => {
+                  setError("");
+                  try {
+                    const result = await importDefaultFinancialAccounts();
+                    if (result.error) setError(result.error);
+                    if (result.success) notifySuccess(result.success);
+                  } catch {
+                    setError("Impor COA belum berhasil. Coba lagi.");
+                  }
+                })
+              }
+            >
+              {importing ? "Mengimpor COA…" : "Impor 151 akun COA"}
+            </button>
+          )}
+          <FormDialog title="Akun Baru" trigger="+ Akun Baru">
+            <FinancialAccountForm />
+          </FormDialog>
+        </div>
       </div>
       <div className="coa-filters">
         <div className="coa-chips" role="group" aria-label="Filter kelompok akun">

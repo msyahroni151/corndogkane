@@ -4,6 +4,8 @@ import { getPrisma } from "@/lib/db";
 import { accountKinds, parseJournal } from "@/lib/general-journal";
 import { revalidatePath } from "next/cache";
 import type { FormState } from "@/lib/form-state";
+import masterAccounts from "../../integrations/coa/master-coa-v1.json";
+import outletAccounts from "../../integrations/coa/outlet-accounts-v1.json";
 function invalid(message: string): never {
   const e = new Error(message);
   e.name = "JournalValidation";
@@ -16,6 +18,52 @@ function fail(e: unknown): FormState {
         ? e.message
         : "Data belum tersimpan. Periksa koneksi lalu coba lagi.",
   };
+}
+export async function importDefaultFinancialAccounts(): Promise<FormState> {
+  const owner = await requireAccess("master-akun", "create");
+  if (owner.roleSystemKey !== "OWNER") return { error: "Impor COA memerlukan akses Owner." };
+  const accounts = [...masterAccounts.accounts, ...outletAccounts.accounts];
+  if (
+    masterAccounts.accounts.length !== 133 ||
+    outletAccounts.accounts.length !== 18 ||
+    new Set(accounts.map(({ code }) => code)).size !== accounts.length
+  )
+    return { error: "Konfigurasi daftar akun tidak valid." };
+  try {
+    await getPrisma().$transaction(async (tx) => {
+      await tx.financialAccount.createMany({
+        data: accounts.map((account) => ({
+          ...account,
+          id: `COA-V1-${account.code}`,
+          createdById: owner.id,
+        })),
+        skipDuplicates: true,
+      });
+      const imported = await tx.financialAccount.findMany({
+        where: { code: { in: accounts.map(({ code }) => code) } },
+      });
+      const byCode = new Map(imported.map((account) => [account.code, account]));
+      for (const account of accounts) {
+        const actual = byCode.get(account.code);
+        if (
+          !actual ||
+          Object.entries(account).some(([key, value]) => actual[key as keyof typeof actual] !== value)
+        )
+          invalid(`Kode COA ${account.code} sudah digunakan dengan data berbeda.`);
+      }
+    });
+  } catch (error) {
+    return fail(error);
+  }
+  for (const route of [
+    "/admin-malam/master-akun",
+    "/open-transaction",
+    "/finance/jurnal-umum",
+    "/finance/pengeluaran-operasional",
+    "/finance/laporan-akuntansi",
+    "/finance/finance-ledger",
+  ]) revalidatePath(route);
+  return { success: "Daftar 151 akun COA berhasil disiapkan." };
 }
 export async function saveFinancialAccount(_: FormState, form: FormData): Promise<FormState> {
   await requireAccess("master-akun", form.get("id") || form.get("existingId") ? "edit" : "create");
