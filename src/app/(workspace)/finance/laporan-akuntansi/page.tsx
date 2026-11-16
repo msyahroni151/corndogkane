@@ -10,6 +10,7 @@ import { requireAccess } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { getPrisma } from "@/lib/db";
 import { CoaTable } from "@/components/coa-table";
+import { InternalSalesPosting } from "@/components/internal-sales-posting";
 import { coaSourceUrl } from "@/lib/coa";
 import { rupiah } from "@/lib/money";
 import { todayWib, parseCivilDate } from "@/lib/placements";
@@ -221,6 +222,7 @@ export default async function ReportPage({
           </Link>
         ))}
       </nav>
+      {tab === "journal" && user.roleSystemKey === "OWNER" && <InternalSalesPosting />}
       {tab === "coa" ? (
         <>
           <p className="text-xs text-slate-500">
