@@ -7,6 +7,7 @@ export type PayrollDay = {
   role: string;
   status: string;
   shift: string | null;
+  outletId?: string | null;
   outletName: string | null;
   outletDailyRate?: number | null;
   location: string | null;
@@ -24,6 +25,7 @@ export type PayrollDay = {
 export type PayLine = {
   date: string;
   outlet: string;
+  outletId?: string | null;
   units: number;
   rate: number;
   base: number;
@@ -79,6 +81,7 @@ export function payrollLines(
     }
     return {
       date,
+      outletId: day.outletId ?? null,
       outlet: day.outletName || day.location || "—",
       units: summary.paidUnits,
       rate,

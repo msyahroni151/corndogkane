@@ -65,13 +65,19 @@ export function statementAccountRows(
       }),
     ]);
 }
-export function outletStatementSections(accounts: ReportAccount[], s: ReportSummary) {
-  // Source recap only. This does not create or imply posted journal entries.
+export function outletStatementSections(
+  accounts: ReportAccount[],
+  s: ReportSummary,
+  wages: number | null = null,
+) {
+  // Report values are derived directly from their operational sources.
   const values: Record<string, number | null> = {};
   if (s.records && accounts.some((a) => a.code === "4101" && a.kind === "PENDAPATAN"))
     values["4101"] = s.gross;
   if (s.bonus !== null && accounts.some((a) => a.code === "6104" && a.kind === "BEBAN"))
     values["6104"] = s.bonus;
+  if (wages !== null && accounts.some((a) => a.code === "6101" && a.kind === "BEBAN"))
+    values["6101"] = wages;
   return {
     revenue: statementAccountRows(
       accounts.filter((a) => a.kind === "PENDAPATAN"),

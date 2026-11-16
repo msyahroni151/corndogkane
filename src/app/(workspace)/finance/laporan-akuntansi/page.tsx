@@ -18,6 +18,7 @@ import { LocalInput } from "@/components/local-input";
 import { SortableTable } from "@/components/sortable-table";
 import { OutletReportExport } from "@/components/outlet-report-export";
 import { summarizeOutletReport, type OutletReportEntry } from "@/lib/outlet-financial-report";
+import { outletPayrollWages } from "@/lib/outlet-payroll-wages";
 import { operationalCash } from "@/lib/outlet-operations";
 import "@/components/outlet-financial-report.css";
 const tabs = [
@@ -142,6 +143,23 @@ export default async function ReportPage({
   }));
   const s = summarizeOutletReport(entries),
     known = s.records > 0;
+  const wages =
+    tab !== "coa" && !error && outlet
+      ? outletPayrollWages(
+          await db.payroll.findMany({
+            where: {
+              status: "PAID",
+              startDate: { lte: end },
+              endDate: { gte: start },
+              employee: { department: { equals: "OPERASIONAL OUTLET", mode: "insensitive" } },
+            },
+            select: { details: true, lateDeduction: true },
+          }),
+          outlet,
+          from,
+          to,
+        )
+      : null;
   const amount = (n: number | null) => (known && n !== null ? rupiah(n) : "—");
   const day = new Date(today + "T00:00:00Z"),
     week = new Date(day);
@@ -304,6 +322,7 @@ export default async function ReportPage({
                 to={to}
                 entries={entries}
                 accounts={accounts}
+                wages={wages}
               />
             )}
           </form>
@@ -376,6 +395,7 @@ export default async function ReportPage({
                   <DetailedOutletStatements
                     accounts={accounts}
                     summary={s}
+                    wages={wages}
                     stacked={tab === "statements"}
                   />
                   {tab === "summary" && known && (

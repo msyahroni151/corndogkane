@@ -8,6 +8,7 @@ export type ReportExportInput = {
   to: string;
   entries: OutletReportEntry[];
   accounts: ReportAccount[];
+  wages?: number | null;
 };
 export type ExportTable = {
   name: string;
@@ -16,10 +17,10 @@ export type ExportTable = {
   widths: number[];
 };
 export const reportExportNote =
-  "Laporan sementara dari rekap operasional. HPP, gaji, penyusutan, biaya pusat, saldo awal, dan jurnal per outlet belum lengkap. Angka yang belum tersedia tidak dianggap nol. Bonus adalah hak diperoleh, bukan pencairan.";
+  "Gaji crew mengikuti shift outlet berdasarkan payroll yang sudah dibayar. Bonus menunjukkan hak dari rekap outlet. HPP, penyusutan, biaya pusat, saldo awal, dan jurnal per outlet belum lengkap. Angka yang belum tersedia tidak dianggap nol.";
 export function buildFinancialExport(input: ReportExportInput): ExportTable[] {
   const s = summarizeOutletReport(input.entries),
-    sections = outletStatementSections(input.accounts, s);
+    sections = outletStatementSections(input.accounts, s, input.wages);
   const unknown = "Belum tersedia";
   const known = (value: number | null) => (s.records && value !== null ? value : unknown);
   const statement = (keys: (keyof typeof sections)[]) =>
@@ -38,6 +39,7 @@ export function buildFinancialExport(input: ReportExportInput): ExportTable[] {
       rows: [
         ["Pendapatan penjualan", known(s.gross)],
         ["Pengeluaran rekap", known(s.expense)],
+        ["Beban gaji crew outlet", input.wages ?? unknown],
         ["Bonus diperoleh", known(s.bonus)],
         ["Cash seharusnya", known(s.cash)],
         ["Setoran diterima yang sudah terisi", s.receipts ? s.received : "Belum terisi"],

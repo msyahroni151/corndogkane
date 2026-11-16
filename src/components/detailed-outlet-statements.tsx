@@ -44,13 +44,15 @@ function Total({
 export function DetailedOutletStatements({
   accounts,
   summary,
+  wages = null,
   stacked = false,
 }: {
   accounts: ReportAccount[];
   summary: ReportSummary;
+  wages?: number | null;
   stacked?: boolean;
 }) {
-  const r = outletStatementSections(accounts, summary);
+  const r = outletStatementSections(accounts, summary, wages);
   return (
     <>
       <div className={stacked ? "statement-stacked" : "report-columns"}>
@@ -80,9 +82,10 @@ export function DetailedOutletStatements({
           <Total label="LABA OPERASIONAL" tone="blue" />
           <Total label="LABA BERSIH (Net Profit)" tone="solid-green" />
           <p className="report-footnote">
-            Nilai 4101 dan 6104 berasal dari rekap outlet, belum jurnal terposting. Bonus adalah hak
-            yang diperoleh, bukan pencairan. Pengeluaran rekap belum dikelompokkan ke akun beban;
-            laba belum dihitung sampai HPP dan seluruh beban lengkap.
+            Penjualan dan hak bonus berasal dari rekap outlet. Gaji crew mengikuti shift di outlet
+            dari payroll yang sudah dibayar, setelah potongan telat yang dapat dicocokkan.
+            Gaji Gudang, Office, dan Management tidak dialokasikan ke outlet. Laba dihitung setelah
+            HPP dan seluruh beban tersedia.
           </p>
         </section>
         <section
