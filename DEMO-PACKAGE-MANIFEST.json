@@ -388,7 +388,7 @@
     },
     {
       "path": "scripts/verify-schedule-payroll.ts",
-      "sha256": "decfccbc0bf9203908e0674f84d109914556d05778071eb0fa45ea17fc210f6e"
+      "sha256": "86c045383ecb471227f65aa4b8b24f3204cd4e6fc8a85c803a5e4af8799a1cca"
     },
     {
       "path": "src/app/(workspace)/absensi/page.tsx",
@@ -456,7 +456,7 @@
     },
     {
       "path": "src/app/(workspace)/jadwal/page.tsx",
-      "sha256": "e000d4bc3ffe0e4bd4ad03449256d2ddb205f8086b08e3e6426159d88db868bb"
+      "sha256": "b7ad08097664e7a674b45e6c919ce6823d04aef7c5d950f2e579b3463eef47dd"
     },
     {
       "path": "src/app/(workspace)/karyawan/[id]/page.tsx",
@@ -748,7 +748,7 @@
     },
     {
       "path": "src/app/schedule-actions.ts",
-      "sha256": "61e17e07ec1bee3e89b89bfb49bd328ace17ae338db740313a35f139c55c4ba8"
+      "sha256": "72bf05c74876111cfcabce2908227c9cc024cd8e099606d57a3d90a02a552268"
     },
     {
       "path": "src/app/security-actions.ts",
@@ -892,7 +892,7 @@
     },
     {
       "path": "src/components/form-dialog.tsx",
-      "sha256": "413783b813ed51acdca265c5c293b3618fa96c62fa863b0694b6e8d2a8116dcb"
+      "sha256": "efc97f31312b42b6e04ed91471cd910e0e545d9a3ce04f5fe783d0551e95a0ab"
     },
     {
       "path": "src/components/goods-receipt-form.tsx",
@@ -1172,7 +1172,7 @@
     },
     {
       "path": "src/components/schedule-form.tsx",
-      "sha256": "b084fec03ce79ef7bc9e5b591d9d946650bc8edbeb6cfc6814ef5272be10fa72"
+      "sha256": "266c850462f07a933af08af5809dd6796a5dfad53f6a17464e7b9ec781713e76"
     },
     {
       "path": "src/components/schedule-outlet-form.tsx",
@@ -1588,7 +1588,7 @@
     },
     {
       "path": "src/lib/share-schedule.ts",
-      "sha256": "facfa0c8a4118c650ad9b933eb8f1f4adcb7a78efe57d416e8e8ba18adf1cb88"
+      "sha256": "bcca8dd5a9d56959e6d04ce8f8a04a4147c15d08c2fd519d523a2f3f5fdddda3"
     },
     {
       "path": "src/lib/stock-return-service.ts",
@@ -1629,6 +1629,30 @@
     {
       "path": "src/components/payroll-history.tsx",
       "sha256": "18b52a3674622741ac6db2e31e00bed6f1367ea40a226d03650e6b018fcc7a91"
+    },
+    {
+      "path": "scripts/verify-grid-schedule.ts",
+      "sha256": "75d71c363e74cb4e99c31b0d0b2eabb66cc8f2c0225dc704defda1613591732d"
+    },
+    {
+      "path": "src/components/schedule-area-note.tsx",
+      "sha256": "6f1bba2bc4eaa1184e68b5fe26b18f1f235cb0b71aa615df5adb27bfa8367cb2"
+    },
+    {
+      "path": "src/components/schedule-cell-form.tsx",
+      "sha256": "77eb6c80672f7566378174c84abbdc1c60333e37cb37118b820a81b82ed4a4cf"
+    },
+    {
+      "path": "src/components/schedule-entry-grid.css",
+      "sha256": "2eb2e06a56b9d4b2f9b721b256ce30a0dd7639696d771a5e684a6997c160aa38"
+    },
+    {
+      "path": "src/components/schedule-entry-grid.tsx",
+      "sha256": "6644af8575d76ef80f87a55c68a38d7330914403e42d4f877a4dee57fe964649"
+    },
+    {
+      "path": "src/lib/grid-schedule.ts",
+      "sha256": "ffb1b5e816b4152efdc39c8e617ab660e16a5e7a589091e4e07f4df1afda8ac2"
     }
   ]
 }

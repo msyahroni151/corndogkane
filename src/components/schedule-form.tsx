@@ -1,6 +1,7 @@
 "use client";
 import { ScheduleOutletForm } from "@/components/schedule-outlet-form";
 import { LocalInput } from "@/components/local-input";
+import { EditableCombobox } from "@/components/editable-combobox";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -16,6 +17,8 @@ type EmployeeChoice = { id: string; name: string; group: "outlet" | "warehouse";
 type OutletChoice = { id: string; name: string };
 type Edit = {
   id: string;
+  employeeId?: string;
+  areaId?: string;
   version: string;
   hasAttendance: boolean;
   outletName: string;
@@ -35,6 +38,7 @@ type Props = {
   edit?: Edit;
   successRoute?: string;
   fromAttendance?: boolean;
+  crewChoices?: { id: string; name: string }[];
 };
 export function ScheduleForm({
   employees = [],
@@ -42,6 +46,7 @@ export function ScheduleForm({
   edit,
   successRoute = "/jadwal?tersimpan=1",
   fromAttendance = false,
+  crewChoices = [],
 }: Props) {
   if (edit?.hasAttendance && !isWarehouse(edit.role) && isWorkingSchedule(edit.status))
     return (
@@ -63,6 +68,7 @@ export function ScheduleForm({
       outlets={outlets}
       successRoute={successRoute}
       fromAttendance={fromAttendance}
+      crewChoices={crewChoices}
     />
   ) : (
     <CreateScheduleForm employees={employees} outlets={outlets} successRoute={successRoute} />
@@ -569,12 +575,16 @@ function DailyScheduleForm({
   outlets,
   successRoute,
   fromAttendance,
+  crewChoices,
 }: {
   edit: Edit;
   outlets: OutletChoice[];
   successRoute: string;
   fromAttendance: boolean;
+  crewChoices: { id: string; name: string }[];
 }) {
+  const [crewId, setCrewId] = useState(edit.employeeId || "");
+  const [crewName, setCrewName] = useState(crewChoices.find((choice) => choice.id === edit.employeeId)?.name || edit.name);
   const changeWorkingStatus = fromAttendance && isWorkingSchedule(edit.status);
   const [draft, setDraft] = useState({
     status: changeWorkingStatus ? "" : edit.status,
@@ -602,14 +612,21 @@ function DailyScheduleForm({
     >
       <input name="id" type="hidden" value={edit.id} />
       <input name="version" type="hidden" value={edit.version} />
-      {!fromAttendance && <p className="mb-5 text-sm font-semibold">{edit.name}</p>}
-      {!warehouse && !fromAttendance && (
-        <p className="mb-5 text-xs text-slate-500">
-          Standby: Rp50.000 per hari, outlet opsional. Jika jadi masuk, pilih Kerja dan outlet yang
-          dijaga agar payroll memakai tarif outlet tanpa uang standby.
-        </p>
-      )}
-      <fieldset disabled={pending} className="grid gap-5 sm:grid-cols-2">
+      <input name="areaId" type="hidden" value={edit.areaId || ""} />
+      {crewChoices.length > 0 && !fromAttendance ? (
+        <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <input name="employeeId" type="hidden" value={crewId} />
+          <label className="mb-2 block text-xs font-semibold text-slate-600" htmlFor={`crew-${edit.id}`}>Crew bertugas</label>
+          <EditableCombobox id={`crew-${edit.id}`} aria-label="Crew bertugas" inline required disabled={pending}
+            placeholder="Cari kode nama crew…" value={crewName} selectedValue={crewId}
+            className="!rounded-lg !border !border-slate-200 !bg-white !px-3 !py-3 !text-sm"
+            options={crewChoices.map((choice) => ({ value: choice.id, label: choice.name }))}
+            onValueChange={(value) => { setCrewName(value); setCrewId(""); }}
+            onOptionSelect={(id) => { setCrewId(id); setCrewName(crewChoices.find((choice) => choice.id === id)?.name || ""); }} />
+          <p className="mt-2 text-[11px] leading-4 text-slate-500">Pilih nama lain untuk mengganti crew pada tanggal ini.</p>
+        </div>
+      ) : !fromAttendance && <p className="mb-5 text-sm font-semibold">{edit.name}</p>}
+      <fieldset disabled={pending} className="grid gap-4 sm:grid-cols-2">
         <label className="field">
           Status jadwal
           <select
@@ -672,7 +689,7 @@ function DailyScheduleForm({
             </label>
           ) : (
             <>
-              <label className="field">
+              <label className="field sm:col-span-2">
                 Acuan jam kerja
                 <select
                   name="timeMode"
@@ -714,8 +731,8 @@ function DailyScheduleForm({
           {state.error}
         </p>
       )}
-      <div className="mt-6 flex justify-end">
-        <button disabled={pending} type="submit" className="button-primary">
+      <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
+        <button disabled={pending || (crewChoices.length > 0 && !crewId)} type="submit" className="button-primary">
           {pending ? "Menyimpan…" : "Simpan perubahan"}
         </button>
       </div>

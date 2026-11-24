@@ -54,7 +54,7 @@ const day: PayrollDay = {
 };
 for (const role of ["REGULER", "BACKUP"]) {
   const line = payrollLines([{ ...day, role }], [], 0, 10000, {})[0];
-  assert.equal(line.standby, 50000);
+  assert.equal(line.standby, role === "BACKUP" ? 50000 : 0);
   assert.equal(line.base, 0);
   assert.equal(line.backup, 0);
   assert.equal(line.fine, 0);

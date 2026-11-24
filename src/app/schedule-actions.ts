@@ -9,6 +9,8 @@ import { revalidatePath } from "next/cache";
 import { requireAccess } from "@/lib/auth";
 import { getPrisma } from "@/lib/db";
 import { employeeGroup, isBackupEmployee, parseCivilDate } from "@/lib/placements";
+import { leaderHomeAreaName } from "@/lib/leader-home-area";
+import { gridScheduleForm } from "@/lib/grid-schedule";
 import {
   canEditScheduleFromAttendance,
   isWarehouse,
@@ -262,6 +264,20 @@ export async function createSchedules(_: FormState, form: FormData): Promise<For
   revalidatePath("/dashboard");
   return { success: "Jadwal harian berhasil dibuat." };
 }
+export async function createGridSchedule(_: FormState, input: FormData): Promise<FormState> {
+  await requireAccess("jadwal", "create");
+  const user = await requireAccess("jadwal");
+  const employeeId = String(input.get("employeeId") || "");
+  const employee = await getPrisma().employee.findUnique({ where: { id: employeeId } });
+  if (!employee?.active || employeeGroup(employee) !== "outlet")
+    return { error: "Pilih crew outlet yang masih aktif." };
+  const regular = !isBackupEmployee(employee);
+  let form: FormData;
+  try { form = gridScheduleForm(input, regular); }
+  catch (e) { return { error: (e as Error).message }; }
+  return createOutletScheduleRows(form, user.id, regular);
+}
+
 async function createOutletScheduleRows(
   form: FormData,
   userId: string,
@@ -286,7 +302,7 @@ async function createOutletScheduleRows(
         await tx.$executeRaw`SELECT id FROM employees WHERE id=${employeeId} FOR UPDATE`;
         const employee = await tx.employee.findUnique({ where: { id: employeeId } });
         if (
-          !employee ||
+          !employee || !employee.active ||
           employeeGroup(employee) !== "outlet" ||
           (regular ? isBackupEmployee(employee) : !isBackupEmployee(employee))
         )
@@ -296,6 +312,13 @@ async function createOutletScheduleRows(
               : "Jadwal per outlet dan tanggal hanya berlaku untuk Crew Backup atau Area Supervisor yang aktif.",
           );
         const role = regular ? ("REGULER" as const) : ("BACKUP" as const);
+        const gridAreaId = String(form.get("gridAreaId") || "");
+        const gridArea = gridAreaId ? await tx.area.findFirst({ where: { id: gridAreaId, active: true } }) : null;
+        if (gridAreaId && !gridArea) invalid("Area sudah tidak aktif. Muat ulang jadwal.");
+        const leaderArea = leaderHomeAreaName(employee.employeeCode);
+        const gridHomeArea = gridArea && leaderArea ? await tx.area.findFirst({ where: { name: leaderArea, active: true } }) : gridArea;
+        if (gridArea && leaderArea && assignments.some((a) => a.holiday || a.status === "STANBY") && gridArea.name.trim().toUpperCase() !== leaderArea)
+          invalid(`Libur / standby crew ini ditempatkan di ${leaderArea}.`);
         const dates = assignments.map((row) => row.date),
           first = dates[0],
           last = dates[dates.length - 1];
@@ -322,6 +345,8 @@ async function createOutletScheduleRows(
         });
         if (outlets.length !== outletIds.length || outlets.some((o) => !o.active || o.closed))
           invalid("Pilih outlet aktif dari Master Outlet pada setiap baris.");
+        if (gridArea && outlets.some((o) => o.areaId !== gridArea.id))
+          invalid("Outlet tidak sesuai area tabel. Muat ulang jadwal.");
         const areaIds = [...new Set(outlets.map((o) => o.areaId))].sort();
         for (const id of areaIds)
           await tx.$executeRaw`SELECT id FROM areas WHERE id=${id} FOR SHARE`;
@@ -343,11 +368,13 @@ async function createOutletScheduleRows(
               "Ada penempatan bertumpang tindih pada tanggal jaga. Periksa riwayat penempatan terlebih dahulu.",
             );
           let placement = covering[0];
+          if (gridArea && placement?.areaId && (assignment.holiday || status === "STANBY") && !leaderArea && placement.areaId !== gridArea.id)
+            invalid(`Crew ini memiliki area asal ${placement.areaName || "lain"}. Isi libur / standby pada area asalnya.`);
           if (placement && placement.role !== role)
             invalid(
               "Jenis penempatan pada tanggal jaga berbeda. Periksa riwayat penempatan karyawan terlebih dahulu.",
             );
-          if (regular && outlet && placement?.outletId && placement.outletId !== outlet.id)
+          if (regular && !gridArea && outlet && placement?.outletId && placement.outletId !== outlet.id)
             invalid(
               "Outlet pada periode reguler berbeda dari penempatan yang sudah tersimpan. Sesuaikan riwayat penempatan terlebih dahulu; data lama tidak ditimpa.",
             );
@@ -365,9 +392,9 @@ async function createOutletScheduleRows(
                 endDate: placementEnd,
                 outletId: regular ? (outlet?.id ?? null) : null,
                 outletName: regular ? (outlet?.name ?? null) : null,
-                areaId: outlet?.areaId ?? null,
-                areaName: outlet?.area.name ?? null,
-                areaColor: outlet?.area.color ?? null,
+                areaId: gridHomeArea?.id ?? outlet?.areaId ?? null,
+                areaName: gridHomeArea?.name ?? outlet?.area.name ?? null,
+                areaColor: gridHomeArea?.color ?? outlet?.area.color ?? null,
                 createdById: userId,
               },
             });
@@ -380,6 +407,7 @@ async function createOutletScheduleRows(
           if (!off && isWorkingSchedule(status)) {
             try {
               const daily = outletHoursForDate(outlet!.operatingHours, assignment.date);
+              if (gridArea && daily.closed) invalid("Outlet tutup pada tanggal ini. Pilih tanggal lain atau isi crew pada baris Libur.");
               off = daily.closed;
               if (!off) {
                 startMinutes = daily.startMinutes;
@@ -396,8 +424,8 @@ async function createOutletScheduleRows(
             placementId: placement.id,
             date: assignment.date,
             role,
-            areaName: placement.areaName,
-            areaColor: placement.areaColor,
+            areaName: placement.areaName || gridHomeArea?.name,
+            areaColor: placement.areaColor || gridHomeArea?.color,
             location: placement.location,
             outletId: off ? null : (outlet?.id ?? null),
             outletName: off ? null : (outlet?.name ?? null),
@@ -435,8 +463,8 @@ async function createOutletScheduleRows(
 }
 export async function updateSchedule(_: FormState, form: FormData): Promise<FormState> {
   await requireAccess("jadwal", "edit");
-  await requireAccess("jadwal");
-  return updateDailySchedule(form);
+  const user = await requireAccess("jadwal");
+  return updateDailySchedule(form, false, user.id);
 }
 
 export async function updateScheduleFromAttendance(_: FormState, form: FormData): Promise<FormState> {
@@ -445,20 +473,26 @@ export async function updateScheduleFromAttendance(_: FormState, form: FormData)
   return updateDailySchedule(form, true);
 }
 
-async function updateDailySchedule(form: FormData, fromAttendance = false): Promise<FormState> {
+async function updateDailySchedule(form: FormData, fromAttendance = false, updatedById?: string): Promise<FormState> {
   const get = (key: string) => String(form.get(key) || "").trim();
   try {
     await getPrisma().$transaction(
       async (tx) => {
         const initial = await tx.schedule.findUnique({ where: { id: get("id") } });
         if (!initial) invalid("Jadwal tidak ditemukan.");
-        await tx.$executeRaw`SELECT id FROM employees WHERE id=${initial.employeeId} FOR UPDATE`;
+        const targetId = get("employeeId") || initial.employeeId;
+        for (const employeeId of [...new Set([initial.employeeId, targetId])].sort())
+          await tx.$executeRaw`SELECT id FROM employees WHERE id=${employeeId} FOR UPDATE`;
         await tx.$executeRaw`SELECT id FROM schedules WHERE id=${get("id")} FOR UPDATE`;
         const record = await tx.schedule.findUnique({
           where: { id: get("id") },
-          include: { attendance: true },
+          include: { attendance: true, placement: true },
         });
         if (!record) invalid("Jadwal tidak ditemukan.");
+        if (record.employeeId !== initial.employeeId)
+          invalid("Crew jadwal sudah berubah. Muat ulang sebelum mengedit.");
+        if (fromAttendance && targetId !== record.employeeId)
+          invalid("Ganti crew melalui menu Jadwal.");
         if (fromAttendance && !canEditScheduleFromAttendance(record.status))
           invalid("Status jadwal sudah berubah. Tutup popup dan muat ulang rekap absensi.");
         if (
@@ -542,10 +576,55 @@ async function updateDailySchedule(form: FormData, fromAttendance = false): Prom
           outletId = outlet.id;
           outletName = outlet.name;
         }
-        await checkPortalLeave(tx, record.employeeId, [{ date: record.date, status }]);
+        let reassignment: Prisma.ScheduleUncheckedUpdateInput = {};
+        if (targetId !== record.employeeId) {
+          if (warehouse || !updatedById) invalid("Pergantian crew hanya tersedia untuk jadwal outlet.");
+          const replacement = await tx.employee.findUnique({ where: { id: targetId } });
+          if (!replacement || employeeGroup(replacement) !== "outlet")
+            invalid("Pilih crew outlet yang masih aktif.");
+          if (await tx.schedule.findFirst({ where: { employeeId: targetId, date: record.date } }))
+            invalid("Crew pengganti sudah memiliki jadwal pada tanggal ini. Jadwal lain tidak ditimpa.");
+          if (await tx.payroll.findFirst({ where: {
+            employeeId: { in: [record.employeeId, targetId] }, status: { in: ["DRAFT", "PAID"] },
+            startDate: { lte: record.date }, endDate: { gte: record.date },
+          } })) invalid("Crew belum dapat diganti karena tanggal ini masuk draft atau payroll dibayar. Selesaikan pembatalan draft terlebih dahulu.");
+          if (await tx.saleTransaction.findFirst({ where: { crewId: record.employeeId, date: record.date } }) ||
+              await tx.outletOperation.findFirst({ where: { date: record.date, OR: [{ crewId: record.employeeId }, { trainingCrewId: record.employeeId }] } }))
+            invalid("Crew belum dapat diganti karena sudah memiliki transaksi atau rekap operasional pada tanggal ini.");
+          const role = isBackupEmployee(replacement) ? "BACKUP" as const : "REGULER" as const;
+          const covering = await tx.placement.findMany({ where: {
+            employeeId: targetId, startDate: { lte: record.date }, endDate: { gte: record.date },
+          } });
+          if (covering.length > 1) invalid("Penempatan crew pengganti bertumpang tindih. Rapikan penempatannya terlebih dahulu.");
+          let placement = covering[0];
+          if (placement && placement.role !== role) invalid("Role penempatan crew pengganti tidak sesuai. Periksa penempatannya terlebih dahulu.");
+          if (!placement) {
+            const leaderArea = leaderHomeAreaName(replacement.employeeCode);
+            const outlet = outletId ? await tx.outlet.findUnique({ where: { id: outletId } }) : null;
+            const area = leaderArea
+              ? await tx.area.findFirst({ where: { name: leaderArea, active: true } })
+              : await tx.area.findFirst({ where: { id: get("areaId") || outlet?.areaId || record.placement.areaId || "", active: true } });
+            if (!area) invalid("Area asal crew pengganti belum tersedia. Lengkapi penempatannya terlebih dahulu.");
+            placement = await tx.placement.create({ data: {
+              employeeId: targetId, employeeName: replacement.employeeCode || replacement.fullName,
+              role, startDate: record.date, endDate: record.date,
+              areaId: area.id, areaName: area.name, areaColor: area.color,
+              outletId: role === "REGULER" ? outletId : null,
+              outletName: role === "REGULER" ? outletName : null,
+              createdById: updatedById,
+            } });
+          }
+          reassignment = {
+            employeeId: targetId, employeeName: replacement.employeeCode || replacement.fullName,
+            placementId: placement.id, role,
+            areaName: placement.areaName, areaColor: placement.areaColor, location: placement.location,
+          };
+        }
+        await checkPortalLeave(tx, targetId, [{ date: record.date, status }]);
         await tx.schedule.update({
           where: { id: record.id },
           data: {
+            ...reassignment,
             status: status as ScheduleStatus,
             outletId,
             outletName,

@@ -1,0 +1,15 @@
+.workspace table.schedule-entry-table th,
+.workspace table.schedule-entry-table td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.schedule-entry-table .schedule-crew-label {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

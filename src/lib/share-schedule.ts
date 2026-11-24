@@ -60,6 +60,9 @@ export function resolveShareHomeAreas(data: ShareScheduleData) {
   }
   return data.rows.map((row) => {
     if (row.homeAreaId) return row;
+    const namedHome = [...areas.values()].find((area) =>
+      area.name.trim().toUpperCase() === row.homeAreaName?.trim().toUpperCase());
+    if (namedHome) return { ...row, homeAreaId: namedHome.id, homeAreaName: namedHome.name };
     const candidates = weekAreas.get(key(row));
     const areaId =
       outletAreas.get(row.outletId || "") ??

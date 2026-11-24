@@ -11,6 +11,8 @@ import {
 import { useRouter } from "next/navigation";
 
 const DialogContext = createContext<(() => void) | undefined>(undefined);
+let openDialogCount = 0;
+let previousBodyOverflow = "";
 export function useCloseFormDialog() {
   return useContext(DialogContext);
 }
@@ -26,6 +28,7 @@ export function FormDialog({
   compact = false,
   subtitle,
   danger = false,
+  triggerClassName,
 }: {
   title: string;
   trigger: string;
@@ -37,6 +40,7 @@ export function FormDialog({
   compact?: boolean;
   subtitle?: string;
   danger?: boolean;
+  triggerClassName?: string;
 }) {
   const [open, setOpen] = useState(initiallyOpen);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -47,11 +51,15 @@ export function FormDialog({
     if (!open || !dialog.current) return;
     const element = dialog.current;
     element.showModal();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (openDialogCount === 0) {
+      previousBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    }
+    openDialogCount += 1;
     return () => {
       element.close();
-      document.body.style.overflow = previousOverflow;
+      openDialogCount -= 1;
+      if (openDialogCount === 0) document.body.style.overflow = previousBodyOverflow;
     };
   }, [open]);
   const close = () => {
@@ -69,7 +77,7 @@ export function FormDialog({
       <button
         ref={triggerButton}
         type="button"
-        className={"button-primary" + (danger ? " button-danger" : "")}
+        className={triggerClassName ?? ("button-primary" + (danger ? " button-danger" : ""))}
         onClick={() => setOpen(true)}
       >
         {trigger}
@@ -99,6 +107,7 @@ export function FormDialog({
                   : "button-secondary"
               }
               onClick={cancel}
+              onPointerDown={(event) => event.preventDefault()}
               aria-label="Tutup popup"
             >
               {compact ? "\u00d7" : "Tutup"}

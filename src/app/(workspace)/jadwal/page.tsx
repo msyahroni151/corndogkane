@@ -1,4 +1,7 @@
 import SearchForm from "next/form";
+import Link from "next/link";
+import { ScheduleEntryGrid } from "@/components/schedule-entry-grid";
+import { shareWeekStart } from "@/lib/share-schedule";
 import { ShareWarehouseSchedule } from "@/components/share-warehouse-schedule";
 import { ShareSchedule } from "@/components/share-schedule";
 import { SortableTable } from "@/components/sortable-table";
@@ -28,11 +31,14 @@ export default async function Schedules({
     from?: string;
     to?: string;
     tersimpan?: string;
+    view?: string;
+    week?: string;
   }>;
 }) {
   await requireAccess("jadwal");
   const query = await searchParams,
     db = getPrisma();
+  const grid = query.view === "grid";
   const month = query.month || query.from?.slice(0, 7) || todayWib().slice(0, 7);
   let valid = true,
     fromDate = new Date(0),
@@ -134,6 +140,8 @@ export default async function Schedules({
     "/jadwal?" +
     new URLSearchParams({
       month,
+      ...(grid ? { view: "grid" } : {}),
+      ...(query.week ? { week: query.week } : {}),
       ...(query.from ? { from } : {}),
       ...(query.to ? { to } : {}),
       ...(query.employee ? { employee: query.employee } : {}),
@@ -143,7 +151,7 @@ export default async function Schedules({
   const currentWeek = new Date(todayWib() + "T00:00:00Z");
   currentWeek.setUTCDate(currentWeek.getUTCDate() - ((currentWeek.getUTCDay() + 6) % 7));
   const weekStart = currentWeek.toISOString().slice(0, 10);
-  const shareFrom =
+  let shareFrom =
     valid && query.from
       ? from
       : month === todayWib().slice(0, 7)
@@ -153,7 +161,18 @@ export default async function Schedules({
           : weekStart;
   const shareEnd = new Date(shareFrom + "T00:00:00Z");
   shareEnd.setUTCDate(shareEnd.getUTCDate() + 6);
-  const shareTo = valid && query.to ? to : shareEnd.toISOString().slice(0, 10);
+  let shareTo = valid && query.to ? to : shareEnd.toISOString().slice(0, 10);
+  const toggleParams = new URLSearchParams(successRoute.split("?")[1]);
+  toggleParams.delete("tersimpan");
+  if (grid) toggleParams.delete("view");
+  else toggleParams.set("view", "grid");
+  let gridStart = query.week || shareFrom;
+  try { parseCivilDate(gridStart); } catch { gridStart = shareFrom; }
+  if (grid) {
+    const start = shareWeekStart(parseCivilDate(gridStart));
+    gridStart = shareFrom = start.toISOString().slice(0, 10);
+    shareTo = new Date(start.getTime() + 6 * 86400000).toISOString().slice(0, 10);
+  }
   function createButton() {
     return (
       <FormDialog title="Buat jadwal periode" trigger="+ Buat Jadwal">
@@ -197,6 +216,7 @@ export default async function Schedules({
           scroll={false}
           className="flex flex-wrap items-end gap-3 text-xs"
         >
+          {grid && <input type="hidden" name="view" value="grid" />}
           <label className="flex flex-col gap-1.5 text-slate-500">
             Bulan
             <input
@@ -238,6 +258,9 @@ export default async function Schedules({
             </select>
           </label>
           <button className="button-secondary !py-2.5">Terapkan</button>
+          <Link href={`/jadwal?${toggleParams}`} scroll={false} className="button-secondary !py-2.5">
+            {grid ? "Tampilan Daftar" : "Tampilan Tabel"}
+          </Link>
         </SearchForm>
         <div className="flex flex-wrap gap-2">
           <ShareSchedule from={shareFrom} to={shareTo} area={query.area} />
@@ -248,7 +271,7 @@ export default async function Schedules({
           {createButton()}
         </div>
       </section>
-      <section className="panel overflow-hidden">
+      {grid && valid ? <ScheduleEntryGrid start={gridStart} area={query.area} employee={query.employee} route={successRoute} /> : <section className="panel overflow-hidden">
         {!valid ? (
           <p role="alert" className="p-6 text-sm text-red-700">
             Periksa bulan atau rentang tanggal. Rentang maksimal satu tahun.
@@ -391,7 +414,7 @@ export default async function Schedules({
               : ""}
           </p>
         )}
-      </section>
+      </section>}
     </div>
   );
 }
