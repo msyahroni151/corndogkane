@@ -1,0 +1,17 @@
+.form-dialog { scrollbar-width:thin; scrollbar-color:#c8d6cb transparent; }
+.form-dialog::backdrop { background:rgb(21 40 31 / 46%); backdrop-filter:blur(4px); }
+.form-dialog-heading { background:linear-gradient(110deg,#f5faf6,#fff 65%); padding:22px 24px; }
+.form-dialog-heading h2 { color:#244536; line-height:1.4; letter-spacing:-.02em; }
+.form-dialog-heading > div { min-width:0; overflow-wrap:anywhere; }
+.form-dialog-heading > button { flex-shrink:0; }
+.form-dialog-content .field { min-width:0; gap:8px; line-height:1.5; }
+.form-dialog-content :is(input,select,textarea):not([type=checkbox]):not([type=radio]):not([type=hidden]) { border-radius:10px; transition:border-color .15s,box-shadow .15s; }
+.form-dialog-content :is(input,select,textarea):focus-visible { outline:2px solid #78a78a; outline-offset:2px; }
+.form-dialog-content textarea { min-height:88px; }
+.form-dialog-content .field > span { line-height:1.6; }
+@media(max-width:640px) {
+ .form-dialog { max-height:94dvh; width:calc(100% - 16px); border-radius:18px; }
+ .form-dialog-heading { padding:16px; }.form-dialog-heading h2 { font-size:17px; }
+ .form-dialog-content > form, .form-dialog-content > div > form { padding:18px 16px; }
+}
+@media(prefers-reduced-motion:no-preference) { .form-dialog[open] { animation:form-dialog-appear .16s ease-out; } @keyframes form-dialog-appear { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } } }

@@ -1,6 +1,7 @@
 import SearchForm from "next/form";
 import Link from "next/link";
 import { ScheduleEntryGrid } from "@/components/schedule-entry-grid";
+import { WarehouseCalendarData } from "@/components/warehouse-calendar-data";
 import { shareWeekStart } from "@/lib/share-schedule";
 import { ShareWarehouseSchedule } from "@/components/share-warehouse-schedule";
 import { ShareSchedule } from "@/components/share-schedule";
@@ -33,12 +34,14 @@ export default async function Schedules({
     tersimpan?: string;
     view?: string;
     week?: string;
+    crew?: string;
   }>;
 }) {
   await requireAccess("jadwal");
   const query = await searchParams,
     db = getPrisma();
   const grid = query.view === "grid";
+  const warehouse = query.crew === "warehouse";
   const month = query.month || query.from?.slice(0, 7) || todayWib().slice(0, 7);
   let valid = true,
     fromDate = new Date(0),
@@ -65,9 +68,10 @@ export default async function Schedules({
       )
     : [];
   const where: Prisma.ScheduleWhereInput = {
+    ...(grid ? { role: { in: warehouse ? ["CREW_GUDANG", "LEADER_SHIFT"] : ["REGULER", "BACKUP"] } } : {}),
     date: { gte: fromDate, lte: toDate },
     ...(query.employee ? { employeeId: query.employee } : {}),
-    ...(query.area
+    ...(query.area && !warehouse
       ? {
           OR: [
             { outletId: { in: areaOutletIds } },
@@ -140,6 +144,7 @@ export default async function Schedules({
     "/jadwal?" +
     new URLSearchParams({
       month,
+      ...(warehouse ? { crew: "warehouse" } : {}),
       ...(grid ? { view: "grid" } : {}),
       ...(query.week ? { week: query.week } : {}),
       ...(query.from ? { from } : {}),
@@ -168,11 +173,17 @@ export default async function Schedules({
   else toggleParams.set("view", "grid");
   let gridStart = query.week || shareFrom;
   try { parseCivilDate(gridStart); } catch { gridStart = shareFrom; }
-  if (grid) {
+  if (grid && !warehouse) {
     const start = shareWeekStart(parseCivilDate(gridStart));
     gridStart = shareFrom = start.toISOString().slice(0, 10);
     shareTo = new Date(start.getTime() + 6 * 86400000).toISOString().slice(0, 10);
   }
+  const crewLink = (group: string) => {
+    const p = new URLSearchParams(successRoute.split("?")[1]);
+    p.set("view", "grid"); p.set("crew", group);
+    ["employee", "area", "week", "tersimpan"].forEach(k => p.delete(k));
+    return `/jadwal?${p}`;
+  };
   function createButton() {
     return (
       <FormDialog title="Buat jadwal periode" trigger="+ Buat Jadwal">
@@ -211,12 +222,14 @@ export default async function Schedules({
       </div>
       <section className="panel flex flex-wrap items-center justify-between gap-4 p-4">
         <SearchForm
+          key={`${month}:${warehouse ? "warehouse" : "outlet"}`}
           action=""
           prefetch={false}
           scroll={false}
           className="flex flex-wrap items-end gap-3 text-xs"
         >
           {grid && <input type="hidden" name="view" value="grid" />}
+          {warehouse && <input type="hidden" name="crew" value="warehouse" />}
           <label className="flex flex-col gap-1.5 text-slate-500">
             Bulan
             <input
@@ -235,14 +248,14 @@ export default async function Schedules({
               defaultValue={query.employee || ""}
             >
               <option value="">Semua karyawan</option>
-              {employees.map((e) => (
+              {employees.filter(e => !grid || crew.some(c => c.id === e.id && employeeGroup(c) === (warehouse ? "warehouse" : "outlet"))).map((e) => (
                 <option key={e.id} value={e.id}>
                   {e.employeeCode || e.fullName}
                 </option>
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1.5 text-slate-500">
+          {!warehouse && <label className="flex flex-col gap-1.5 text-slate-500">
             Area
             <select
               name="area"
@@ -256,22 +269,23 @@ export default async function Schedules({
                 </option>
               ))}
             </select>
-          </label>
+          </label>}
           <button className="button-secondary !py-2.5">Terapkan</button>
           <Link href={`/jadwal?${toggleParams}`} scroll={false} className="button-secondary !py-2.5">
             {grid ? "Tampilan Daftar" : "Tampilan Tabel"}
           </Link>
         </SearchForm>
         <div className="flex flex-wrap gap-2">
-          <ShareSchedule from={shareFrom} to={shareTo} area={query.area} />
-          <ShareWarehouseSchedule
+          {(!grid || !warehouse) && <ShareSchedule from={shareFrom} to={shareTo} area={query.area} />}
+          {(!grid || warehouse) && <ShareWarehouseSchedule
             from={valid ? from : shareFrom}
             to={valid && toDate.getTime() - fromDate.getTime() <= 30 * 86400000 ? to : shareTo}
-          />
+          />}
           {createButton()}
         </div>
       </section>
-      {grid && valid ? <ScheduleEntryGrid start={gridStart} area={query.area} employee={query.employee} route={successRoute} /> : <section className="panel overflow-hidden">
+      {grid && <nav aria-label="Jenis crew" className="flex gap-2 rounded-xl border border-slate-200 bg-white p-1.5 w-fit"><Link href={crewLink("outlet")} scroll={false} aria-current={!warehouse ? "page" : undefined} className={`rounded-lg px-5 py-2.5 text-sm font-semibold ${!warehouse ? "bg-[#3e5e4d] text-white" : "text-slate-500 hover:bg-slate-50"}`}>Crew Outlet</Link><Link href={crewLink("warehouse")} scroll={false} aria-current={warehouse ? "page" : undefined} className={`rounded-lg px-5 py-2.5 text-sm font-semibold ${warehouse ? "bg-[#3e5e4d] text-white" : "text-slate-500 hover:bg-slate-50"}`}>Crew Gudang</Link></nav>}
+      {grid && valid ? warehouse ? <WarehouseCalendarData month={month} employee={query.employee} route={successRoute} /> : <ScheduleEntryGrid start={gridStart} area={query.area} employee={query.employee} route={successRoute} /> : <section className="panel overflow-hidden">
         {!valid ? (
           <p role="alert" className="p-6 text-sm text-red-700">
             Periksa bulan atau rentang tanggal. Rentang maksimal satu tahun.

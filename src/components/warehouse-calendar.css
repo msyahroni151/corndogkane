@@ -1,0 +1,27 @@
+.warehouse-calendar { overflow: hidden; }
+.warehouse-calendar-header { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:24px; }
+.warehouse-legend { display:flex; flex-wrap:wrap; gap:12px 20px; padding:0 24px 20px; font-size:11px; color:#526359; }
+.warehouse-legend span { display:flex; align-items:center; gap:6px; }
+.warehouse-legend i { width:8px; height:8px; border-radius:50%; background:#4a896b; }
+.warehouse-legend i.second { background:#5d83c4; }.warehouse-legend i.full { background:#cd8c3e; }.warehouse-legend i.leave { background:#cb7180; }
+.warehouse-weekdays,.warehouse-days { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+.warehouse-weekdays { background:#f1f6f2; border-top:1px solid #e2eae4; }
+.warehouse-weekdays span { padding:12px 4px; text-align:center; font-size:12px; font-weight:600; color:#526359; }
+.warehouse-day { min-width:0; min-height:150px; border-top:1px solid #e2eae4; border-right:1px solid #e2eae4; padding:6px; background:white; }
+.warehouse-day:nth-child(7n) { border-right:0; }.warehouse-day.outside { background:#f8faf9; color:#c2cbc5; }
+.warehouse-day.selected { box-shadow:inset 0 0 0 2px #527d64; background:#fcfefb; }
+.warehouse-date { display:flex; align-items:center; justify-content:space-between; gap:2px; width:100%; padding:4px; text-align:left; font-size:12px; }
+.warehouse-date span { display:grid; place-items:center; width:27px; height:27px; border-radius:50%; }.today .warehouse-date span { background:#3e5e4d; color:white; }
+.warehouse-date small { font-size:10px; color:#7a8b80; }
+.warehouse-desktop-events { display:flex; flex-direction:column; gap:5px; margin-top:5px; }
+.warehouse-event { text-align:left; padding:6px; border-radius:6px; font-size:11px; line-height:1.55; white-space:normal; overflow-wrap:anywhere; background:#eaf5ef; color:#24553e; border-left:3px solid #689e7c; }
+.warehouse-event.second { background:#edf2fc; color:#365d94; border-color:#7a9cce; }.warehouse-event.full { background:#fff4e3; color:#925c24; border-color:#d6a15b; }.warehouse-event.leave { background:#fceff1; color:#9c4c5b; border-color:#d88c9a; }
+.warehouse-event:hover { filter:brightness(.96); }.warehouse-add { font-size:11px; padding:7px 9px; color:#446551; border:1px dashed #c5d7ca; border-radius:8px; background:#fff; }.warehouse-add:hover { background:#eff7f1; }
+.warehouse-mobile-events { display:none; }.warehouse-agenda { border-top:1px solid #e2eae4; padding:24px; background:#fbfdfb; }
+.warehouse-agenda-row { display:flex; justify-content:space-between; align-items:center; gap:12px; border:1px solid #e2eae4; border-left:4px solid #689e7c; background:white; border-radius:12px; padding:16px; }.warehouse-agenda-row.second { border-left-color:#7a9cce; }.warehouse-agenda-row.full { border-left-color:#d6a15b; }.warehouse-agenda-row.leave { border-left-color:#d88c9a; }
+@media(max-width:767px) {
+ .warehouse-calendar-header { padding:16px; align-items:flex-start; }.warehouse-legend { padding:0 16px 16px; gap:8px 12px; font-size:10px; }
+ .warehouse-calendar-header h2 { font-size:18px; }.warehouse-day { min-height:78px; padding:3px 2px; }.warehouse-date { padding:1px; justify-content:center; }.warehouse-date small { display:none; }
+ .warehouse-desktop-events { display:none; }.warehouse-mobile-events { display:flex; flex-direction:column; gap:3px; width:100%; text-align:left; margin-top:4px; }.warehouse-mobile-events span { font-size:9px; line-height:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 3px; border-radius:3px; background:#e3f0e7; color:#315f42; }.warehouse-mobile-events span.second { background:#e5edfc; color:#3c6099; }.warehouse-mobile-events span.full { background:#fff0d8; color:#925c24; }.warehouse-mobile-events span.leave { background:#fbe5e9; color:#984856; }.warehouse-mobile-events small { font-size:9px; text-align:center; color:#859487; }
+ .warehouse-agenda { padding:16px; }.warehouse-agenda-row { padding:12px; }.warehouse-agenda-row .button-secondary { padding:7px 12px; font-size:11px; }
+}

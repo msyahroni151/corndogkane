@@ -126,8 +126,8 @@ function Preview({ initialFrom, initialTo }: { initialFrom: string; initialTo: s
         </div>
       </form>
       <p className="mt-3 text-xs leading-5 text-slate-500">
-        Pilih periode maksimal 31 hari. Hijau: Shift 1 · Biru: Shift 2 · Jingga: Full Shift · Merah:
-        Libur. Tanggal yang belum dijadwalkan ditampilkan —.
+        Kalender gudang maksimal 31 hari. Setiap tanggal menampilkan crew, shift, dan jam kerja.
+        Shift 2 dan Full Shift selesai pukul 23:59 pada tanggal yang sama. Jam dalam WIB.
       </p>
       {error && (
         <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">

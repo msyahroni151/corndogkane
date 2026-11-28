@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import "./form-dialog.css";
 
 const DialogContext = createContext<(() => void) | undefined>(undefined);
 let openDialogCount = 0;
@@ -31,7 +32,7 @@ export function FormDialog({
   triggerClassName,
 }: {
   title: string;
-  trigger: string;
+  trigger: ReactNode;
   children: ReactNode;
   initiallyOpen?: boolean;
   cancelRoute?: string;
@@ -90,9 +91,9 @@ export function FormDialog({
             event.preventDefault();
             cancel();
           }}
-          className={`m-auto max-h-[90dvh] w-[calc(100%-2rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-slate-900/45 ${compact ? "max-w-[480px]" : extraWide ? "max-w-[1500px]" : wide ? "max-w-5xl" : "max-w-3xl"}`}
+          className={`form-dialog m-auto max-h-[90dvh] w-[calc(100%-2rem)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-0 shadow-2xl backdrop:bg-slate-900/45 ${compact ? "max-w-[480px]" : extraWide ? "max-w-[1500px]" : wide ? "max-w-5xl" : "max-w-3xl"}`}
         >
-          <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-4">
+          <div className="form-dialog-heading sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-4">
             <div>
               <h2 id={titleId} className={compact ? "text-sm font-bold" : "text-xl font-bold"}>
                 {title}
@@ -114,7 +115,7 @@ export function FormDialog({
             </button>
           </div>
           <DialogContext.Provider value={close}>
-            <div className="[&_.panel]:mt-0 [&_.panel]:rounded-none [&_.panel]:border-0 [&_.panel]:shadow-none">
+            <div className="form-dialog-content [&_.panel]:mt-0 [&_.panel]:rounded-none [&_.panel]:border-0 [&_.panel]:shadow-none">
               {children}
             </div>
           </DialogContext.Provider>

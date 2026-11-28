@@ -1,4 +1,4 @@
-import { timeLabel } from "@/lib/schedules";
+import { timeLabel, compareWarehouseSchedules } from "@/lib/schedules";
 export type WarehouseScheduleData = {
   from: string;
   to: string;
@@ -24,163 +24,55 @@ const longDate = (iso: string) =>
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(iso + "T00:00:00Z"));
-function nameLines(name: string) {
-  return name.match(/.{1,16}/gu) || ["—"];
-}
+
 export function warehouseScheduleSvg(data: WarehouseScheduleData) {
+  const first = new Date(data.from + 'T00:00:00Z'), last = new Date(data.to + 'T00:00:00Z');
+  first.setUTCDate(first.getUTCDate() - ((first.getUTCDay() + 6) % 7));
   const dates: string[] = [];
-  for (
-    let d = new Date(data.from + "T00:00:00Z");
-    d <= new Date(data.to + "T00:00:00Z");
-    d.setUTCDate(d.getUTCDate() + 1)
-  )
-    dates.push(d.toISOString().slice(0, 10));
-  const employees = data.employees,
-    margin = 12,
-    dateWidth = 156,
-    dayWidth = 100,
-    crewWidth = 160;
-  const width = Math.max(600, margin * 2 + dateWidth + dayWidth + crewWidth * employees.length),
-    gridWidth = width - margin * 2,
-    cellWidth = employees.length
-      ? (gridWidth - dateWidth - dayWidth) / employees.length
-      : crewWidth;
-  const parts: string[] = [];
-  const rect = (x: number, y: number, w: number, h: number, fill: string) =>
-    parts.push(
-      `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="#bdcbbf" stroke-width="1"/>`,
-    );
-  const label = (
-    lines: string[],
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    bold = false,
-    color = "#183c35",
-    size = 13,
-  ) => {
-    const lineHeight = size + 3,
-      top = y + (h - lines.length * lineHeight) / 2 + size;
-    parts.push(
-      `<text font-family="Arial, sans-serif" font-size="${size}" font-weight="${bold ? 700 : 400}" fill="${color}" text-anchor="middle">${lines.map((s, i) => `<tspan x="${x + w / 2}" y="${top + i * lineHeight}">${escape(s)}</tspan>`).join("")}</text>`,
-    );
-  };
-  rect(margin, 12, gridWidth, 64, "#426554");
-  label(
-    ["JADWAL BULANAN - CREW GUDANG", `PERIODE ${longDate(data.from)} – ${longDate(data.to)}`],
-    margin,
-    12,
-    gridWidth,
-    64,
-    true,
-    "#ffffff",
-    15,
-  );
-  const q = gridWidth / 4;
-  for (const [i, text] of [
-    "Tanggal awal",
-    longDate(data.from),
-    "Tanggal akhir",
-    longDate(data.to),
-  ].entries()) {
-    rect(margin + i * q, 76, q, 28, i % 2 ? "#fff2ce" : "#ffffff");
-    label([text], margin + i * q, 76, q, 28, false, "#183c35", 12);
+  while (first <= last || dates.length % 7 !== 0) { dates.push(first.toISOString().slice(0, 10)); first.setUTCDate(first.getUTCDate() + 1); }
+  const width = 1400, margin = 20, cw = (width - margin * 2) / 7, parts: string[] = [];
+  const rect = (x:number,y:number,w:number,h:number,fill:string) => parts.push('<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#dce5df"/>');
+  const text = (s:string,x:number,y:number,size=14,bold=false,color='#294638') => parts.push('<text x="'+x+'" y="'+y+'" font-family="Arial,sans-serif" font-size="'+size+'" font-weight="'+(bold?700:400)+'" fill="'+color+'">'+escape(s)+'</text>');
+  rect(margin, 16, width-margin*2, 82, '#3e5e4d');
+  text('CORNDOG KANE · JADWAL CREW GUDANG',40,49,23,true,'#ffffff');
+  text(longDate(data.from)+' – '+longDate(data.to),40,79,15,false,'#e2eee5');
+  const fills: Record<string,string> = {S1:'#dceedd',S2:'#dce8fb',FULL:'#ffe3b9',LIBUR:'#f8dddd'};
+  ['Shift 1 · 08:00–17:00','Shift 2 · 15:00–23:59','Full · 08:00–23:59','Libur'].forEach((s,i)=> { rect(24+i*340,111,9,9,Object.values(fills)[i]); text(s,42+i*340,122,13); });
+  ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'].forEach((s,i)=> { rect(margin+i*cw,140,cw,34,'#ecf2e9'); text(s,margin+i*cw+12,162,14,true); });
+  let y=174;
+  const names = new Map(data.employees.map(e=>[e.id,e.name]));
+  for(let offset=0;offset<dates.length;offset+=7) {
+    const week=dates.slice(offset,offset+7);
+    const height=Math.max(118,...week.map(d=>48+data.rows.filter(r=>r.date===d&&d>=data.from&&d<=data.to).reduce((n,r)=>n+52+Math.max(0,Math.ceil((names.get(r.employeeId)||'').length/21)-1)*14,0)));
+    week.forEach((date,index)=>{
+      const x=margin+index*cw, active=date>=data.from&&date<=data.to;
+      rect(x,y,cw,height,active?'#ffffff':'#f5f7f5');
+      text(String(Number(date.slice(-2))),x+12,y+24,15,true,active?'#294638':'#b6c0b9');
+      if(!active)return;
+      const rows=data.rows.filter(r=>r.date===date).sort((a,b)=>compareWarehouseSchedules({...a,name:names.get(a.employeeId)||''},{...b,name:names.get(b.employeeId)||''}));
+      let top=y+34;
+      if(!rows.length)text('Belum dijadwalkan',x+12,top+21,12,false,'#89968d');
+      rows.forEach(r=>{
+        const lines=(names.get(r.employeeId)||'Crew').match(/.{1,21}/gu)||['Crew'];
+        const h=46+(lines.length-1)*14;
+        rect(x+7,top,cw-14,h,fills[r.status==='LIBUR'?'LIBUR':r.shift||'S1']||'#eff2ed');
+        lines.forEach((line,i)=>text(line,x+14,top+16+i*14,12,true));
+        const shift=r.status==='LIBUR'?'LIBUR':r.shift==='FULL'?'Full shift':r.shift==='S2'?'Shift 2':'Shift 1';
+        const hours=r.status==='LIBUR'?'Tidak bertugas':r.startMinutes===null||r.endMinutes===null?'Jam belum diatur':timeLabel(r.startMinutes)+'–'+timeLabel(r.endMinutes)+(r.endMinutes<=r.startMinutes?' (+1)':'');
+        text(shift+' · '+hours,x+14,top+h-9,10);
+        top+=h+6;
+      });
+    });
+    y+=height;
   }
-  let y = 120;
-  const headerHeight = Math.max(34, ...employees.map((e) => nameLines(e.name).length * 16 + 12));
-  rect(margin, y, dateWidth, headerHeight, "#e1edda");
-  label(["Tanggal"], margin, y, dateWidth, headerHeight, true);
-  rect(margin + dateWidth, y, dayWidth, headerHeight, "#e1edda");
-  label(["Hari"], margin + dateWidth, y, dayWidth, headerHeight, true);
-  for (const [i, e] of employees.entries()) {
-    const x = margin + dateWidth + dayWidth + i * cellWidth;
-    rect(x, y, cellWidth, headerHeight, "#e1edda");
-    label(nameLines(e.name), x, y, cellWidth, headerHeight, true);
-  }
-  y += headerHeight;
-  const indexed = new Map(data.rows.map((r) => [r.employeeId + ":" + r.date, r]));
-  for (const date of dates) {
-    rect(margin, y, dateWidth, 42, "#ffffff");
-    label([longDate(date)], margin, y, dateWidth, 42, false, "#183c35", 12);
-    rect(margin + dateWidth, y, dayWidth, 42, "#ffffff");
-    label(
-      [
-        new Intl.DateTimeFormat("id-ID", { weekday: "long", timeZone: "UTC" }).format(
-          new Date(date + "T00:00:00Z"),
-        ),
-      ],
-      margin + dateWidth,
-      y,
-      dayWidth,
-      42,
-      false,
-      "#183c35",
-      12,
-    );
-    for (const [i, e] of employees.entries()) {
-      const row = indexed.get(e.id + ":" + date),
-        x = margin + dateWidth + dayWidth + i * cellWidth;
-      const fill = !row
-        ? "#ffffff"
-        : row.status === "LIBUR"
-          ? "#f8dddd"
-          : row.status !== "KERJA"
-            ? "#f2f2ed"
-            : row.shift === "FULL"
-              ? "#ffe3b9"
-              : row.shift === "S2"
-                ? "#dce8fb"
-                : "#dceedd";
-      const lines = !row
-        ? ["—"]
-        : row.status !== "KERJA"
-          ? [row.status]
-          : [
-              row.shift === "FULL" ? "[S1-S2]" : row.shift ? `[${row.shift}]` : "KERJA",
-              row.startMinutes === null || row.endMinutes === null
-                ? "Jam belum diatur"
-                : `${timeLabel(row.startMinutes)}–${timeLabel(row.endMinutes)}`,
-            ];
-      rect(x, y, cellWidth, 42, fill);
-      label(lines, x, y, cellWidth, 42, false, row?.status === "LIBUR" ? "#ac2424" : "#183c35", 12);
-    }
-    y += 42;
-  }
-  for (const [status, title] of [
-    ["KERJA", "TOTAL KERJA"],
-    ["LIBUR", "TOTAL LIBUR"],
-  ]) {
-    rect(margin, y, dateWidth + dayWidth, 30, "#e1edda");
-    label([title], margin, y, dateWidth + dayWidth, 30, true);
-    for (const [i, e] of employees.entries()) {
-      const x = margin + dateWidth + dayWidth + i * cellWidth,
-        count = data.rows.filter(
-          (r) =>
-            r.employeeId === e.id &&
-            r.date >= data.from &&
-            r.date <= data.to &&
-            r.status === status,
-        ).length;
-      rect(x, y, cellWidth, 30, "#e1edda");
-      label([String(count)], x, y, cellWidth, 30, true);
-    }
-    y += 30;
-  }
-  label(
-    ["Jam WIB · — belum dijadwalkan · Full shift dihitung 1 hari kerja"],
-    margin,
-    y,
-    gridWidth,
-    30,
-    false,
-    "#657b6f",
-    11,
-  );
-  y += 36;
-  return {
-    width,
-    height: y,
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${y}" viewBox="0 0 ${width} ${y}" role="img"><title>Jadwal crew gudang ${escape(longDate(data.from))} – ${escape(longDate(data.to))}</title><rect width="100%" height="100%" fill="#ffffff"/>${parts.join("")}</svg>`,
-  };
+  text('WIB · Shift 2 dan Full Shift selesai 23:59 · Full shift dihitung 1 hari kerja',24,y+25,12,false,'#687d6c');
+  y+=45;
+  data.employees.forEach(e=>{
+    const r=data.rows.filter(r=>r.employeeId===e.id&&r.date>=data.from&&r.date<=data.to);
+    const label=e.name+' · '+r.filter(r=>r.status==='KERJA').length+' hari kerja · '+r.filter(r=>r.status==='LIBUR').length+' libur';
+    const lines=label.match(/.{1,140}/gu)||[];
+    lines.forEach(line=> {text(line,24,y,12);y+=18;});
+  });
+  y+=20;
+  return {width,height:y,svg:'<svg xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+y+'" viewBox="0 0 '+width+' '+y+'" role="img"><title>Kalender jadwal gudang '+escape(longDate(data.from))+' – '+escape(longDate(data.to))+'</title><rect width="100%" height="100%" fill="white"/>'+parts.join('')+'</svg>'};
 }

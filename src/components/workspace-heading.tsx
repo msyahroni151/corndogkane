@@ -228,7 +228,7 @@ export function WorkspaceHeading({ userName }: { userName: string }) {
         icon: "people" as const,
       };
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-3">
+    <div className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-auto">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600">
         <UiIcon name={heading.icon} size={22} />
       </span>
